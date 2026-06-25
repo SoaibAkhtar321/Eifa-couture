@@ -21,13 +21,13 @@ export default function WomensCollectionSection() {
       className="relative overflow-hidden bg-ivory"
       aria-labelledby="womens-heading"
     >
-      <div ref={ref} className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px] lg:min-h-[800px]">
+      <div ref={ref} className="grid grid-cols-1 lg:grid-cols-2 min-h-auto lg:min-h-[800px]">
         {/* ── Image Side (Left) ── */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ ...luxuryTransition, duration: 1 }}
-          className="relative overflow-hidden aspect-[3/4] lg:aspect-auto"
+          className="relative overflow-hidden aspect-[3/4] lg:aspect-auto lg:min-h-[600px]"
         >
           <motion.div className="absolute inset-0" style={{ y: imageY }}>
             <img
@@ -50,56 +50,53 @@ export default function WomensCollectionSection() {
           initial={{ opacity: 0, x: 50 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ ...luxuryTransition, duration: 1, delay: 0.2 }}
-          className="flex items-center px-8 py-16 md:px-12 lg:px-16 xl:px-24"
+          className="flex items-center px-6 py-12 md:px-12 lg:px-16 xl:px-24 min-h-auto lg:min-h-[600px]"
         >
-          <div className="max-w-lg">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="max-w-lg w-full">
+            <div className="flex items-center gap-3 mb-4 md:mb-6">
               <div className="w-10 h-px bg-gold" />
               <span className="text-gold text-xs tracking-[0.3em] uppercase font-body">
                 For Her
               </span>
             </div>
 
-            <h2 id="womens-heading" className="font-heading text-4xl md:text-5xl lg:text-6xl text-charcoal leading-[1.1]">
+            <h2 id="womens-heading" className="font-heading text-3xl md:text-5xl lg:text-6xl text-charcoal leading-[1.1]">
               The Women&apos;s
               <br />
               <span className="text-gradient-gold">Collection</span>
             </h2>
 
-            <div className="w-16 h-px bg-gold/40 my-8" />
+            <div className="w-16 h-px bg-gold/40 my-6 md:my-8" />
 
-            <p className="font-subheading text-lg md:text-xl text-charcoal/70 leading-relaxed italic">
-              From ethereal kurtas to opulent bridal ensembles — every piece is a canvas of Lucknowi artistry. 
-              Our women&apos;s collection celebrates femininity with delicate tepchi, bakhiya, and shadow work 
-              that have adorned royalty for centuries.
+            <p className="font-subheading text-base md:text-xl text-charcoal/70 leading-relaxed italic">
+              From ethereal kurtas to opulent bridal ensembles — every piece is a canvas of Lucknowi artistry.
             </p>
 
-            <p className="font-body text-sm text-charcoal/50 mt-6 leading-relaxed">
-              Each garment takes 15 to 45 days of meticulous hand-embroidery, 
-              ensuring every stitch carries the soul of our master karigars.
+            <p className="font-body text-xs md:text-sm text-charcoal/50 mt-4 md:mt-6 leading-relaxed">
+              Each garment takes 15 to 45 days of meticulous hand-embroidery, ensuring every stitch carries the soul of our master karigars.
             </p>
 
-            <div className="mt-10">
-              <Link href="/shop/womens-kurtas" className="btn-luxury btn-luxury-primary">
+            <div className="mt-6 md:mt-10">
+              <Link href="/shop/womens-kurtas" className="btn-luxury btn-luxury-primary text-xs md:text-sm">
                 Explore Women&apos;s Edit
               </Link>
             </div>
 
-            {/* Stats */}
-            <div className="flex items-center gap-8 mt-12 pt-8 border-t border-beige">
+            {/* Stats — Mobile optimized */}
+            <div className="flex items-center gap-4 md:gap-8 mt-8 md:mt-12 pt-6 md:pt-8 border-t border-beige">
               <div>
-                <span className="font-heading text-3xl text-gradient-gold">200+</span>
-                <p className="font-body text-xs tracking-[0.1em] uppercase text-charcoal/50 mt-1">Designs</p>
+                <span className="font-heading text-2xl md:text-3xl text-gradient-gold">200+</span>
+                <p className="font-body text-[10px] md:text-xs tracking-[0.1em] uppercase text-charcoal/50 mt-1">Designs</p>
               </div>
-              <div className="w-px h-10 bg-beige" />
+              <div className="hidden md:block w-px h-10 bg-beige" />
               <div>
-                <span className="font-heading text-3xl text-gradient-gold">12</span>
-                <p className="font-body text-xs tracking-[0.1em] uppercase text-charcoal/50 mt-1">Categories</p>
+                <span className="font-heading text-2xl md:text-3xl text-gradient-gold">12</span>
+                <p className="font-body text-[10px] md:text-xs tracking-[0.1em] uppercase text-charcoal/50 mt-1">Categories</p>
               </div>
-              <div className="w-px h-10 bg-beige" />
+              <div className="hidden md:block w-px h-10 bg-beige" />
               <div>
-                <span className="font-heading text-3xl text-gradient-gold">50+</span>
-                <p className="font-body text-xs tracking-[0.1em] uppercase text-charcoal/50 mt-1">Artisans</p>
+                <span className="font-heading text-2xl md:text-3xl text-gradient-gold">50+</span>
+                <p className="font-body text-[10px] md:text-xs tracking-[0.1em] uppercase text-charcoal/50 mt-1">Artisans</p>
               </div>
             </div>
           </div>
