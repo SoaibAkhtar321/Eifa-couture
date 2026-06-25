@@ -41,7 +41,7 @@ export default function NewArrivalsSection() {
           transition={luxuryTransition}
           className="luxury-container flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12 md:mb-16"
         >
-          <div>
+          <div className="flex-1">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-8 h-px bg-gold" />
               <span className="text-gold text-xs tracking-[0.3em] uppercase font-body">
@@ -56,11 +56,11 @@ export default function NewArrivalsSection() {
             </p>
           </div>
 
-          {/* Scroll Controls */}
+          {/* Scroll Controls - Hidden on mobile, shown on md+ */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => scroll('left')}
-              className="w-12 h-12 border border-charcoal/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors duration-300"
+              className="hidden md:flex w-12 h-12 border border-charcoal/20 items-center justify-center hover:border-gold hover:text-gold transition-colors duration-300 flex-shrink-0"
               aria-label="Scroll left"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -69,7 +69,7 @@ export default function NewArrivalsSection() {
             </button>
             <button
               onClick={() => scroll('right')}
-              className="w-12 h-12 border border-charcoal/20 flex items-center justify-center hover:border-gold hover:text-gold transition-colors duration-300"
+              className="hidden md:flex w-12 h-12 border border-charcoal/20 items-center justify-center hover:border-gold hover:text-gold transition-colors duration-300 flex-shrink-0"
               aria-label="Scroll right"
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
@@ -79,10 +79,10 @@ export default function NewArrivalsSection() {
           </div>
         </motion.div>
 
-        {/* ── Horizontal Scrollable Carousel ── */}
+        {/* ── Responsive Grid/Carousel ── */}
         <div
           ref={scrollContainerRef}
-          className="flex gap-6 overflow-x-auto scrollbar-hide px-6 md:px-12 lg:px-16 pb-4 snap-x snap-mandatory"
+          className="hidden md:flex gap-6 overflow-x-auto scrollbar-hide px-6 md:px-12 lg:px-16 pb-4 snap-x snap-mandatory"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
           {products.map((product, idx) => (
@@ -91,9 +91,9 @@ export default function NewArrivalsSection() {
               initial={{ opacity: 0, x: 40 }}
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ ...luxuryTransition, delay: idx * 0.1 }}
-              className="flex-shrink-0 w-[300px] md:w-[340px] lg:w-[380px] snap-start group"
+              className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[340px] lg:w-[380px] snap-start group"
             >
-              <Link href={`/product/${product.slug}`} className="block">
+              <Link href={`/product/${product.slug}`} className="block h-full">
                 {/* Image */}
                 <div className="img-zoom relative aspect-[3/4] overflow-hidden bg-beige">
                   <img
@@ -104,7 +104,7 @@ export default function NewArrivalsSection() {
                   />
 
                   {/* New Badge */}
-                  <span className="absolute top-4 left-4 bg-gold text-white text-[10px] tracking-[0.2em] uppercase px-4 py-1.5 font-body font-medium">
+                  <span className="absolute top-4 left-4 bg-gold text-white text-[10px] tracking-[0.2em] uppercase px-4 py-1.5 font-body font-medium z-10">
                     New
                   </span>
 
@@ -121,7 +121,7 @@ export default function NewArrivalsSection() {
                   <p className="text-[11px] text-gold/80 tracking-[0.2em] uppercase font-body mb-1.5">
                     {product.fabric}
                   </p>
-                  <h3 className="font-heading text-base md:text-lg text-charcoal group-hover:text-maroon transition-colors duration-300">
+                  <h3 className="font-heading text-base md:text-lg text-charcoal group-hover:text-maroon transition-colors duration-300 line-clamp-2">
                     {product.name}
                   </h3>
                   <div className="flex items-center gap-3 mt-2">
@@ -139,6 +139,60 @@ export default function NewArrivalsSection() {
             </motion.article>
           ))}
         </div>
+
+        {/* ── Mobile Grid (2 columns) ── */}
+        <motion.div
+          variants={{
+            hidden: {},
+            visible: { transition: { staggerChildren: 0.1 } },
+          }}
+          initial="hidden"
+          animate={isInView ? 'visible' : 'hidden'}
+          className="md:hidden grid grid-cols-2 gap-4 px-4"
+        >
+          {products.slice(0, 4).map((product, idx) => (
+            <motion.article
+              key={product.id}
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0, transition: luxuryTransition },
+              }}
+              className="group"
+            >
+              <Link href={`/product/${product.slug}`} className="block">
+                {/* Image */}
+                <div className="img-zoom relative aspect-[3/4] overflow-hidden bg-beige mb-3">
+                  <img
+                    src={productImages[idx % productImages.length]}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
+
+                  {/* New Badge */}
+                  <span className="absolute top-2 left-2 bg-gold text-white text-[9px] tracking-[0.2em] uppercase px-2.5 py-1 font-body font-medium z-10">
+                    New
+                  </span>
+                </div>
+
+                {/* Product Info */}
+                <div>
+                  <p className="text-[10px] text-gold/80 tracking-[0.15em] uppercase font-body mb-1">
+                    {product.fabric}
+                  </p>
+                  <h3 className="font-heading text-sm text-charcoal group-hover:text-maroon transition-colors duration-300 line-clamp-2">
+                    {product.name}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1.5">
+                    <span className="font-subheading text-base text-charcoal font-semibold">
+                      {formatPrice(product.price)}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            </motion.article>
+          ))}
+        </motion.div>
 
         {/* View All link */}
         <motion.div
