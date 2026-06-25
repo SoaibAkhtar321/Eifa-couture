@@ -21,53 +21,50 @@ export default function MensCollectionSection() {
       className="relative overflow-hidden bg-charcoal text-white"
       aria-labelledby="mens-heading"
     >
-      <div ref={ref} className="grid grid-cols-1 lg:grid-cols-2 min-h-[600px] lg:min-h-[800px]">
+      <div ref={ref} className="grid grid-cols-1 lg:grid-cols-2 min-h-auto lg:min-h-[800px]">
         {/* ── Content Side (Left) — reversed from Women's ── */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ ...luxuryTransition, duration: 1 }}
-          className="flex items-center px-8 py-16 md:px-12 lg:px-16 xl:px-24 order-2 lg:order-1"
+          className="flex items-center px-6 py-12 md:px-12 lg:px-16 xl:px-24 order-2 lg:order-1 min-h-auto lg:min-h-[600px]"
         >
-          <div className="max-w-lg">
-            <div className="flex items-center gap-3 mb-6">
+          <div className="max-w-lg w-full">
+            <div className="flex items-center gap-3 mb-4 md:mb-6">
               <div className="w-10 h-px bg-gold" />
               <span className="text-gold text-xs tracking-[0.3em] uppercase font-body">
                 For Him
               </span>
             </div>
 
-            <h2 id="mens-heading" className="font-heading text-4xl md:text-5xl lg:text-6xl text-white leading-[1.1]">
+            <h2 id="mens-heading" className="font-heading text-3xl md:text-5xl lg:text-6xl text-white leading-[1.1]">
               The Men&apos;s
               <br />
               <span className="text-gradient-gold">Edit</span>
             </h2>
 
-            <div className="w-16 h-px bg-gold/40 my-8" />
+            <div className="w-16 h-px bg-gold/40 my-6 md:my-8" />
 
-            <p className="font-subheading text-lg md:text-xl text-white/70 leading-relaxed italic">
-              Refined silhouettes for the modern gentleman. Our men&apos;s collection features 
-              distinguished kurtas in premium cotton lawn, silk, and linen — each adorned with 
-              subtle Chikankari that speaks of understated luxury.
+            <p className="font-subheading text-base md:text-xl text-white/70 leading-relaxed italic">
+              Refined silhouettes for the modern gentleman. Distinguished kurtas in premium fabrics.
             </p>
 
-            <p className="font-body text-sm text-white/40 mt-6 leading-relaxed">
-              From crisp whites for summer to regal silks for celebrations — 
-              every piece is crafted to command quiet admiration.
+            <p className="font-body text-xs md:text-sm text-white/40 mt-4 md:mt-6 leading-relaxed">
+              From crisp whites for summer to regal silks for celebrations — every piece is crafted to command quiet admiration.
             </p>
 
-            <div className="mt-10 flex items-center gap-6">
-              <Link href="/shop/mens-kurtas" className="btn-luxury bg-gold border-gold text-white hover:bg-gold-dark hover:border-gold-dark text-sm">
-                Shop Men&apos;s Collection
+            <div className="mt-6 md:mt-10 flex items-center gap-4">
+              <Link href="/shop/mens-kurtas" className="btn-luxury bg-gold border-gold text-charcoal hover:bg-gold-dark hover:border-gold-dark text-xs md:text-sm">
+                Shop Men&apos;s
               </Link>
             </div>
 
-            {/* Fabric types */}
-            <div className="flex flex-wrap gap-4 mt-12 pt-8 border-t border-white/10">
+            {/* Fabric types — mobile optimized */}
+            <div className="flex flex-wrap gap-2 md:gap-4 mt-8 md:mt-12 pt-6 md:pt-8 border-t border-white/10">
               {['Cotton Lawn', 'Pure Silk', 'Chanderi', 'Linen Blend'].map((fabric) => (
                 <span
                   key={fabric}
-                  className="text-[11px] tracking-[0.15em] uppercase font-body text-white/50 border border-white/15 px-4 py-2"
+                  className="text-[9px] md:text-[11px] tracking-[0.15em] uppercase font-body text-white/50 border border-white/15 px-2 md:px-4 py-1 md:py-2"
                 >
                   {fabric}
                 </span>
@@ -81,7 +78,7 @@ export default function MensCollectionSection() {
           initial={{ opacity: 0, x: 50 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ ...luxuryTransition, duration: 1, delay: 0.2 }}
-          className="relative overflow-hidden aspect-[3/4] lg:aspect-auto order-1 lg:order-2"
+          className="relative overflow-hidden aspect-[3/4] lg:aspect-auto order-1 lg:order-2 lg:min-h-[600px]"
         >
           <motion.div className="absolute inset-0" style={{ scale: imageScale }}>
             <img
