@@ -1,26 +1,480 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ============================================
+   EIFA COUTURE — Luxury Design System
+   Tailwind CSS v4 Configuration
+   ============================================ */
+
+@theme {
+  /* ── Brand Colors ── */
+  --color-maroon: #5A0B22;
+  --color-maroon-light: #7A1E3A;
+  --color-maroon-dark: #3D0717;
+  --color-gold: #C8A548;
+  --color-gold-light: #D4B96A;
+  --color-gold-dark: #A68A3A;
+  --color-cream: #FAF8F4;
+  --color-beige: #F3EEE6;
+  --color-charcoal: #2B2B2B;
+  --color-ivory: #FFFEF9;
+  --color-antique-gold: #B89B5E;
+  --color-light-ivory: #FEFDFB;
+
+  /* ── Typography ── */
+  --font-heading: "Playfair Display", serif;
+  --font-subheading: "Cormorant Garamond", serif;
+  --font-body: "Inter", sans-serif;
+
+  /* ── Luxury Spacing ── */
+  --spacing-luxury-xs: 0.5rem;
+  --spacing-luxury-sm: 1rem;
+  --spacing-luxury-md: 2rem;
+  --spacing-luxury-lg: 4rem;
+  --spacing-luxury-xl: 6rem;
+  --spacing-luxury-2xl: 8rem;
+  --spacing-luxury-3xl: 12rem;
+  --spacing-section: 6rem;
+  --spacing-section-lg: 10rem;
+
+  /* ── Animations ── */
+  --animate-fade-in: fade-in 0.6s ease-out forwards;
+  --animate-fade-in-up: fade-in-up 0.6s ease-out forwards;
+  --animate-fade-in-down: fade-in-down 0.6s ease-out forwards;
+  --animate-slide-in-left: slide-in-left 0.5s ease-out forwards;
+  --animate-slide-in-right: slide-in-right 0.5s ease-out forwards;
+  --animate-scale-in: scale-in 0.4s ease-out forwards;
+  --animate-shimmer: shimmer 2s infinite;
+  --animate-float: float 3s ease-in-out infinite;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ── Keyframes ── */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
 
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-in-left {
+  from {
+    opacity: 0;
+    transform: translateX(-32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(32px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  color: var(--color-charcoal);
+  background-color: var(--color-ivory);
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+  overflow-x: hidden;
+}
+
+/* ── Selection Colors ── */
+::selection {
+  background-color: var(--color-maroon);
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background-color: var(--color-maroon);
+  color: #ffffff;
+}
+
+/* ── Custom Scrollbar ── */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-gold);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-maroon);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gold) var(--color-cream);
+}
+
+/* ============================================
+   TYPOGRAPHY
+   ============================================ */
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--color-charcoal);
+}
+
+h5,
+h6 {
+  font-family: var(--font-subheading);
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  color: var(--color-charcoal);
+}
+
+p {
+  line-height: 1.75;
+  letter-spacing: 0.01em;
+}
+
+/* ============================================
+   FOCUS STYLES (Accessibility)
+   ============================================ */
+
+:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+/* ============================================
+   LUXURY UTILITY CLASSES
+   ============================================ */
+
+/* ── Gold Gradient Text ── */
+.text-gradient-gold {
+  background: linear-gradient(
+    135deg,
+    var(--color-gold-dark),
+    var(--color-gold),
+    var(--color-gold-light),
+    var(--color-gold)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Maroon Gradient Text ── */
+.text-gradient-maroon {
+  background: linear-gradient(
+    135deg,
+    var(--color-maroon-dark),
+    var(--color-maroon),
+    var(--color-maroon-light)
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* ── Gold Divider ── */
+.divider-gold {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-gold),
+    transparent
+  );
+}
+
+/* ── Luxury Section Padding ── */
+.section-padding {
+  padding-top: var(--spacing-section);
+  padding-bottom: var(--spacing-section);
+}
+
+@media (min-width: 1024px) {
+  .section-padding {
+    padding-top: var(--spacing-section-lg);
+    padding-bottom: var(--spacing-section-lg);
+  }
+}
+
+/* ── Luxury Container ── */
+.luxury-container {
+  width: 100%;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .luxury-container {
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .luxury-container {
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+
+/* ── Luxury Button Base ── */
+.btn-luxury {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.875rem 2.5rem;
+  font-family: var(--font-body);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  border-radius: 0;
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-luxury-primary {
+  background-color: var(--color-maroon);
+  color: #ffffff;
+  border: 1px solid var(--color-maroon);
+}
+
+.btn-luxury-primary:hover {
+  background-color: var(--color-maroon-dark);
+  border-color: var(--color-maroon-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(90, 11, 34, 0.3);
+}
+
+.btn-luxury-secondary {
+  background-color: transparent;
+  color: var(--color-maroon);
+  border: 1px solid var(--color-maroon);
+}
+
+.btn-luxury-secondary:hover {
+  background-color: var(--color-maroon);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-luxury-gold {
+  background-color: var(--color-gold);
+  color: #ffffff;
+  border: 1px solid var(--color-gold);
+}
+
+.btn-luxury-gold:hover {
+  background-color: var(--color-gold-dark);
+  border-color: var(--color-gold-dark);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 16px rgba(200, 165, 72, 0.3);
+}
+
+/* ── Luxury Card ── */
+.card-luxury {
+  background-color: #ffffff;
+  border: 1px solid var(--color-beige);
+  transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.card-luxury:hover {
+  border-color: var(--color-gold);
+  box-shadow:
+    0 8px 32px rgba(200, 165, 72, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
+}
+
+/* ── Image Hover Zoom ── */
+.img-zoom {
+  overflow: hidden;
+}
+
+.img-zoom img {
+  transition: transform 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.img-zoom:hover img {
+  transform: scale(1.06);
+}
+
+/* ── Luxury Link ── */
+.link-luxury {
+  position: relative;
+  color: var(--color-charcoal);
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.link-luxury::after {
+  content: "";
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background-color: var(--color-gold);
+  transition: width 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.link-luxury:hover {
+  color: var(--color-maroon);
+}
+
+.link-luxury:hover::after {
+  width: 100%;
+}
+
+/* ── Gold Border Accent ── */
+.border-accent-gold {
+  position: relative;
+}
+
+.border-accent-gold::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--color-gold),
+    transparent
+  );
+}
+
+/* ── Overlay Gradient ── */
+.overlay-gradient {
+  position: relative;
+}
+
+.overlay-gradient::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(43, 43, 43, 0.7) 0%,
+    rgba(43, 43, 43, 0.2) 40%,
+    transparent 100%
+  );
+  pointer-events: none;
+}
+
+/* ── Shimmer Loading Placeholder ── */
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--color-beige) 25%,
+    var(--color-cream) 50%,
+    var(--color-beige) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ── Subtle Grain Texture ── */
+.texture-grain {
+  position: relative;
+}
+
+.texture-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
 }
