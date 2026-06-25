@@ -57,43 +57,36 @@ export default function FeaturedCollection() {
           </p>
         </motion.div>
 
-        {/* ── Editorial Grid — asymmetric layout ── */}
+        {/* ── Responsive Grid Layout ── */}
         <motion.div
           variants={containerVariants}
           initial="hidden"
           animate={isInView ? 'visible' : 'hidden'}
-          className="grid grid-cols-1 md:grid-cols-12 gap-6 md:gap-8"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6 md:gap-8"
         >
           {products.map((product, idx) => {
             const discount = product.compareAtPrice
               ? getDiscountPercentage(product.compareAtPrice, product.price)
               : 0;
 
-            // Editorial layout: first item large (7 cols), second 5 cols, third 5 cols, fourth 7 cols
-            const gridClasses = [
-              'md:col-span-7 md:row-span-1',
-              'md:col-span-5 md:row-span-1',
-              'md:col-span-5 md:row-span-1',
-              'md:col-span-7 md:row-span-1',
-            ];
-
+            // Image aspect ratios
             const imageAspects = [
-              'aspect-[4/5]',
               'aspect-[3/4]',
               'aspect-[3/4]',
-              'aspect-[4/5]',
+              'aspect-[3/4]',
+              'aspect-[3/4]',
             ];
 
             return (
               <motion.article
                 key={product.id}
                 variants={itemVariants}
-                className={`group ${gridClasses[idx]}`}
+                className="group"
               >
-                <Link href={`/product/${product.slug}`} className="block">
-                  <div className="card-luxury overflow-hidden">
+                <Link href={`/product/${product.slug}`} className="block h-full">
+                  <div className="card-luxury overflow-hidden h-full flex flex-col">
                     {/* Image */}
-                    <div className={`img-zoom relative ${imageAspects[idx]} overflow-hidden bg-beige`}>
+                    <div className={`img-zoom relative ${imageAspects[idx]} overflow-hidden bg-beige flex-shrink-0`}>
                       <img
                         src={productImages[idx]}
                         alt={product.name}
@@ -103,7 +96,7 @@ export default function FeaturedCollection() {
 
                       {/* Discount badge */}
                       {discount > 0 && (
-                        <span className="absolute top-4 left-4 bg-maroon text-white text-[10px] tracking-[0.15em] uppercase px-3 py-1.5 font-body">
+                        <span className="absolute top-4 left-4 bg-maroon text-white text-[10px] tracking-[0.15em] uppercase px-3 py-1.5 font-body z-10">
                           {discount}% Off
                         </span>
                       )}
@@ -123,14 +116,16 @@ export default function FeaturedCollection() {
                     </div>
 
                     {/* Product Info */}
-                    <div className="p-5 md:p-6">
-                      <p className="text-[11px] text-gold tracking-[0.2em] uppercase font-body mb-2">
-                        {product.fabric}
-                      </p>
-                      <h3 className="font-heading text-lg md:text-xl text-charcoal group-hover:text-maroon transition-colors duration-300 leading-snug">
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center gap-3 mt-3">
+                    <div className="p-5 md:p-6 flex-grow flex flex-col justify-between">
+                      <div>
+                        <p className="text-[11px] text-gold tracking-[0.2em] uppercase font-body mb-2">
+                          {product.fabric}
+                        </p>
+                        <h3 className="font-heading text-lg md:text-xl text-charcoal group-hover:text-maroon transition-colors duration-300 leading-snug">
+                          {product.name}
+                        </h3>
+                      </div>
+                      <div className="flex items-center gap-3 mt-4">
                         <span className="font-subheading text-xl md:text-2xl text-charcoal font-semibold">
                           {formatPrice(product.price)}
                         </span>
