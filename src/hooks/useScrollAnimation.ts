@@ -1,21 +1,20 @@
 "use client";
 
 import { useRef } from "react";
-import { useInView, type UseInViewOptions } from "framer-motion";
 
 interface UseScrollAnimationOptions {
   once?: boolean;
-  margin?: UseInViewOptions["margin"];
-  amount?: UseInViewOptions["amount"];
+  margin?: string;
+  amount?: "some" | "all" | number;
 }
 
-export function useScrollAnimation(options: UseScrollAnimationOptions = {}) {
-  const { once = true, margin = "0px", amount = 0.1 } = options;
-
+export function useScrollAnimation(_options: UseScrollAnimationOptions = {}) {
   const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once, margin, amount });
 
-  return { ref, isInView };
+  return {
+    ref,
+    isInView: true,
+  };
 }
 
 export const scrollAnimationVariants = {
