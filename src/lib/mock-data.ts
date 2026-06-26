@@ -18,16 +18,48 @@ function buildStock(
   baseQty = 10
 ): Record<string, number> {
   const stock: Record<string, number> = {};
+
   for (const size of sizes) {
     for (const color of colors) {
-      stock[`${size}-${color.name}`] = baseQty + Math.floor(Math.random() * 15);
+      const stockKey = `${size}-${color.name}`;
+      const stableOffset = Array.from(stockKey).reduce(
+        (sum, character) => sum + character.charCodeAt(0),
+        0
+      ) % 15;
+
+      stock[stockKey] = baseQty + stableOffset;
     }
   }
+
   return stock;
 }
 
+
+const CATEGORY_PLACEHOLDER_IMAGES: Record<string, string> = {
+  "womens-kurtas": "/images/categories/kurtas.png",
+  "mens-kurtas": "/images/categories/men-kurtas.png",
+  anarkalis: "/images/categories/anarkali.png",
+  dupattas: "/images/categories/dupattas.png",
+  sarees: "/images/categories/sarees.png",
+  "palazzo-sets": "/images/categories/palazzo.png",
+  "bridal-collection": "/images/categories/bridal.png",
+  accessories: "/images/categories/dupattas.png",
+  "crochet-bags": "/images/categories/dupattas.png",
+};
+
+function getCategoryPlaceholderImage(categorySlug: string): string {
+  return (
+    CATEGORY_PLACEHOLDER_IMAGES[categorySlug] ??
+    "/images/categories/kurtas.png"
+  );
+}
+
+function buildProductImages(categorySlug: string): string[] {
+  return [getCategoryPlaceholderImage(categorySlug)];
+}
+
 /* ============================================
-   PRODUCTS (12+)
+   PRODUCTS
    ============================================ */
 
 export const MOCK_PRODUCTS: Product[] = [
@@ -41,12 +73,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "Exquisite Chanderi silk kurta with handcrafted tepchi and phanda Chikankari embroidery.",
     price: 7999,
     compareAtPrice: 9999,
-    images: [
-      "https://picsum.photos/seed/product1a/800/1000",
-      "https://picsum.photos/seed/product1b/800/1000",
-      "https://picsum.photos/seed/product1c/800/1000",
-      "https://picsum.photos/seed/product1d/800/1000",
-    ],
+    images: buildProductImages("womens-kurtas"),
     category: "womens-kurtas",
     subcategory: "silk-kurtas",
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -90,11 +117,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "Regal Anarkali with all-over bakhiya and shadow work on premium georgette.",
     price: 12999,
     compareAtPrice: 15999,
-    images: [
-      "https://picsum.photos/seed/product2a/800/1000",
-      "https://picsum.photos/seed/product2b/800/1000",
-      "https://picsum.photos/seed/product2c/800/1000",
-    ],
+    images: buildProductImages("anarkalis"),
     category: "anarkalis",
     subcategory: "georgette-anarkalis",
     sizes: ["S", "M", "L", "XL", "XXL"],
@@ -138,11 +161,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "Ultra-fine muslin cotton kurta set with murri and phanda Chikankari detailing.",
     price: 5999,
     compareAtPrice: 7499,
-    images: [
-      "https://picsum.photos/seed/product3a/800/1000",
-      "https://picsum.photos/seed/product3b/800/1000",
-      "https://picsum.photos/seed/product3c/800/1000",
-    ],
+    images: buildProductImages("palazzo-sets"),
     category: "palazzo-sets",
     subcategory: "cotton-sets",
     sizes: ["S", "M", "L", "XL"],
@@ -185,12 +204,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "Opulent bridal lehenga with kamdani, mukaish, and Chikankari — over 200 hours of hand-embroidery.",
     price: 25999,
     compareAtPrice: null,
-    images: [
-      "https://picsum.photos/seed/product4a/800/1000",
-      "https://picsum.photos/seed/product4b/800/1000",
-      "https://picsum.photos/seed/product4c/800/1000",
-      "https://picsum.photos/seed/product4d/800/1000",
-    ],
+    images: buildProductImages("bridal-collection"),
     category: "bridal-collection",
     subcategory: "lehenga-sets",
     sizes: ["S", "M", "L", "XL"],
@@ -234,10 +248,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "Whisper-light organza dupatta with jali work and phanda-murri border Chikankari.",
     price: 3999,
     compareAtPrice: 4999,
-    images: [
-      "https://picsum.photos/seed/product5a/800/1000",
-      "https://picsum.photos/seed/product5b/800/1000",
-    ],
+    images: buildProductImages("dupattas"),
     category: "dupattas",
     subcategory: "organza-dupattas",
     sizes: ["Free Size"],
@@ -281,11 +292,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "Refined men's kurta with shadow work and tepchi Chikankari on premium cotton lawn.",
     price: 4999,
     compareAtPrice: 5999,
-    images: [
-      "https://picsum.photos/seed/product6a/800/1000",
-      "https://picsum.photos/seed/product6b/800/1000",
-      "https://picsum.photos/seed/product6c/800/1000",
-    ],
+    images: buildProductImages("mens-kurtas"),
     category: "mens-kurtas",
     subcategory: "cotton-kurtas",
     sizes: ["S", "M", "L", "XL", "XXL", "3XL"],
@@ -329,11 +336,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "All-over Chikankari georgette saree with Mughal-inspired floral motifs on pallu.",
     price: 15999,
     compareAtPrice: 18999,
-    images: [
-      "https://picsum.photos/seed/product7a/800/1000",
-      "https://picsum.photos/seed/product7b/800/1000",
-      "https://picsum.photos/seed/product7c/800/1000",
-    ],
+    images: buildProductImages("sarees"),
     category: "sarees",
     subcategory: "georgette-sarees",
     sizes: ["Free Size"],
@@ -377,11 +380,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "Stylish modal cotton palazzo set with tepchi and keel kangan Chikankari detailing.",
     price: 6499,
     compareAtPrice: 7999,
-    images: [
-      "https://picsum.photos/seed/product8a/800/1000",
-      "https://picsum.photos/seed/product8b/800/1000",
-      "https://picsum.photos/seed/product8c/800/1000",
-    ],
+    images: buildProductImages("palazzo-sets"),
     category: "palazzo-sets",
     subcategory: "modal-sets",
     sizes: ["S", "M", "L", "XL"],
@@ -425,12 +424,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "Stunning sharara set with mukaish embellishment and dense Chikankari on georgette.",
     price: 18999,
     compareAtPrice: 22999,
-    images: [
-      "https://picsum.photos/seed/product9a/800/1000",
-      "https://picsum.photos/seed/product9b/800/1000",
-      "https://picsum.photos/seed/product9c/800/1000",
-      "https://picsum.photos/seed/product9d/800/1000",
-    ],
+    images: buildProductImages("bridal-collection"),
     category: "bridal-collection",
     subcategory: "sharara-sets",
     sizes: ["S", "M", "L", "XL"],
@@ -474,10 +468,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "Fine wool-silk blend stole with exquisite all-over Chikankari and dense border work.",
     price: 4499,
     compareAtPrice: 5499,
-    images: [
-      "https://picsum.photos/seed/product10a/800/1000",
-      "https://picsum.photos/seed/product10b/800/1000",
-    ],
+    images: buildProductImages("accessories"),
     category: "accessories",
     subcategory: "stoles",
     sizes: ["Free Size"],
@@ -521,11 +512,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "Elegant A-line kurta with all-over shadow work on premium cotton voile.",
     price: 5499,
     compareAtPrice: 6999,
-    images: [
-      "https://picsum.photos/seed/product11a/800/1000",
-      "https://picsum.photos/seed/product11b/800/1000",
-      "https://picsum.photos/seed/product11c/800/1000",
-    ],
+    images: buildProductImages("womens-kurtas"),
     category: "womens-kurtas",
     subcategory: "cotton-kurtas",
     sizes: ["XS", "S", "M", "L", "XL", "XXL"],
@@ -569,11 +556,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "Regal pure silk Pathani kurta set with refined Chikankari detailing.",
     price: 9999,
     compareAtPrice: 12999,
-    images: [
-      "https://picsum.photos/seed/product12a/800/1000",
-      "https://picsum.photos/seed/product12b/800/1000",
-      "https://picsum.photos/seed/product12c/800/1000",
-    ],
+    images: buildProductImages("mens-kurtas"),
     category: "mens-kurtas",
     subcategory: "silk-kurtas",
     sizes: ["M", "L", "XL", "XXL", "3XL"],
@@ -618,11 +601,7 @@ export const MOCK_PRODUCTS: Product[] = [
       "Finest jali work cotton kurta — lattice-pattern embroidery that rivals handmade lace.",
     price: 8499,
     compareAtPrice: 9999,
-    images: [
-      "https://picsum.photos/seed/product13a/800/1000",
-      "https://picsum.photos/seed/product13b/800/1000",
-      "https://picsum.photos/seed/product13c/800/1000",
-    ],
+    images: buildProductImages("womens-kurtas"),
     category: "womens-kurtas",
     subcategory: "cotton-kurtas",
     sizes: ["XS", "S", "M", "L", "XL"],
@@ -656,6 +635,139 @@ export const MOCK_PRODUCTS: Product[] = [
     createdAt: "2024-10-15T10:00:00Z",
     updatedAt: "2025-06-12T15:00:00Z",
   },
+
+  {
+    id: "prod-014",
+    name: "Ivory Crochet Silk Potli Bag",
+    slug: "ivory-crochet-silk-potli-bag",
+    description:
+      "A refined crochet silk potli bag crafted for festive styling, weddings, and elegant evening looks. The soft silk finish and handcrafted crochet texture make it a graceful accessory for Chikankari kurtas, sarees, and celebration wear.",
+    shortDescription:
+      "Handcrafted ivory crochet silk potli bag for festive and ethnic styling.",
+    price: 2499,
+    compareAtPrice: 2999,
+    images: buildProductImages("crochet-bags"),
+    category: "crochet-bags",
+    subcategory: "potli-bags",
+    sizes: ["Free Size"],
+    colors: [
+      { name: "Ivory", hex: "#FFFEF9" },
+      { name: "Cream", hex: "#FFFDD0" },
+    ],
+    stock: buildStock(
+      ["Free Size"],
+      [{ name: "Ivory" }, { name: "Cream" }],
+      12
+    ),
+    fabric: "Silk Crochet",
+    care: [
+      "Spot clean only",
+      "Store in dust bag",
+      "Avoid overloading the bag",
+      "Keep away from moisture and sharp objects",
+    ],
+    tags: ["crochet bag", "silk bag", "potli", "accessory", "festive"],
+    isFeatured: true,
+    isBestSeller: false,
+    isNewArrival: true,
+    isActive: true,
+    seo: {
+      title: "Ivory Crochet Silk Potli Bag | Eifa Couture",
+      description:
+        "Shop handcrafted ivory crochet silk potli bag by Eifa Couture. A premium festive accessory for ethnic wear.",
+      keywords: ["crochet silk bag", "potli bag", "festive bag"],
+    },
+    createdAt: "2025-06-24T10:00:00Z",
+    updatedAt: "2025-06-24T10:00:00Z",
+  },
+  {
+    id: "prod-015",
+    name: "Maroon Crochet Silk Sling Bag",
+    slug: "maroon-crochet-silk-sling-bag",
+    description:
+      "A statement crochet silk sling bag in a rich maroon tone, designed to pair beautifully with festive kurtas, sarees, and evening ethnic looks. Lightweight yet elegant, it adds a handcrafted finishing touch to your ensemble.",
+    shortDescription:
+      "Elegant maroon crochet silk sling bag for festive and occasion wear.",
+    price: 2799,
+    compareAtPrice: 3499,
+    images: buildProductImages("crochet-bags"),
+    category: "crochet-bags",
+    subcategory: "sling-bags",
+    sizes: ["Free Size"],
+    colors: [
+      { name: "Maroon", hex: "#6F1D1B" },
+      { name: "Gold", hex: "#C8A548" },
+    ],
+    stock: buildStock(
+      ["Free Size"],
+      [{ name: "Maroon" }, { name: "Gold" }],
+      10
+    ),
+    fabric: "Silk Crochet",
+    care: [
+      "Spot clean only",
+      "Do not machine wash",
+      "Store separately to protect crochet texture",
+      "Avoid heavy items inside the bag",
+    ],
+    tags: ["crochet bag", "silk sling", "maroon bag", "accessory", "festive"],
+    isFeatured: false,
+    isBestSeller: true,
+    isNewArrival: true,
+    isActive: true,
+    seo: {
+      title: "Maroon Crochet Silk Sling Bag | Eifa Couture",
+      description:
+        "Premium maroon crochet silk sling bag for festive ethnic styling. Handcrafted accessory by Eifa Couture.",
+      keywords: ["crochet sling bag", "silk bag", "maroon ethnic bag"],
+    },
+    createdAt: "2025-06-24T10:00:00Z",
+    updatedAt: "2025-06-24T10:00:00Z",
+  },
+  {
+    id: "prod-016",
+    name: "Gold Crochet Silk Clutch",
+    slug: "gold-crochet-silk-clutch",
+    description:
+      "A compact crochet silk clutch with a festive gold finish, perfect for weddings, celebrations, and refined evening wear. Designed to complement Chikankari outfits with a handcrafted luxury touch.",
+    shortDescription:
+      "Festive gold crochet silk clutch for weddings and celebration wear.",
+    price: 3199,
+    compareAtPrice: 3999,
+    images: buildProductImages("crochet-bags"),
+    category: "crochet-bags",
+    subcategory: "clutches",
+    sizes: ["Free Size"],
+    colors: [
+      { name: "Gold", hex: "#C8A548" },
+      { name: "Ivory", hex: "#FFFEF9" },
+    ],
+    stock: buildStock(
+      ["Free Size"],
+      [{ name: "Gold" }, { name: "Ivory" }],
+      8
+    ),
+    fabric: "Silk Crochet",
+    care: [
+      "Spot clean gently",
+      "Store in dust bag",
+      "Avoid perfume or moisture contact",
+      "Keep away from sharp jewellery edges",
+    ],
+    tags: ["crochet clutch", "silk bag", "gold bag", "wedding", "accessory"],
+    isFeatured: false,
+    isBestSeller: false,
+    isNewArrival: true,
+    isActive: true,
+    seo: {
+      title: "Gold Crochet Silk Clutch | Eifa Couture",
+      description:
+        "Handcrafted gold crochet silk clutch for festive and wedding looks. Premium accessory by Eifa Couture.",
+      keywords: ["gold clutch", "crochet silk clutch", "wedding bag"],
+    },
+    createdAt: "2025-06-24T10:00:00Z",
+    updatedAt: "2025-06-24T10:00:00Z",
+  },
 ];
 
 /* ============================================
@@ -669,7 +781,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "womens-kurtas",
     description:
       "Exquisite handcrafted Chikankari kurtas for women, blending timeless elegance with modern silhouettes.",
-    image: "https://picsum.photos/seed/cat-womens/600/800",
+    image: "/images/categories/kurtas.png",
     parentId: null,
     isActive: true,
     order: 1,
@@ -680,7 +792,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "mens-kurtas",
     description:
       "Refined Chikankari kurtas for men, featuring intricate hand-embroidery on the finest fabrics.",
-    image: "https://picsum.photos/seed/cat-mens/600/800",
+    image: "/images/categories/men-kurtas.png",
     parentId: null,
     isActive: true,
     order: 2,
@@ -691,7 +803,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "anarkalis",
     description:
       "Flowing Anarkali suits adorned with delicate Chikankari work, perfect for celebrations.",
-    image: "https://picsum.photos/seed/cat-anarkali/600/800",
+    image: "/images/categories/anarkali.png",
     parentId: null,
     isActive: true,
     order: 3,
@@ -702,7 +814,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "dupattas",
     description:
       "Lightweight dupattas featuring intricate Chikankari embroidery on fine muslin and chiffon.",
-    image: "https://picsum.photos/seed/cat-dupatta/600/800",
+    image: "/images/categories/dupattas.png",
     parentId: null,
     isActive: true,
     order: 4,
@@ -713,7 +825,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "sarees",
     description:
       "Graceful Chikankari sarees that embody the rich heritage of Lucknow's artisanal craft.",
-    image: "https://picsum.photos/seed/cat-saree/600/800",
+    image: "/images/categories/sarees.png",
     parentId: null,
     isActive: true,
     order: 5,
@@ -724,7 +836,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "palazzo-sets",
     description:
       "Contemporary palazzo sets with traditional Chikankari detailing for effortless style.",
-    image: "https://picsum.photos/seed/cat-palazzo/600/800",
+    image: "/images/categories/palazzo.png",
     parentId: null,
     isActive: true,
     order: 6,
@@ -735,7 +847,7 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "bridal-collection",
     description:
       "Opulent bridal ensembles featuring kamdani, mukaish, and exquisite Chikankari on luxurious fabrics.",
-    image: "https://picsum.photos/seed/cat-bridal/600/800",
+    image: "/images/categories/bridal.png",
     parentId: null,
     isActive: true,
     order: 7,
@@ -746,10 +858,22 @@ export const MOCK_CATEGORIES: Category[] = [
     slug: "accessories",
     description:
       "Chikankari-embroidered stoles, clutches, and accessories to complete your ensemble.",
-    image: "https://picsum.photos/seed/cat-accessory/600/800",
+    image: "/images/categories/dupattas.png",
     parentId: null,
     isActive: true,
     order: 8,
+  },
+
+  {
+    id: "cat-crochet-bags",
+    name: "Crochet Silk Bags",
+    slug: "crochet-bags",
+    description:
+      "Handcrafted crochet silk bags designed to complete festive, ethnic, and occasion wear looks.",
+    image: "/images/categories/dupattas.png",
+    parentId: null,
+    isActive: true,
+    order: 9,
   },
 ];
 
@@ -763,7 +887,7 @@ export const MOCK_BANNERS: Banner[] = [
     title: "The Art of Chikankari",
     subtitle:
       "Handcrafted luxury from the heart of Lucknow — discover our new collection",
-    image: "https://picsum.photos/seed/banner1/1920/800",
+    image: "/images/hero/hero-1.png",
     link: "/shop",
     isActive: true,
     order: 1,
@@ -773,8 +897,8 @@ export const MOCK_BANNERS: Banner[] = [
     title: "Bridal Season 2025",
     subtitle:
       "Make your special day unforgettable with our opulent bridal collection",
-    image: "https://picsum.photos/seed/banner2/1920/800",
-    link: "/shop/bridal-collection",
+    image: "/images/categories/bridal.png",
+    link: "/shop?category=bridal-collection",
     isActive: true,
     order: 2,
   },
@@ -782,8 +906,8 @@ export const MOCK_BANNERS: Banner[] = [
     id: "banner-003",
     title: "New Arrivals",
     subtitle: "Fresh designs inspired by Mughal gardens and Lucknowi heritage",
-    image: "https://picsum.photos/seed/banner3/1920/800",
-    link: "/new-arrivals",
+    image: "/images/categories/kurtas.png",
+    link: "/shop?collection=new-arrivals",
     isActive: true,
     order: 3,
   },
@@ -792,8 +916,8 @@ export const MOCK_BANNERS: Banner[] = [
     title: "The Men's Edit",
     subtitle:
       "Distinguished kurtas for the modern gentleman — silk, cotton, and linen",
-    image: "https://picsum.photos/seed/banner4/1920/800",
-    link: "/shop/mens-kurtas",
+    image: "/images/categories/men-kurtas.png",
+    link: "/shop?category=mens-kurtas",
     isActive: true,
     order: 4,
   },
@@ -802,7 +926,7 @@ export const MOCK_BANNERS: Banner[] = [
     title: "Summer Essentials",
     subtitle:
       "Breathable cottons and sheers with delicate Chikankari — perfect for warm days",
-    image: "https://picsum.photos/seed/banner5/1920/800",
+    image: "/images/categories/dupattas.png",
     link: "/shop?season=summer",
     isActive: true,
     order: 5,
@@ -812,7 +936,7 @@ export const MOCK_BANNERS: Banner[] = [
     title: "Artisan Heritage",
     subtitle:
       "Meet the master karigars whose hands weave magic into every thread",
-    image: "https://picsum.photos/seed/banner6/1920/800",
+    image: "/images/hero/hero-1.png",
     link: "/about#artisans",
     isActive: true,
     order: 6,
@@ -833,8 +957,8 @@ export const MOCK_REVIEWS: Review[] = [
     comment:
       "The Chanderi silk kurta is beyond beautiful. The embroidery is so intricate and fine — you can tell it's genuinely handcrafted. I wore it to a family wedding and received endless compliments. The fabric feels luxurious and the fit is perfect. Worth every rupee.",
     images: [
-      "https://picsum.photos/seed/review1a/400/400",
-      "https://picsum.photos/seed/review1b/400/400",
+      "/images/categories/kurtas.png",
+      "/images/categories/kurtas.png",
     ],
     isVerified: true,
     createdAt: "2025-05-10T14:30:00Z",
@@ -859,7 +983,7 @@ export const MOCK_REVIEWS: Review[] = [
     title: "Beautiful Anarkali, Minor Size Issue",
     comment:
       "The Anarkali is gorgeous — the flare is perfect and the embroidery is stunning. I would have given 5 stars but the bust area runs slightly small, so I'd recommend ordering one size up. The dupatta alone is worth the price! Customer service was helpful when I reached out about sizing.",
-    images: ["https://picsum.photos/seed/review3/400/400"],
+    images: ["/images/categories/anarkali.png"],
     isVerified: true,
     createdAt: "2025-06-01T16:45:00Z",
   },
@@ -889,7 +1013,7 @@ export const MOCK_TESTIMONIALS: Testimonial[] = [
     rating: 5,
     comment:
       "Eifa Couture has completely changed how I view ethnic wear. Every piece feels like wearing art. The craftsmanship is extraordinary, and you can feel the love and heritage in every stitch. My go-to for festive season shopping.",
-    image: "https://picsum.photos/seed/test1/200/200",
+    image: "/images/eifa-logo-header.png",
     productPurchased: "Chanderi Silk Chikankari Kurta",
   },
   {
@@ -899,7 +1023,7 @@ export const MOCK_TESTIMONIALS: Testimonial[] = [
     rating: 5,
     comment:
       "I ordered the bridal lehenga set for my sister's wedding, and it was nothing short of breathtaking. The mukaish and kamdani work sparkled beautifully under lights. Multiple guests asked where she got it. Eifa Couture made her day extra special.",
-    image: "https://picsum.photos/seed/test2/200/200",
+    image: "/images/eifa-logo-header.png",
     productPurchased: "Kamdani Bridal Lehenga Set",
   },
   {
@@ -909,7 +1033,7 @@ export const MOCK_TESTIMONIALS: Testimonial[] = [
     rating: 5,
     comment:
       "Being from Lucknow, I'm very particular about my Chikankari. Eifa Couture lives up to the highest standards. Their men's kurtas use genuine hand-embroidery — not the machine-made imitations flooding the market. Authentic Lucknowi quality.",
-    image: "https://picsum.photos/seed/test3/200/200",
+    image: "/images/eifa-logo-header.png",
     productPurchased: "Classic Men's Chikankari Kurta",
   },
   {
@@ -919,7 +1043,7 @@ export const MOCK_TESTIMONIALS: Testimonial[] = [
     rating: 5,
     comment:
       "The palazzo set I ordered is my most-worn outfit now. It's so comfortable yet looks incredibly elegant. The modal cotton is like butter against the skin, and the Chikankari detailing gets me compliments everywhere. Already eyeing the Anarkali for my next purchase!",
-    image: "https://picsum.photos/seed/test4/200/200",
+    image: "/images/eifa-logo-header.png",
     productPurchased: "Pastel Palazzo Chikankari Set",
   },
   {
@@ -929,7 +1053,7 @@ export const MOCK_TESTIMONIALS: Testimonial[] = [
     rating: 5,
     comment:
       "I've been searching for authentic Chikankari online for years, and Eifa Couture is the first brand that delivers genuine handcrafted pieces. The organza dupatta I bought is a work of art. Their attention to packaging and customer care is equally impressive.",
-    image: "https://picsum.photos/seed/test5/200/200",
+    image: "/images/eifa-logo-header.png",
     productPurchased: "Sheer Organza Chikankari Dupatta",
   },
   {
@@ -939,7 +1063,7 @@ export const MOCK_TESTIMONIALS: Testimonial[] = [
     rating: 5,
     comment:
       "The Chikankari saree from Eifa Couture is hands down the most beautiful saree in my collection. The all-over embroidery, the Mughal-inspired motifs on the pallu — it's museum-quality work that you can actually wear. I feel like royalty every time I drape it.",
-    image: "https://picsum.photos/seed/test6/200/200",
+    image: "/images/eifa-logo-header.png",
     productPurchased: "Georgette Chikankari Saree",
   },
 ];

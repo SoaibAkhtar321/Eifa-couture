@@ -2,7 +2,7 @@ const USP_DATA = [
   {
     title: 'Handcrafted Artistry',
     description:
-      'Every stitch is handcrafted by master karigars of Lucknow, preserving centuries-old techniques.',
+      'Every piece is carefully finished by skilled karigars with patient hand embroidery and refined detailing.',
     icon: (
       <svg
         width="34"
@@ -25,7 +25,7 @@ const USP_DATA = [
   {
     title: 'Premium Fabrics',
     description:
-      'Only the finest Chanderi silk, muslin cotton, georgette, and organza make it to our looms.',
+      'Only selected Chanderi silk, muslin cotton, georgette, organza, and breathable festive fabrics make it to our collections.',
     icon: (
       <svg
         width="34"
@@ -44,9 +44,9 @@ const USP_DATA = [
     ),
   },
   {
-    title: 'Heritage Since 1998',
+    title: 'Comfort Fit',
     description:
-      'Over 25 years of preserving and promoting the art of Lucknowi Chikankari worldwide.',
+      'Our silhouettes are designed for graceful movement, easy styling, and all-day comfort across occasions.',
     icon: (
       <svg
         width="34"
@@ -58,17 +58,17 @@ const USP_DATA = [
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M24 4v4M24 40v4M4 24h4M40 24h4" />
-        <circle cx="24" cy="24" r="16" />
-        <circle cx="24" cy="24" r="8" />
-        <path d="M24 16v8l6 4" />
+        <path d="M16 6h16l6 10-6 26H16L10 16 16 6z" />
+        <path d="M18 6c1.5 4 4 6 6 6s4.5-2 6-6" />
+        <path d="M14 18h20" />
+        <path d="M18 30h12" />
       </svg>
     ),
   },
   {
-    title: 'Free Shipping',
+    title: 'Secure Packaging',
     description:
-      'Complimentary shipping on all orders above ₹2,999. Hand-packed with love and care.',
+      'Each order is neatly checked, folded, and packed with care so your piece reaches you safely.',
     icon: (
       <svg
         width="34"
@@ -80,19 +80,17 @@ const USP_DATA = [
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M4 8h28v24H4z" />
-        <path d="M32 16h8l4 8v8h-12" />
-        <circle cx="14" cy="36" r="4" />
-        <circle cx="38" cy="36" r="4" />
-        <path d="M18 32H4" />
-        <path d="M34 32h-2" />
+        <path d="M8 16l16-8 16 8v20l-16 8-16-8V16z" />
+        <path d="M8 16l16 8 16-8" />
+        <path d="M24 24v20" />
+        <path d="M16 12l16 8" />
       </svg>
     ),
   },
   {
-    title: 'Easy Returns',
+    title: 'Easy Exchange',
     description:
-      '7-day hassle-free returns and 15-day exchanges. Your satisfaction is our promise.',
+      'Enjoy a simple exchange experience if the size or fit does not feel right after delivery.',
     icon: (
       <svg
         width="34"
@@ -113,7 +111,7 @@ const USP_DATA = [
   {
     title: 'Secure Payments',
     description:
-      'Shop with confidence — 100% secure transactions with multiple payment options.',
+      'Shop with confidence through secure payment handling and clear order communication.',
     icon: (
       <svg
         width="34"
@@ -135,7 +133,10 @@ const USP_DATA = [
 
 export default function WhyChooseUsSection() {
   return (
-    <section className="bg-cream py-10 md:py-16 lg:py-24" aria-labelledby="why-choose-heading">
+    <section
+      className="bg-cream py-10 md:py-16 lg:py-24"
+      aria-labelledby="why-choose-heading"
+    >
       <div className="luxury-container">
         <div className="mb-8 text-center md:mb-12">
           <span className="mb-3 block font-body text-[10px] uppercase tracking-[0.28em] text-gold md:text-xs">
@@ -144,12 +145,17 @@ export default function WhyChooseUsSection() {
 
           <h2
             id="why-choose-heading"
-            className="font-heading text-2xl text-charcoal md:text-5xl"
+            className="font-heading text-3xl text-charcoal md:text-5xl"
           >
             Why Choose Us
           </h2>
 
           <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
+
+          <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-charcoal/55 md:text-base md:leading-8">
+            A luxury shopping experience built around craftsmanship, quality,
+            comfort, and careful delivery.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:gap-5 lg:grid-cols-3">
@@ -164,7 +170,7 @@ export default function WhyChooseUsSection() {
                 {usp.icon}
               </div>
 
-              <h3 className="mb-2 font-heading text-lg text-charcoal md:text-xl">
+              <h3 className="mb-2 font-heading text-xl text-charcoal md:text-2xl">
                 {usp.title}
               </h3>
 

@@ -1,58 +1,89 @@
 import Link from 'next/link';
 
-const shopLinks = [
-  { label: 'New Arrivals', href: '/new-arrivals' },
-  { label: 'Best Sellers', href: '/best-sellers' },
-  { label: "Women's Kurtas", href: '/shop/womens-kurtas' },
-  { label: "Men's Kurtas", href: '/shop/mens-kurtas' },
-  { label: 'Sarees', href: '/shop/sarees' },
-  { label: 'Bridal Collection', href: '/shop/bridal-collection' },
+import { SOCIAL_LINKS } from '@/lib/constants';
+import { MOCK_CATEGORIES } from '@/lib/mock-data';
+
+type FooterLink = {
+  label: string;
+  href: string;
+};
+
+const collectionLinks: FooterLink[] = [
+  { label: 'New Arrivals', href: '/shop?collection=new-arrivals' },
+  { label: 'Best Sellers', href: '/shop?collection=best-sellers' },
 ];
 
-const helpLinks = [
+const helpLinks: FooterLink[] = [
   { label: 'Contact Us', href: '/contact' },
-  { label: 'Shipping Policy', href: '/shipping-policy' },
-  { label: 'Return Policy', href: '/return-policy' },
-  { label: 'Privacy Policy', href: '/privacy-policy' },
-  { label: 'Terms & Conditions', href: '/terms' },
+  { label: 'Size Guide', href: '/size-guide' },
+  { label: 'Track Order', href: '/track-order' },
+  { label: 'Wishlist', href: '/wishlist' },
+  { label: 'My Account', href: '/account' },
 ];
+
+const legalLinks: FooterLink[] = [
+  { label: 'Privacy Policy', href: '/privacy-policy' },
+  { label: 'Terms of Service', href: '/terms' },
+  { label: 'Refund Policy', href: '/refund-policy' },
+];
+
+function getCategoryHref(slug: string) {
+  return `/shop?category=${slug}`;
+}
+
+function getShopLinks(): FooterLink[] {
+  const categoryLinks = MOCK_CATEGORIES.filter((category) => category.isActive)
+    .slice()
+    .sort((a, b) => a.order - b.order)
+    .map((category) => ({
+      label: category.name,
+      href: getCategoryHref(category.slug),
+    }));
+
+  return [...collectionLinks, ...categoryLinks];
+}
 
 export default function Footer() {
+  const shopLinks = getShopLinks();
+  const currentYear = new Date().getFullYear();
+
   return (
-    <footer className="bg-charcoal text-white" aria-label="Footer">
-      <div className="luxury-container py-12 md:py-16">
-        <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-4">
-          <div className="lg:col-span-2">
-            <Link href="/" className="inline-block">
-              <span className="block font-heading text-3xl tracking-[0.22em] text-white">
+    <footer className="border-t border-beige bg-ivory">
+      <div className="luxury-container">
+        <div className="grid gap-10 py-12 sm:py-14 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-12 lg:py-16">
+          <div>
+            <Link href="/" className="inline-flex flex-col">
+              <span className="font-heading text-2xl tracking-[0.22em] text-charcoal">
                 EIFA COUTURE
               </span>
-              <span className="mt-1 block font-body text-[10px] uppercase tracking-[0.35em] text-gold">
+
+              <span className="mt-1 font-subheading text-[11px] uppercase tracking-[0.34em] text-gold">
                 Lucknowi Chikankari
               </span>
             </Link>
 
-            <p className="mt-5 max-w-md font-body text-sm leading-relaxed text-white/60">
+            <p className="mt-5 max-w-sm text-sm leading-7 text-charcoal/60">
               Premium handcrafted Lucknowi Chikankari fashion since 1998. Every
-              piece celebrates heritage, patience, and the artistry of skilled
-              karigars.
+              piece celebrates heritage, patience, and refined craftsmanship.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-3">
-              {['Instagram', 'Facebook', 'WhatsApp'].map((item) => (
+              {SOCIAL_LINKS.slice(0, 3).map((link) => (
                 <a
-                  key={item}
-                  href="#"
-                  className="border border-white/15 px-4 py-2 font-body text-[10px] uppercase tracking-[0.18em] text-white/70 transition-colors hover:border-gold hover:text-gold"
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="border border-beige bg-white px-4 py-2 text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
                 >
-                  {item}
+                  {link.name}
                 </a>
               ))}
             </div>
           </div>
 
           <div>
-            <h3 className="font-body text-xs uppercase tracking-[0.25em] text-gold">
+            <h3 className="font-body text-xs font-semibold uppercase tracking-[0.28em] text-charcoal">
               Shop
             </h3>
 
@@ -61,7 +92,7 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="font-body text-sm text-white/65 transition-colors hover:text-gold"
+                    className="font-subheading text-[17px] text-charcoal/60 transition-colors duration-300 hover:text-maroon"
                   >
                     {link.label}
                   </Link>
@@ -71,7 +102,7 @@ export default function Footer() {
           </div>
 
           <div>
-            <h3 className="font-body text-xs uppercase tracking-[0.25em] text-gold">
+            <h3 className="font-body text-xs font-semibold uppercase tracking-[0.28em] text-charcoal">
               Help
             </h3>
 
@@ -80,36 +111,56 @@ export default function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="font-body text-sm text-white/65 transition-colors hover:text-gold"
+                    className="font-subheading text-[17px] text-charcoal/60 transition-colors duration-300 hover:text-maroon"
                   >
                     {link.label}
                   </Link>
                 </li>
               ))}
             </ul>
+          </div>
 
-            <div className="mt-7 border-t border-white/10 pt-5">
-              <p className="font-body text-xs uppercase tracking-[0.2em] text-gold">
-                Contact
-              </p>
-              <p className="mt-3 font-body text-sm text-white/60">
-                Lucknow, Uttar Pradesh
-              </p>
-              <p className="mt-1 font-body text-sm text-white/60">
+          <div>
+            <h3 className="font-body text-xs font-semibold uppercase tracking-[0.28em] text-charcoal">
+              Contact
+            </h3>
+
+            <div className="mt-5 space-y-3 font-subheading text-[17px] text-charcoal/60">
+              <p>Lucknow, Uttar Pradesh</p>
+
+              <a
+                href="mailto:support@eifacouture.com"
+                className="block transition-colors duration-300 hover:text-maroon"
+              >
                 support@eifacouture.com
-              </p>
+              </a>
+
+              <a
+                href="tel:+919876543210"
+                className="block transition-colors duration-300 hover:text-maroon"
+              >
+                +91 98765 43210
+              </a>
             </div>
+
+            <ul className="mt-6 space-y-3">
+              {legalLinks.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="text-xs uppercase tracking-[0.22em] text-charcoal/45 transition-colors duration-300 hover:text-maroon"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
         </div>
 
-        <div className="mt-10 flex flex-col gap-3 border-t border-white/10 pt-6 text-center md:flex-row md:items-center md:justify-between md:text-left">
-          <p className="font-body text-xs text-white/45">
-            © {new Date().getFullYear()} Eifa Couture. All rights reserved.
-          </p>
-
-          <p className="font-body text-xs uppercase tracking-[0.18em] text-white/35">
-            Handcrafted in Lucknow
-          </p>
+        <div className="flex flex-col gap-3 border-t border-beige py-5 text-xs uppercase tracking-[0.22em] text-charcoal/45 sm:flex-row sm:items-center sm:justify-between">
+          <p>© {currentYear} Eifa Couture. All rights reserved.</p>
+          <p>Handcrafted in Lucknow</p>
         </div>
       </div>
     </footer>

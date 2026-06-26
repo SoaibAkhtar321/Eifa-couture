@@ -1,5 +1,7 @@
 'use client';
 
+import { useEffect, useState } from 'react';
+
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -7,23 +9,71 @@ import { motion } from 'framer-motion';
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
 import { useWishlistStore } from '@/store/wishlist-store';
-import type { Product } from '@/types';
+
 import { formatPrice, getDiscountPercentage } from '@/lib/utils';
+
+import type { Product } from '@/types';
 
 interface ShopProductCardProps {
   product: Product;
   index: number;
 }
 
-export default function ShopProductCard({ product, index }: ShopProductCardProps) {
+const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
+  'womens-kurtas': '/images/categories/kurtas.png',
+  'mens-kurtas': '/images/categories/men-kurtas.png',
+  anarkalis: '/images/categories/anarkali.png',
+  dupattas: '/images/categories/dupattas.png',
+  sarees: '/images/categories/sarees.png',
+  'palazzo-sets': '/images/categories/palazzo.png',
+  'bridal-collection': '/images/categories/bridal.png',
+  accessories: '/images/categories/dupattas.png',
+  'crochet-bags': '/images/categories/dupattas.png',
+};
+
+const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
+
+function getProductImage(product: Product) {
+  const image = product.images?.[0];
+
+  if (!image || image.includes('picsum.photos')) {
+    return CATEGORY_FALLBACK_IMAGES[product.category] || DEFAULT_PRODUCT_IMAGE;
+  }
+
+  return image;
+}
+
+export default function ShopProductCard({
+  product,
+  index,
+}: ShopProductCardProps) {
+  const [hasMounted, setHasMounted] = useState(false);
+
   const addItem = useCartStore((state) => state.addItem);
   const openCart = useUIStore((state) => state.openCart);
+
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
-  const isInWishlist = useWishlistStore((state) => state.isInWishlist(product.id));
+  const isInWishlist = useWishlistStore((state) =>
+    state.isInWishlist(product.id)
+  );
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
+
+  const visibleIsInWishlist = hasMounted ? isInWishlist : false;
+  const productImage = getProductImage(product);
 
   const discount = product.compareAtPrice
     ? getDiscountPercentage(product.compareAtPrice, product.price)
     : 0;
+
+  const saveShopScrollPosition = () => {
+    if (typeof window === 'undefined') return;
+
+    sessionStorage.setItem('eifa-shop-scroll-y', String(window.scrollY));
+    sessionStorage.setItem('eifa-restore-shop-scroll', 'true');
+  };
 
   const handleAddToCart = () => {
     const defaultSize = product.sizes[0];
@@ -33,6 +83,10 @@ export default function ShopProductCard({ product, index }: ShopProductCardProps
 
     addItem(product, defaultSize, defaultColor, 1);
     openCart();
+  };
+
+  const handleWishlistClick = () => {
+    toggleWishlist(product.id);
   };
 
   return (
@@ -50,14 +104,17 @@ export default function ShopProductCard({ product, index }: ShopProductCardProps
       <div className="relative overflow-hidden bg-cream">
         <Link
           href={`/product/${product.slug}`}
+          scroll={true}
+          onClick={saveShopScrollPosition}
           aria-label={`View ${product.name}`}
           className="block"
         >
           <div className="relative aspect-[3/4] overflow-hidden">
             <Image
-              src={product.images[0]}
+              src={productImage}
               alt={product.name}
               fill
+              priority={index < 2}
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
               className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
             />
@@ -82,15 +139,15 @@ export default function ShopProductCard({ product, index }: ShopProductCardProps
 
         <button
           type="button"
-          onClick={() => toggleWishlist(product.id)}
+          onClick={handleWishlistClick}
           aria-label={
-            isInWishlist
+            visibleIsInWishlist
               ? `Remove ${product.name} from wishlist`
               : `Add ${product.name} to wishlist`
           }
           className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-ivory/95 text-sm text-maroon shadow-sm transition-all duration-300 hover:bg-maroon hover:text-white"
         >
-          {isInWishlist ? '♥' : '♡'}
+          {visibleIsInWishlist ? '♥' : '♡'}
         </button>
 
         <button
@@ -107,7 +164,12 @@ export default function ShopProductCard({ product, index }: ShopProductCardProps
           {product.fabric}
         </p>
 
-        <Link href={`/product/${product.slug}`} className="group/title">
+        <Link
+          href={`/product/${product.slug}`}
+          scroll={true}
+          onClick={saveShopScrollPosition}
+          className="group/title"
+        >
           <h3 className="font-heading text-lg leading-snug text-charcoal transition-colors duration-300 group-hover/title:text-maroon sm:text-xl">
             {product.name}
           </h3>

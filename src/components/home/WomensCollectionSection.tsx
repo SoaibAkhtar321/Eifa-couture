@@ -47,7 +47,7 @@ export default function WomensCollectionSection() {
 
               <div className="mt-6 md:mt-8">
                 <Link
-                  href="/shop/womens-kurtas"
+                  href="/shop?category=womens-kurtas"
                   className="btn-luxury btn-luxury-primary px-6 py-3 text-[11px] md:px-10 md:py-4 md:text-sm"
                 >
                   Explore Women&apos;s Edit

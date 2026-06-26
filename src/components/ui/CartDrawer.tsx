@@ -10,6 +10,31 @@ import { formatPrice } from '@/lib/utils';
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
 
+import type { Product } from '@/types';
+
+const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
+  'womens-kurtas': '/images/categories/kurtas.png',
+  'mens-kurtas': '/images/categories/men-kurtas.png',
+  anarkalis: '/images/categories/anarkali.png',
+  dupattas: '/images/categories/dupattas.png',
+  sarees: '/images/categories/sarees.png',
+  'palazzo-sets': '/images/categories/palazzo.png',
+  'bridal-collection': '/images/categories/bridal.png',
+  accessories: '/images/categories/accessories.png',
+};
+
+const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
+
+function getCartProductImage(product: Product) {
+  const image = product.images?.[0];
+
+  if (!image || image.includes('picsum.photos')) {
+    return CATEGORY_FALLBACK_IMAGES[product.category] || DEFAULT_PRODUCT_IMAGE;
+  }
+
+  return image;
+}
+
 const backdropVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.3 } },
@@ -51,13 +76,17 @@ export default function CartDrawer() {
   const updateQuantity = useCartStore((state) => state.updateQuantity);
   const total = useCartStore((state) => state.getTotal());
 
+  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const freeShippingDelta = SHIPPING_INFO.freeShippingThreshold - total;
 
   useEffect(() => {
-    document.body.style.overflow = isCartOpen ? 'hidden' : '';
+    if (!isCartOpen) return;
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
 
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = originalOverflow;
     };
   }, [isCartOpen]);
 
@@ -87,9 +116,20 @@ export default function CartDrawer() {
             aria-modal="true"
             aria-label="Shopping bag"
           >
-            <div className="flex items-center justify-between border-b border-beige px-6 py-5">
+            <div className="flex items-center justify-between border-b border-beige px-5 py-4 sm:px-6 sm:py-5">
               <div className="flex items-center gap-3">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-charcoal" aria-hidden="true">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-charcoal"
+                  aria-hidden="true"
+                >
                   <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                   <line x1="3" y1="6" x2="21" y2="6" />
                   <path d="M16 10a4 4 0 0 1-8 0" />
@@ -100,17 +140,27 @@ export default function CartDrawer() {
                 </h2>
 
                 <span className="font-body text-xs tracking-wide text-charcoal/40">
-                  ({items.length})
+                  ({itemCount})
                 </span>
               </div>
 
               <button
                 onClick={closeCart}
-                className="-mr-2 p-2 text-charcoal/50 transition-colors hover:text-charcoal"
+                className="-mr-2 flex h-10 w-10 items-center justify-center text-charcoal/50 transition-colors hover:text-charcoal"
                 aria-label="Close shopping bag"
                 type="button"
               >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
                 </svg>
@@ -118,10 +168,14 @@ export default function CartDrawer() {
             </div>
 
             {items.length > 0 && (
-              <div className="border-b border-beige/50 bg-cream/50 px-6 py-3">
+              <div className="border-b border-beige/50 bg-cream/50 px-5 py-3 sm:px-6">
                 {freeShippingDelta > 0 ? (
                   <p className="text-center font-subheading text-[13px] tracking-wide text-charcoal/70">
-                    Add <span className="font-medium text-maroon">{formatPrice(freeShippingDelta)}</span> more for complimentary shipping
+                    Add{' '}
+                    <span className="font-medium text-maroon">
+                      {formatPrice(freeShippingDelta)}
+                    </span>{' '}
+                    more for complimentary shipping
                   </p>
                 ) : (
                   <p className="text-center font-subheading text-[13px] tracking-wide text-gold">
@@ -148,18 +202,30 @@ export default function CartDrawer() {
             <div className="flex-1 overflow-y-auto">
               {items.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center px-6 py-16 text-center">
-                  <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="0.8" strokeLinecap="round" strokeLinejoin="round" className="mb-6 text-beige" aria-hidden="true">
+                  <svg
+                    width="56"
+                    height="56"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="0.8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="mb-6 text-beige"
+                    aria-hidden="true"
+                  >
                     <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
                     <line x1="3" y1="6" x2="21" y2="6" />
                     <path d="M16 10a4 4 0 0 1-8 0" />
                   </svg>
 
-                  <h3 className="mb-2 font-heading text-lg text-charcoal">
+                  <h3 className="mb-2 font-heading text-xl text-charcoal">
                     Your bag is empty
                   </h3>
 
-                  <p className="mb-8 max-w-[260px] font-subheading text-sm tracking-wide text-charcoal/50">
-                    Discover our curated collection of handcrafted Chikankari pieces
+                  <p className="mb-8 max-w-[280px] font-subheading text-sm leading-6 tracking-wide text-charcoal/50">
+                    Discover handcrafted Chikankari pieces made for timeless
+                    elegance.
                   </p>
 
                   <Link
@@ -175,6 +241,25 @@ export default function CartDrawer() {
                   <AnimatePresence initial={false}>
                     {items.map((item) => {
                       const itemKey = `${item.product.id}-${item.selectedSize}-${item.selectedColor}`;
+                      const productImage = getCartProductImage(item.product);
+
+                      const handleDecreaseQuantity = () => {
+                        if (item.quantity <= 1) {
+                          removeItem(
+                            item.product.id,
+                            item.selectedSize,
+                            item.selectedColor
+                          );
+                          return;
+                        }
+
+                        updateQuantity(
+                          item.product.id,
+                          item.selectedSize,
+                          item.selectedColor,
+                          item.quantity - 1
+                        );
+                      };
 
                       return (
                         <motion.li
@@ -184,41 +269,49 @@ export default function CartDrawer() {
                           animate="visible"
                           exit="exit"
                           layout
-                          className="px-6 py-5"
+                          className="px-5 py-5 sm:px-6"
                         >
                           <div className="flex gap-4">
-                            <div className="relative h-[100px] w-[80px] flex-shrink-0 overflow-hidden bg-beige">
+                            <Link
+                              href={`/product/${item.product.slug}`}
+                              onClick={closeCart}
+                              className="relative h-[108px] w-[84px] flex-shrink-0 overflow-hidden bg-beige"
+                              aria-label={`View ${item.product.name}`}
+                            >
                               <Image
-                                src={item.product.images[0] || '/placeholder.jpg'}
+                                src={productImage}
                                 alt={item.product.name}
                                 fill
                                 className="object-cover"
-                                sizes="80px"
+                                sizes="84px"
                               />
-                            </div>
+                            </Link>
 
                             <div className="min-w-0 flex-1">
-                              <h4 className="mb-1 truncate font-subheading text-[15px] leading-snug text-charcoal">
-                                {item.product.name}
-                              </h4>
+                              <Link
+                                href={`/product/${item.product.slug}`}
+                                onClick={closeCart}
+                                className="mb-1 block"
+                              >
+                                <h4 className="line-clamp-2 font-subheading text-[15px] leading-snug text-charcoal transition-colors duration-300 hover:text-maroon">
+                                  {item.product.name}
+                                </h4>
+                              </Link>
 
-                              <div className="mb-3 flex items-center gap-2 font-body text-[11px] uppercase tracking-wider text-charcoal/50">
+                              <div className="mb-3 flex flex-wrap items-center gap-2 font-body text-[11px] uppercase tracking-wider text-charcoal/50">
                                 <span>{item.selectedSize}</span>
                                 <span className="text-beige">|</span>
                                 <span>{item.selectedColor}</span>
                               </div>
 
-                              <div className="flex items-center justify-between">
+                              <p className="mb-3 font-body text-sm tracking-wide text-charcoal">
+                                {formatPrice(item.product.price)}
+                              </p>
+
+                              <div className="flex items-center justify-between gap-3">
                                 <div className="flex items-center border border-beige">
                                   <button
-                                    onClick={() =>
-                                      updateQuantity(
-                                        item.product.id,
-                                        item.selectedSize,
-                                        item.selectedColor,
-                                        item.quantity - 1
-                                      )
-                                    }
+                                    onClick={handleDecreaseQuantity}
                                     className="flex h-8 w-8 items-center justify-center text-charcoal/50 transition-colors hover:bg-cream hover:text-charcoal"
                                     aria-label={`Decrease quantity of ${item.product.name}`}
                                     type="button"
@@ -248,7 +341,9 @@ export default function CartDrawer() {
                                 </div>
 
                                 <p className="font-body text-sm tracking-wide text-charcoal">
-                                  {formatPrice(item.product.price * item.quantity)}
+                                  {formatPrice(
+                                    item.product.price * item.quantity
+                                  )}
                                 </p>
                               </div>
                             </div>
@@ -261,7 +356,7 @@ export default function CartDrawer() {
                                   item.selectedColor
                                 )
                               }
-                              className="self-start p-1 text-charcoal/30 transition-colors hover:text-maroon"
+                              className="self-start p-1 text-2xl leading-none text-charcoal/30 transition-colors hover:text-maroon"
                               aria-label={`Remove ${item.product.name} from bag`}
                               type="button"
                             >
@@ -277,39 +372,40 @@ export default function CartDrawer() {
             </div>
 
             {items.length > 0 && (
-              <div className="border-t border-beige">
-                <div className="px-6 py-4">
+              <div className="border-t border-beige bg-ivory">
+                <div className="px-5 py-4 sm:px-6">
                   <div className="mb-1 flex items-center justify-between">
                     <span className="font-body text-xs uppercase tracking-[0.14em] text-charcoal/50">
                       Subtotal
                     </span>
-                    <span className="font-heading text-lg text-charcoal">
+
+                    <span className="font-heading text-xl text-charcoal">
                       {formatPrice(total)}
                     </span>
                   </div>
 
                   <p className="font-subheading text-[12px] tracking-wide text-charcoal/40">
-                    Taxes and shipping calculated at checkout
+                    Taxes and shipping will be calculated at checkout.
                   </p>
                 </div>
 
-                <div className="mx-6 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent" />
+                <div className="mx-5 h-px bg-gradient-to-r from-transparent via-gold/30 to-transparent sm:mx-6" />
 
-                <div className="space-y-3 px-6 py-5">
+                <div className="space-y-3 px-5 py-5 sm:px-6">
                   <Link
-                    href="/checkout"
-                    onClick={closeCart}
-                    className="btn-luxury btn-luxury-primary w-full text-center"
-                  >
-                    Checkout
-                  </Link>
+  href="/checkout"
+  onClick={closeCart}
+  className="btn-luxury btn-luxury-primary w-full text-center"
+>
+  Checkout
+</Link>
 
                   <Link
-                    href="/cart"
+                    href="/shop"
                     onClick={closeCart}
                     className="btn-luxury btn-luxury-secondary w-full text-center"
                   >
-                    View Bag
+                    Continue Shopping
                   </Link>
                 </div>
               </div>

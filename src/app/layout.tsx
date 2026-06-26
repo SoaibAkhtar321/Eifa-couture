@@ -102,6 +102,7 @@ export default function RootLayout({
       className={`${playfairDisplay.variable} ${cormorantGaramond.variable} ${inter.variable}`}
     >
       <body className="min-h-screen bg-ivory font-body text-charcoal antialiased">
+    
         {children}
       </body>
     </html>

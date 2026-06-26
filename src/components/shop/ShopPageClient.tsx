@@ -1,14 +1,28 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+
 import { motion } from 'framer-motion';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 import ShopProductCard from '@/components/shop/ShopProductCard';
+
 import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '@/lib/mock-data';
+
 import type { Product, SortOption } from '@/types';
 
 const PRODUCTS_PER_PAGE = 8;
+
+type CollectionFilter = 'all' | 'new-arrivals' | 'best-sellers';
+
+type PriceFilter =
+  | 'all'
+  | 'under-2000'
+  | '2000-4000'
+  | '4000-7000'
+  | '7000-plus';
+
+type AvailabilityFilter = 'all' | 'in-stock';
 
 const sortOptions: { label: string; value: SortOption }[] = [
   { label: 'Newest First', value: 'newest' },
@@ -18,45 +32,140 @@ const sortOptions: { label: string; value: SortOption }[] = [
   { label: 'Name: A to Z', value: 'name-a-z' },
 ];
 
-const validCollections = ['new-arrivals', 'best-sellers'] as const;
+const priceFilterOptions: { label: string; value: PriceFilter }[] = [
+  { label: 'All Prices', value: 'all' },
+  { label: 'Under ₹2,000', value: 'under-2000' },
+  { label: '₹2,000 - ₹4,000', value: '2000-4000' },
+  { label: '₹4,000 - ₹7,000', value: '4000-7000' },
+  { label: 'Above ₹7,000', value: '7000-plus' },
+];
+
+function getCollectionFromUrl(value: string | null): CollectionFilter {
+  if (value === 'new-arrivals' || value === 'best-sellers') {
+    return value;
+  }
+
+  return 'all';
+}
+
+function getCategoryBySlug(slug: string) {
+  return MOCK_CATEGORIES.find((category) => category.slug === slug);
+}
+
+function isProductInStock(product: Product) {
+  return Object.values(product.stock).some((quantity) => quantity > 0);
+}
+
+function productMatchesPrice(product: Product, priceFilter: PriceFilter) {
+  switch (priceFilter) {
+    case 'under-2000':
+      return product.price < 2000;
+
+    case '2000-4000':
+      return product.price >= 2000 && product.price <= 4000;
+
+    case '4000-7000':
+      return product.price > 4000 && product.price <= 7000;
+
+    case '7000-plus':
+      return product.price > 7000;
+
+    case 'all':
+    default:
+      return true;
+  }
+}
+
+function productMatchesSearch(product: Product, searchQuery: string) {
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+
+  if (!normalizedSearch) return true;
+
+  const searchableText = [
+    product.name,
+    product.shortDescription,
+    product.description,
+    product.category,
+    product.subcategory,
+    product.fabric,
+    ...(product.tags ?? []),
+  ]
+    .join(' ')
+    .toLowerCase();
+
+  return searchableText.includes(normalizedSearch);
+}
 
 function sortProducts(products: Product[], sortBy: SortOption) {
-  const sorted = [...products];
+  const sortedProducts = [...products];
 
   switch (sortBy) {
     case 'price-low-high':
-      return sorted.sort((a, b) => a.price - b.price);
+      return sortedProducts.sort((a, b) => a.price - b.price);
 
     case 'price-high-low':
-      return sorted.sort((a, b) => b.price - a.price);
+      return sortedProducts.sort((a, b) => b.price - a.price);
 
     case 'popularity':
-      return sorted.sort(
+      return sortedProducts.sort(
         (a, b) => Number(b.isBestSeller) - Number(a.isBestSeller)
       );
 
     case 'name-a-z':
-      return sorted.sort((a, b) => a.name.localeCompare(b.name));
+      return sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
 
     case 'name-z-a':
-      return sorted.sort((a, b) => b.name.localeCompare(a.name));
+      return sortedProducts.sort((a, b) => b.name.localeCompare(a.name));
 
     case 'rating':
     case 'newest':
     default:
-      return sorted.sort(
+      return sortedProducts.sort(
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
   }
 }
 
-function getCollectionFromUrl(collection: string | null) {
-  if (!collection) return '';
+function getPageTitle(categorySlug: string, collection: CollectionFilter) {
+  if (collection === 'new-arrivals') return 'New Arrivals';
+  if (collection === 'best-sellers') return 'Best Sellers';
 
-  return validCollections.includes(collection as (typeof validCollections)[number])
-    ? collection
-    : '';
+  if (categorySlug !== 'all') {
+    const activeCategory = getCategoryBySlug(categorySlug);
+    return activeCategory?.name ?? 'The Collection';
+  }
+
+  return 'The Collection';
+}
+
+function getPageDescription(categorySlug: string, collection: CollectionFilter) {
+  if (collection === 'new-arrivals') {
+    return 'Explore the newest handcrafted Chikankari pieces from Eifa Couture.';
+  }
+
+  if (collection === 'best-sellers') {
+    return 'Discover the most loved handcrafted pieces chosen by our customers.';
+  }
+
+  if (categorySlug !== 'all') {
+    const activeCategory = getCategoryBySlug(categorySlug);
+
+    return (
+      activeCategory?.description ??
+      'Discover handcrafted pieces shaped by Lucknowi heritage and quiet luxury.'
+    );
+  }
+
+  return 'Discover handcrafted pieces shaped by Lucknowi heritage, quiet luxury, and the patience of master karigars.';
+}
+
+function chipClass(isActive: boolean) {
+  return `shrink-0 border px-4 py-3 text-[11px] font-medium uppercase tracking-[0.16em] transition-colors duration-300 ${
+    isActive
+      ? 'border-maroon bg-maroon text-white'
+      : 'border-charcoal/15 bg-white text-charcoal hover:border-gold hover:text-maroon'
+  }`;
 }
 
 export default function ShopPageClient() {
@@ -64,239 +173,297 @@ export default function ShopPageClient() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
+  const rawCategoryFromUrl = searchParams.get('category') ?? 'all';
+  const collectionFromUrl = getCollectionFromUrl(searchParams.get('collection'));
+
+  const [sortBy, setSortBy] = useState<SortOption>('newest');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedSize, setSelectedSize] = useState('all');
+  const [selectedFabric, setSelectedFabric] = useState('all');
+  const [selectedPrice, setSelectedPrice] = useState<PriceFilter>('all');
+  const [availability, setAvailability] = useState<AvailabilityFilter>('all');
+  const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
+
   const activeCategories = useMemo(
     () =>
-      MOCK_CATEGORIES.filter((category) => category.isActive).sort(
-        (a, b) => a.order - b.order
-      ),
+      MOCK_CATEGORIES.filter((category) => category.isActive)
+        .slice()
+        .sort((a, b) => a.order - b.order),
     []
   );
 
-  const categoryFromUrl = searchParams.get('category') ?? 'all';
-  const collectionFromUrl = getCollectionFromUrl(searchParams.get('collection'));
-
-  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
-  const [selectedCollection, setSelectedCollection] = useState(collectionFromUrl);
-  const [sortBy, setSortBy] = useState<SortOption>(
-    collectionFromUrl === 'best-sellers' ? 'popularity' : 'newest'
+  const activeCategorySlugs = useMemo(
+    () => new Set(activeCategories.map((category) => category.slug)),
+    [activeCategories]
   );
-  const [searchQuery, setSearchQuery] = useState('');
-  const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
 
-  useEffect(() => {
-    setSelectedCategory(categoryFromUrl);
-    setSelectedCollection(collectionFromUrl);
-    setSortBy(collectionFromUrl === 'best-sellers' ? 'popularity' : 'newest');
-    setVisibleCount(PRODUCTS_PER_PAGE);
-  }, [categoryFromUrl, collectionFromUrl]);
+  const categoryFromUrl = useMemo(() => {
+    if (rawCategoryFromUrl === 'all') return 'all';
+
+    return activeCategorySlugs.has(rawCategoryFromUrl)
+      ? rawCategoryFromUrl
+      : 'all';
+  }, [activeCategorySlugs, rawCategoryFromUrl]);
+
+  const effectiveCategory =
+    collectionFromUrl === 'all' ? categoryFromUrl : 'all';
+
+  const activeProducts = useMemo(
+    () => MOCK_PRODUCTS.filter((product) => product.isActive),
+    []
+  );
+
+  const availableSizes = useMemo(() => {
+    return Array.from(
+      new Set(activeProducts.flatMap((product) => product.sizes))
+    ).sort();
+  }, [activeProducts]);
+
+  const availableFabrics = useMemo(() => {
+    return Array.from(
+      new Set(activeProducts.map((product) => product.fabric).filter(Boolean))
+    ).sort((a, b) => a.localeCompare(b));
+  }, [activeProducts]);
+
+  const pageTitle = getPageTitle(effectiveCategory, collectionFromUrl);
+  const pageDescription = getPageDescription(
+    effectiveCategory,
+    collectionFromUrl
+  );
 
   const filteredProducts = useMemo(() => {
-    const normalizedSearch = searchQuery.trim().toLowerCase();
-
-    const filtered = MOCK_PRODUCTS.filter((product) => {
+    const filtered = activeProducts.filter((product) => {
       const matchesCategory =
-        selectedCategory === 'all' || product.category === selectedCategory;
+        effectiveCategory === 'all' || product.category === effectiveCategory;
 
       const matchesCollection =
-        selectedCollection === '' ||
-        (selectedCollection === 'new-arrivals' && product.isNewArrival) ||
-        (selectedCollection === 'best-sellers' && product.isBestSeller);
+        collectionFromUrl === 'all' ||
+        (collectionFromUrl === 'new-arrivals' && product.isNewArrival) ||
+        (collectionFromUrl === 'best-sellers' && product.isBestSeller);
 
-      const matchesSearch =
-        normalizedSearch.length === 0 ||
-        product.name.toLowerCase().includes(normalizedSearch) ||
-        product.shortDescription.toLowerCase().includes(normalizedSearch) ||
-        product.fabric.toLowerCase().includes(normalizedSearch) ||
-        product.tags.some((tag) => tag.toLowerCase().includes(normalizedSearch));
+      const matchesSearch = productMatchesSearch(product, searchQuery);
+
+      const matchesSize =
+        selectedSize === 'all' || product.sizes.includes(selectedSize);
+
+      const matchesFabric =
+        selectedFabric === 'all' || product.fabric === selectedFabric;
+
+      const matchesPrice = productMatchesPrice(product, selectedPrice);
+
+      const matchesAvailability =
+        availability === 'all' || isProductInStock(product);
 
       return (
-        product.isActive &&
         matchesCategory &&
         matchesCollection &&
-        matchesSearch
+        matchesSearch &&
+        matchesSize &&
+        matchesFabric &&
+        matchesPrice &&
+        matchesAvailability
       );
     });
 
     return sortProducts(filtered, sortBy);
-  }, [searchQuery, selectedCategory, selectedCollection, sortBy]);
+  }, [
+    activeProducts,
+    availability,
+    collectionFromUrl,
+    effectiveCategory,
+    searchQuery,
+    selectedFabric,
+    selectedPrice,
+    selectedSize,
+    sortBy,
+  ]);
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
+  useLayoutEffect(() => {
+  const shouldRestore = sessionStorage.getItem('eifa-restore-shop-scroll');
+  const savedScrollY = sessionStorage.getItem('eifa-shop-scroll-y');
+
+  if (shouldRestore !== 'true' || !savedScrollY) return;
+
+  const scrollY = Number(savedScrollY);
+
+  if (Number.isNaN(scrollY)) return;
+
+  const html = document.documentElement;
+  const previousScrollBehavior = html.style.scrollBehavior;
+
+  html.style.scrollBehavior = 'auto';
+
+  const restoreScroll = () => {
+    window.scrollTo({
+      top: scrollY,
+      left: 0,
+      behavior: 'auto',
+    });
+  };
+
+  restoreScroll();
+
+  const frame = window.requestAnimationFrame(restoreScroll);
+
+  const timeout = window.setTimeout(() => {
+    restoreScroll();
+
+    sessionStorage.removeItem('eifa-restore-shop-scroll');
+    sessionStorage.removeItem('eifa-shop-scroll-y');
+
+    html.style.scrollBehavior = previousScrollBehavior;
+  }, 120);
+
+  return () => {
+    window.cancelAnimationFrame(frame);
+    window.clearTimeout(timeout);
+    html.style.scrollBehavior = previousScrollBehavior;
+  };
+}, []);
   const canLoadMore = visibleCount < filteredProducts.length;
 
-  const activeCategory = activeCategories.find(
-    (category) => category.slug === selectedCategory
-  );
+  const isAllActive = effectiveCategory === 'all' && collectionFromUrl === 'all';
 
-  const updateShopUrl = (params: { category?: string; collection?: string }) => {
-    const nextParams = new URLSearchParams();
+  const hasActiveFilters =
+    !isAllActive ||
+    searchQuery.trim().length > 0 ||
+    sortBy !== 'newest' ||
+    selectedSize !== 'all' ||
+    selectedFabric !== 'all' ||
+    selectedPrice !== 'all' ||
+    availability !== 'all';
 
-    if (params.category && params.category !== 'all') {
-      nextParams.set('category', params.category);
+  useEffect(() => {
+    setVisibleCount(PRODUCTS_PER_PAGE);
+  }, [
+    collectionFromUrl,
+    effectiveCategory,
+    searchQuery,
+    selectedSize,
+    selectedFabric,
+    selectedPrice,
+    availability,
+    sortBy,
+  ]);
+
+  const updateShopUrl = (params: {
+    category?: string;
+    collection?: CollectionFilter;
+  }) => {
+    const nextParams = new URLSearchParams(searchParams.toString());
+
+    if (params.category !== undefined) {
+      if (params.category === 'all') {
+        nextParams.delete('category');
+      } else {
+        nextParams.set('category', params.category);
+      }
+
+      nextParams.delete('collection');
     }
 
-    if (params.collection) {
-      nextParams.set('collection', params.collection);
+    if (params.collection !== undefined) {
+      if (params.collection === 'all') {
+        nextParams.delete('collection');
+      } else {
+        nextParams.set('collection', params.collection);
+      }
+
+      nextParams.delete('category');
     }
 
     const queryString = nextParams.toString();
-    router.push(queryString ? `${pathname}?${queryString}` : pathname);
+
+    router.push(queryString ? `${pathname}?${queryString}` : pathname, {
+      scroll: false,
+    });
   };
 
   const handleCategoryChange = (categorySlug: string) => {
-    setSelectedCategory(categorySlug);
-    setSelectedCollection('');
-    setVisibleCount(PRODUCTS_PER_PAGE);
     updateShopUrl({ category: categorySlug });
   };
 
-  const handleCollectionChange = (collectionSlug: string) => {
-    setSelectedCategory('all');
-    setSelectedCollection(collectionSlug);
-    setSortBy(collectionSlug === 'best-sellers' ? 'popularity' : 'newest');
-    setVisibleCount(PRODUCTS_PER_PAGE);
-    updateShopUrl({ collection: collectionSlug });
+  const handleCollectionChange = (collection: CollectionFilter) => {
+    updateShopUrl({ collection });
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value);
-    setVisibleCount(PRODUCTS_PER_PAGE);
-  };
-
-  const handleSortChange = (value: SortOption) => {
-    setSortBy(value);
-    setVisibleCount(PRODUCTS_PER_PAGE);
-  };
-
-  const handleResetFilters = () => {
-    setSelectedCategory('all');
-    setSelectedCollection('');
+  const resetFilters = () => {
     setSearchQuery('');
     setSortBy('newest');
+    setSelectedSize('all');
+    setSelectedFabric('all');
+    setSelectedPrice('all');
+    setAvailability('all');
     setVisibleCount(PRODUCTS_PER_PAGE);
-    router.push(pathname);
+    router.push(pathname, { scroll: false });
   };
 
-  const pageTitle =
-    selectedCollection === 'new-arrivals'
-      ? 'New Arrivals'
-      : selectedCollection === 'best-sellers'
-        ? 'Best Sellers'
-        : activeCategory
-          ? activeCategory.name
-          : 'Shop the Art of';
-
-  const pageHighlight =
-    selectedCollection === 'new-arrivals'
-      ? 'Fresh Chikankari'
-      : selectedCollection === 'best-sellers'
-        ? 'Loved Pieces'
-        : activeCategory
-          ? 'Collection'
-          : 'Chikankari';
-
   return (
-    <div className="bg-ivory">
-      <section className="relative overflow-hidden bg-cream pb-14 pt-32 sm:pb-18 sm:pt-36 lg:pb-24 lg:pt-44">
-        <div className="absolute inset-0 texture-grain" />
-
-        <div className="luxury-container relative z-10">
+    <main className="bg-ivory">
+      <section className="border-b border-beige bg-gradient-to-b from-cream/70 to-ivory">
+        <div className="luxury-container py-12 sm:py-16 lg:py-20">
           <motion.div
-            initial={{ opacity: 0, y: 28 }}
+            initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+            transition={{ duration: 0.55, ease: 'easeOut' }}
             className="max-w-3xl"
           >
-            <p className="mb-4 text-xs font-medium uppercase tracking-[0.32em] text-gold-dark">
-              The Collection
+            <p className="mb-4 text-xs font-medium uppercase tracking-[0.34em] text-gold">
+              Curated Catalogue
             </p>
 
-            <h1 className="font-heading text-5xl leading-[0.95] text-charcoal sm:text-6xl lg:text-7xl">
+            <h1 className="font-heading text-4xl font-medium leading-tight text-charcoal sm:text-5xl lg:text-6xl">
               {pageTitle}
-              <span className="block text-gradient-maroon">{pageHighlight}</span>
             </h1>
 
-            <p className="mt-6 max-w-2xl text-base leading-8 text-charcoal/65 sm:text-lg">
-              Discover handcrafted pieces shaped by Lucknowi heritage, quiet luxury,
-              and the patience of master karigars.
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-charcoal/60 sm:text-base sm:leading-8">
+              {pageDescription}
             </p>
           </motion.div>
-
-          <div className="mt-10 grid gap-4 border-y border-gold/25 py-5 sm:grid-cols-3">
-            {[
-              ['Since', '1998'],
-              ['Craft', 'Hand Embroidered'],
-              ['Origin', 'Lucknow'],
-            ].map(([label, value]) => (
-              <div key={label}>
-                <p className="text-[10px] uppercase tracking-[0.28em] text-charcoal/45">
-                  {label}
-                </p>
-                <p className="mt-1 font-subheading text-2xl text-maroon">
-                  {value}
-                </p>
-              </div>
-            ))}
-          </div>
         </div>
       </section>
 
-      <section className="section-padding">
-        <div className="luxury-container">
-          <div className="mb-8 flex flex-col gap-5 lg:mb-12 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="text-xs font-medium uppercase tracking-[0.28em] text-gold-dark">
-                Curated Catalogue
-              </p>
+      <section className="luxury-container py-8 sm:py-10 lg:py-14">
+        <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.3em] text-gold">
+              Products
+            </p>
 
-              <h2 className="mt-3 font-heading text-3xl text-charcoal sm:text-4xl">
-                {filteredProducts.length} handcrafted pieces
-              </h2>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-[1fr_220px] lg:w-[560px]">
-              <label className="relative block">
-                <span className="sr-only">Search products</span>
-                <input
-                  type="search"
-                  value={searchQuery}
-                  onChange={(event) => handleSearchChange(event.target.value)}
-                  placeholder="Search kurtas, sarees, dupattas..."
-                  className="h-12 w-full border border-charcoal/15 bg-white px-4 text-sm text-charcoal outline-none transition-colors duration-300 placeholder:text-charcoal/35 focus:border-gold"
-                />
-              </label>
-
-              <label className="relative block">
-                <span className="sr-only">Sort products</span>
-                <select
-                  value={sortBy}
-                  onChange={(event) =>
-                    handleSortChange(event.target.value as SortOption)
-                  }
-                  className="h-12 w-full appearance-none border border-charcoal/15 bg-white px-4 text-sm text-charcoal outline-none transition-colors duration-300 focus:border-gold"
-                >
-                  {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-
-                <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-xs text-charcoal/50">
-                  ↓
-                </span>
-              </label>
-            </div>
+            <h2 className="mt-2 font-heading text-3xl text-charcoal sm:text-4xl">
+              {filteredProducts.length}{' '}
+              {filteredProducts.length === 1 ? 'piece' : 'handcrafted pieces'}
+            </h2>
           </div>
 
-          <div className="mb-8 flex gap-2 overflow-x-auto pb-2 lg:hidden">
+          {hasActiveFilters && (
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="w-fit text-xs font-medium uppercase tracking-[0.22em] text-maroon transition-colors hover:text-gold"
+            >
+              Clear All Filters
+            </button>
+          )}
+        </div>
+
+        <div className="mb-8 border border-beige bg-white p-4 shadow-sm sm:p-5 lg:p-6">
+          <div className="mb-5">
+            <p className="font-body text-[10px] uppercase tracking-[0.28em] text-gold">
+              Filters & Sorting
+            </p>
+
+            <h3 className="mt-1 font-heading text-3xl text-charcoal">
+              Refine Products
+            </h3>
+          </div>
+
+          <div className="mb-5 flex gap-3 overflow-x-auto pb-2">
             <button
               type="button"
               onClick={() => handleCategoryChange('all')}
-              className={`shrink-0 border px-5 py-3 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-300 ${
-                selectedCategory === 'all' && selectedCollection === ''
-                  ? 'border-maroon bg-maroon text-white'
-                  : 'border-charcoal/15 bg-white text-charcoal hover:border-gold'
-              }`}
+              className={chipClass(isAllActive)}
             >
               All
             </button>
@@ -304,212 +471,163 @@ export default function ShopPageClient() {
             <button
               type="button"
               onClick={() => handleCollectionChange('new-arrivals')}
-              className={`shrink-0 border px-5 py-3 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-300 ${
-                selectedCollection === 'new-arrivals'
-                  ? 'border-maroon bg-maroon text-white'
-                  : 'border-charcoal/15 bg-white text-charcoal hover:border-gold'
-              }`}
+              className={chipClass(collectionFromUrl === 'new-arrivals')}
             >
-              New
+              New Arrivals
             </button>
 
             <button
               type="button"
               onClick={() => handleCollectionChange('best-sellers')}
-              className={`shrink-0 border px-5 py-3 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-300 ${
-                selectedCollection === 'best-sellers'
-                  ? 'border-maroon bg-maroon text-white'
-                  : 'border-charcoal/15 bg-white text-charcoal hover:border-gold'
-              }`}
+              className={chipClass(collectionFromUrl === 'best-sellers')}
             >
               Best Sellers
             </button>
 
-            {activeCategories.map((category) => (
-              <button
-                key={category.id}
-                type="button"
-                onClick={() => handleCategoryChange(category.slug)}
-                className={`shrink-0 border px-5 py-3 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-300 ${
-                  selectedCategory === category.slug
-                    ? 'border-maroon bg-maroon text-white'
-                    : 'border-charcoal/15 bg-white text-charcoal hover:border-gold'
-                }`}
-              >
-                {category.name}
-              </button>
-            ))}
+            {activeCategories.map((category) => {
+              const isCategoryActive =
+                effectiveCategory === category.slug &&
+                collectionFromUrl === 'all';
+
+              return (
+                <button
+                  key={category.slug}
+                  type="button"
+                  onClick={() => handleCategoryChange(category.slug)}
+                  className={chipClass(isCategoryActive)}
+                >
+                  {category.name}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="grid gap-10 lg:grid-cols-[280px_1fr]">
-            <aside className="hidden lg:block">
-              <div className="sticky top-28 border border-beige bg-white p-6">
-                <div className="mb-6 border-b border-beige pb-5">
-                  <p className="text-xs font-medium uppercase tracking-[0.26em] text-gold-dark">
-                    Refine
-                  </p>
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+            <input
+              type="search"
+              value={searchQuery}
+              onChange={(event) => setSearchQuery(event.target.value)}
+              placeholder="Search products..."
+              className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none transition-colors placeholder:text-charcoal/35 focus:border-gold sm:col-span-2 lg:col-span-1 xl:col-span-2"
+            />
 
-                  <h3 className="mt-2 font-heading text-2xl text-charcoal">
-                    Collections
-                  </h3>
-                </div>
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value as SortOption)}
+              className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+            >
+              {sortOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  Sort: {option.label}
+                </option>
+              ))}
+            </select>
 
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => handleCategoryChange('all')}
-                    className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors duration-300 ${
-                      selectedCategory === 'all' && selectedCollection === ''
-                        ? 'bg-cream text-maroon'
-                        : 'text-charcoal/70 hover:bg-cream hover:text-maroon'
-                    }`}
-                  >
-                    <span>All Collections</span>
-                    <span>
-                      {MOCK_PRODUCTS.filter((product) => product.isActive).length}
-                    </span>
-                  </button>
+            <select
+              value={selectedSize}
+              onChange={(event) => setSelectedSize(event.target.value)}
+              className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+            >
+              <option value="all">All Sizes</option>
+              {availableSizes.map((size) => (
+                <option key={size} value={size}>
+                  Size {size}
+                </option>
+              ))}
+            </select>
 
-                  <button
-                    type="button"
-                    onClick={() => handleCollectionChange('new-arrivals')}
-                    className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors duration-300 ${
-                      selectedCollection === 'new-arrivals'
-                        ? 'bg-cream text-maroon'
-                        : 'text-charcoal/70 hover:bg-cream hover:text-maroon'
-                    }`}
-                  >
-                    <span>New Arrivals</span>
-                    <span>
-                      {
-                        MOCK_PRODUCTS.filter(
-                          (product) => product.isActive && product.isNewArrival
-                        ).length
-                      }
-                    </span>
-                  </button>
+            <select
+              value={selectedFabric}
+              onChange={(event) => setSelectedFabric(event.target.value)}
+              className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+            >
+              <option value="all">All Fabrics</option>
+              {availableFabrics.map((fabric) => (
+                <option key={fabric} value={fabric}>
+                  {fabric}
+                </option>
+              ))}
+            </select>
 
-                  <button
-                    type="button"
-                    onClick={() => handleCollectionChange('best-sellers')}
-                    className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors duration-300 ${
-                      selectedCollection === 'best-sellers'
-                        ? 'bg-cream text-maroon'
-                        : 'text-charcoal/70 hover:bg-cream hover:text-maroon'
-                    }`}
-                  >
-                    <span>Best Sellers</span>
-                    <span>
-                      {
-                        MOCK_PRODUCTS.filter(
-                          (product) => product.isActive && product.isBestSeller
-                        ).length
-                      }
-                    </span>
-                  </button>
-                </div>
+            <select
+              value={selectedPrice}
+              onChange={(event) =>
+                setSelectedPrice(event.target.value as PriceFilter)
+              }
+              className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+            >
+              {priceFilterOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
 
-                <div className="mt-8 border-t border-beige pt-6">
-                  <h3 className="font-heading text-2xl text-charcoal">
-                    Categories
-                  </h3>
-
-                  <div className="mt-4 space-y-2">
-                    {activeCategories.map((category) => {
-                      const categoryCount = MOCK_PRODUCTS.filter(
-                        (product) =>
-                          product.isActive && product.category === category.slug
-                      ).length;
-
-                      return (
-                        <button
-                          key={category.id}
-                          type="button"
-                          onClick={() => handleCategoryChange(category.slug)}
-                          className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors duration-300 ${
-                            selectedCategory === category.slug
-                              ? 'bg-cream text-maroon'
-                              : 'text-charcoal/70 hover:bg-cream hover:text-maroon'
-                          }`}
-                        >
-                          <span>{category.name}</span>
-                          <span>{categoryCount}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                <div className="mt-8 border-t border-beige pt-6">
-                  <p className="font-subheading text-xl text-maroon">
-                    Crafted slowly, worn beautifully.
-                  </p>
-
-                  <p className="mt-3 text-sm leading-7 text-charcoal/60">
-                    Each product celebrates hand embroidery, breathable fabrics, and
-                    heritage-inspired silhouettes.
-                  </p>
-                </div>
-              </div>
-            </aside>
-
-            <div>
-              {visibleProducts.length > 0 ? (
-                <>
-                  <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:grid-cols-3 xl:grid-cols-4">
-                    {visibleProducts.map((product, index) => (
-                      <ShopProductCard
-                        key={product.id}
-                        product={product}
-                        index={index}
-                      />
-                    ))}
-                  </div>
-
-                  {canLoadMore && (
-                    <div className="mt-14 flex justify-center">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setVisibleCount(
-                            (current) => current + PRODUCTS_PER_PAGE
-                          )
-                        }
-                        className="btn-luxury btn-luxury-secondary"
-                      >
-                        Load More
-                      </button>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="border border-beige bg-white px-6 py-16 text-center">
-                  <p className="text-xs font-medium uppercase tracking-[0.28em] text-gold-dark">
-                    No pieces found
-                  </p>
-
-                  <h3 className="mt-3 font-heading text-3xl text-charcoal">
-                    Try a different search
-                  </h3>
-
-                  <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-charcoal/60">
-                    We could not find a piece matching your current filters. Explore
-                    all collections or search by fabric, category, or embroidery style.
-                  </p>
-
-                  <button
-                    type="button"
-                    onClick={handleResetFilters}
-                    className="btn-luxury btn-luxury-primary mt-8"
-                  >
-                    Reset Filters
-                  </button>
-                </div>
-              )}
-            </div>
+            <select
+              value={availability}
+              onChange={(event) =>
+                setAvailability(event.target.value as AvailabilityFilter)
+              }
+              className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+            >
+              <option value="all">All Availability</option>
+              <option value="in-stock">In Stock Only</option>
+            </select>
           </div>
         </div>
+
+        {visibleProducts.length > 0 ? (
+          <>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:gap-x-6 xl:grid-cols-4">
+              {visibleProducts.map((product, index) => (
+                <ShopProductCard
+                  key={product.id}
+                  product={product}
+                  index={index}
+                />
+              ))}
+            </div>
+
+            {canLoadMore && (
+              <div className="mt-12 flex justify-center">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setVisibleCount((current) => current + PRODUCTS_PER_PAGE)
+                  }
+                  className="btn-luxury btn-luxury-secondary"
+                >
+                  Load More
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="border border-beige bg-white px-6 py-16 text-center">
+            <p className="text-xs font-medium uppercase tracking-[0.3em] text-gold">
+              No pieces found
+            </p>
+
+            <h3 className="mt-3 font-heading text-4xl text-charcoal">
+              Try a different search
+            </h3>
+
+            <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-charcoal/60">
+              We could not find a piece matching your current filters. Explore
+              all collections or search by fabric, category, or embroidery
+              style.
+            </p>
+
+            <button
+              type="button"
+              onClick={resetFilters}
+              className="btn-luxury btn-luxury-primary mt-8"
+            >
+              Reset Filters
+            </button>
+          </div>
+        )}
       </section>
-    </div>
+    </main>
   );
 }
