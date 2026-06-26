@@ -10,6 +10,7 @@ import WomensCollectionSection from '@/components/home/WomensCollectionSection';
 import MensCollectionSection from '@/components/home/MensCollectionSection';
 import WhyChooseUsSection from '@/components/home/WhyChooseUsSection';
 import HeritageSection from '@/components/home/HeritageSection';
+import Footer from '@/components/layout/Footer';
 
 export default function HomePage() {
   return (
@@ -27,6 +28,7 @@ export default function HomePage() {
         <WhyChooseUsSection />
         <HeritageSection />
       </main>
+      <Footer />
 
       
       <CartDrawer />

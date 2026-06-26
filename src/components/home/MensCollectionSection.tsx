@@ -22,17 +22,17 @@ export default function MensCollectionSection() {
               >
                 The Men&apos;s
                 <br />
-                <span className="text-gradient-gold">Edit</span>
+                <span className="text-gradient-gold">Collection</span>
               </h2>
 
               <div className="my-5 h-px w-14 bg-gold/40 md:my-7 md:w-16" />
 
-              <p className="font-subheading text-lg italic leading-relaxed text-white/75 md:text-xl">
-                Refined silhouettes for the modern gentleman. Distinguished kurtas in premium fabrics.
+              <p className="max-w-md font-subheading text-lg italic leading-relaxed text-white/75 md:text-xl">
+                Refined silhouettes for the modern gentleman, crafted in premium fabrics with timeless Lucknowi embroidery.
               </p>
 
-              <p className="mt-4 font-body text-sm leading-relaxed text-white/50 md:mt-5">
-                From crisp whites for summer to regal silks for celebrations — every piece is crafted to command quiet admiration.
+              <p className="mt-4 max-w-md font-body text-sm leading-relaxed text-white/50 md:mt-5">
+                From crisp whites for summer to regal festive kurtas — every piece is designed for understated elegance.
               </p>
 
               <div className="mt-6 md:mt-8">
@@ -40,11 +40,40 @@ export default function MensCollectionSection() {
                   href="/shop/mens-kurtas"
                   className="btn-luxury bg-gold px-6 py-3 text-[11px] text-charcoal hover:bg-gold-dark md:px-10 md:py-4 md:text-sm"
                 >
-                  Shop Men&apos;s
+                  Shop Men&apos;s Kurtas
                 </Link>
               </div>
 
-              <div className="mt-7 flex flex-wrap gap-2 border-t border-white/10 pt-5 md:mt-10 md:gap-3 md:pt-7">
+              <div className="mt-7 grid grid-cols-3 gap-3 border-t border-white/10 pt-5 md:mt-10 md:gap-6 md:pt-7">
+                <div>
+                  <span className="font-heading text-2xl text-gradient-gold md:text-3xl">
+                    120+
+                  </span>
+                  <p className="mt-1 font-body text-[9px] uppercase tracking-[0.1em] text-white/45 md:text-xs">
+                    Designs
+                  </p>
+                </div>
+
+                <div>
+                  <span className="font-heading text-2xl text-gradient-gold md:text-3xl">
+                    8
+                  </span>
+                  <p className="mt-1 font-body text-[9px] uppercase tracking-[0.1em] text-white/45 md:text-xs">
+                    Fabrics
+                  </p>
+                </div>
+
+                <div>
+                  <span className="font-heading text-2xl text-gradient-gold md:text-3xl">
+                    100%
+                  </span>
+                  <p className="mt-1 font-body text-[9px] uppercase tracking-[0.1em] text-white/45 md:text-xs">
+                    Handmade
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 flex flex-wrap gap-2 md:gap-3">
                 {fabrics.map((fabric) => (
                   <span
                     key={fabric}
@@ -60,12 +89,12 @@ export default function MensCollectionSection() {
           <div className="relative order-1 aspect-[4/5] overflow-hidden bg-charcoal sm:aspect-[16/10] lg:order-2 lg:aspect-auto lg:min-h-[620px]">
             <img
               src="/images/collections/men.png"
-              alt="Men&apos;s Chikankari Collection"
-              className="h-full w-full object-cover"
+              alt="Men's Chikankari Kurta Collection"
+              className="h-full w-full object-cover object-top"
               loading="lazy"
             />
 
-            <div className="absolute inset-0 bg-gradient-to-t from-charcoal/35 to-transparent lg:bg-gradient-to-l lg:from-transparent lg:to-charcoal/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-charcoal/25 to-transparent lg:bg-gradient-to-l lg:from-transparent lg:to-charcoal/30" />
             <div className="absolute bottom-4 right-4 h-12 w-12 border-b-2 border-r-2 border-gold/50 md:bottom-8 md:right-8 md:h-16 md:w-16" />
           </div>
         </div>
