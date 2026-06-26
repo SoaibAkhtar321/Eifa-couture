@@ -1,19 +1,25 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['192.168.1.36'],
+
   images: {
     remotePatterns: [
       {
-        protocol: "https",
-        hostname: "picsum.photos",
+        protocol: 'https',
+        hostname: 'picsum.photos',
       },
       {
-        protocol: "https",
-        hostname: "images.unsplash.com",
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
       },
       {
-        protocol: "https",
-        hostname: "res.cloudinary.com",
+        protocol: 'https',
+        hostname: 'images.pexels.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'cdn.shopify.com',
       },
     ],
   },

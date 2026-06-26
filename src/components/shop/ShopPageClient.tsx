@@ -1,6 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 
 import ShopProductCard from '@/components/shop/ShopProductCard';
@@ -17,6 +18,8 @@ const sortOptions: { label: string; value: SortOption }[] = [
   { label: 'Name: A to Z', value: 'name-a-z' },
 ];
 
+const validCollections = ['new-arrivals', 'best-sellers'] as const;
+
 function sortProducts(products: Product[], sortBy: SortOption) {
   const sorted = [...products];
 
@@ -28,7 +31,9 @@ function sortProducts(products: Product[], sortBy: SortOption) {
       return sorted.sort((a, b) => b.price - a.price);
 
     case 'popularity':
-      return sorted.sort((a, b) => Number(b.isBestSeller) - Number(a.isBestSeller));
+      return sorted.sort(
+        (a, b) => Number(b.isBestSeller) - Number(a.isBestSeller)
+      );
 
     case 'name-a-z':
       return sorted.sort((a, b) => a.name.localeCompare(b.name));
@@ -40,16 +45,24 @@ function sortProducts(products: Product[], sortBy: SortOption) {
     case 'newest':
     default:
       return sorted.sort(
-        (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
   }
 }
 
+function getCollectionFromUrl(collection: string | null) {
+  if (!collection) return '';
+
+  return validCollections.includes(collection as (typeof validCollections)[number])
+    ? collection
+    : '';
+}
+
 export default function ShopPageClient() {
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [sortBy, setSortBy] = useState<SortOption>('newest');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const activeCategories = useMemo(
     () =>
@@ -59,12 +72,35 @@ export default function ShopPageClient() {
     []
   );
 
+  const categoryFromUrl = searchParams.get('category') ?? 'all';
+  const collectionFromUrl = getCollectionFromUrl(searchParams.get('collection'));
+
+  const [selectedCategory, setSelectedCategory] = useState(categoryFromUrl);
+  const [selectedCollection, setSelectedCollection] = useState(collectionFromUrl);
+  const [sortBy, setSortBy] = useState<SortOption>(
+    collectionFromUrl === 'best-sellers' ? 'popularity' : 'newest'
+  );
+  const [searchQuery, setSearchQuery] = useState('');
+  const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
+
+  useEffect(() => {
+    setSelectedCategory(categoryFromUrl);
+    setSelectedCollection(collectionFromUrl);
+    setSortBy(collectionFromUrl === 'best-sellers' ? 'popularity' : 'newest');
+    setVisibleCount(PRODUCTS_PER_PAGE);
+  }, [categoryFromUrl, collectionFromUrl]);
+
   const filteredProducts = useMemo(() => {
     const normalizedSearch = searchQuery.trim().toLowerCase();
 
     const filtered = MOCK_PRODUCTS.filter((product) => {
       const matchesCategory =
         selectedCategory === 'all' || product.category === selectedCategory;
+
+      const matchesCollection =
+        selectedCollection === '' ||
+        (selectedCollection === 'new-arrivals' && product.isNewArrival) ||
+        (selectedCollection === 'best-sellers' && product.isBestSeller);
 
       const matchesSearch =
         normalizedSearch.length === 0 ||
@@ -73,18 +109,52 @@ export default function ShopPageClient() {
         product.fabric.toLowerCase().includes(normalizedSearch) ||
         product.tags.some((tag) => tag.toLowerCase().includes(normalizedSearch));
 
-      return product.isActive && matchesCategory && matchesSearch;
+      return (
+        product.isActive &&
+        matchesCategory &&
+        matchesCollection &&
+        matchesSearch
+      );
     });
 
     return sortProducts(filtered, sortBy);
-  }, [searchQuery, selectedCategory, sortBy]);
+  }, [searchQuery, selectedCategory, selectedCollection, sortBy]);
 
   const visibleProducts = filteredProducts.slice(0, visibleCount);
   const canLoadMore = visibleCount < filteredProducts.length;
 
+  const activeCategory = activeCategories.find(
+    (category) => category.slug === selectedCategory
+  );
+
+  const updateShopUrl = (params: { category?: string; collection?: string }) => {
+    const nextParams = new URLSearchParams();
+
+    if (params.category && params.category !== 'all') {
+      nextParams.set('category', params.category);
+    }
+
+    if (params.collection) {
+      nextParams.set('collection', params.collection);
+    }
+
+    const queryString = nextParams.toString();
+    router.push(queryString ? `${pathname}?${queryString}` : pathname);
+  };
+
   const handleCategoryChange = (categorySlug: string) => {
     setSelectedCategory(categorySlug);
+    setSelectedCollection('');
     setVisibleCount(PRODUCTS_PER_PAGE);
+    updateShopUrl({ category: categorySlug });
+  };
+
+  const handleCollectionChange = (collectionSlug: string) => {
+    setSelectedCategory('all');
+    setSelectedCollection(collectionSlug);
+    setSortBy(collectionSlug === 'best-sellers' ? 'popularity' : 'newest');
+    setVisibleCount(PRODUCTS_PER_PAGE);
+    updateShopUrl({ collection: collectionSlug });
   };
 
   const handleSearchChange = (value: string) => {
@@ -97,9 +167,36 @@ export default function ShopPageClient() {
     setVisibleCount(PRODUCTS_PER_PAGE);
   };
 
+  const handleResetFilters = () => {
+    setSelectedCategory('all');
+    setSelectedCollection('');
+    setSearchQuery('');
+    setSortBy('newest');
+    setVisibleCount(PRODUCTS_PER_PAGE);
+    router.push(pathname);
+  };
+
+  const pageTitle =
+    selectedCollection === 'new-arrivals'
+      ? 'New Arrivals'
+      : selectedCollection === 'best-sellers'
+        ? 'Best Sellers'
+        : activeCategory
+          ? activeCategory.name
+          : 'Shop the Art of';
+
+  const pageHighlight =
+    selectedCollection === 'new-arrivals'
+      ? 'Fresh Chikankari'
+      : selectedCollection === 'best-sellers'
+        ? 'Loved Pieces'
+        : activeCategory
+          ? 'Collection'
+          : 'Chikankari';
+
   return (
     <div className="bg-ivory">
-      <section className="relative overflow-hidden bg-cream pt-32 pb-14 sm:pt-36 sm:pb-18 lg:pt-44 lg:pb-24">
+      <section className="relative overflow-hidden bg-cream pb-14 pt-32 sm:pb-18 sm:pt-36 lg:pb-24 lg:pt-44">
         <div className="absolute inset-0 texture-grain" />
 
         <div className="luxury-container relative z-10">
@@ -114,8 +211,8 @@ export default function ShopPageClient() {
             </p>
 
             <h1 className="font-heading text-5xl leading-[0.95] text-charcoal sm:text-6xl lg:text-7xl">
-              Shop the Art of
-              <span className="block text-gradient-maroon">Chikankari</span>
+              {pageTitle}
+              <span className="block text-gradient-maroon">{pageHighlight}</span>
             </h1>
 
             <p className="mt-6 max-w-2xl text-base leading-8 text-charcoal/65 sm:text-lg">
@@ -134,7 +231,9 @@ export default function ShopPageClient() {
                 <p className="text-[10px] uppercase tracking-[0.28em] text-charcoal/45">
                   {label}
                 </p>
-                <p className="mt-1 font-subheading text-2xl text-maroon">{value}</p>
+                <p className="mt-1 font-subheading text-2xl text-maroon">
+                  {value}
+                </p>
               </div>
             ))}
           </div>
@@ -170,7 +269,9 @@ export default function ShopPageClient() {
                 <span className="sr-only">Sort products</span>
                 <select
                   value={sortBy}
-                  onChange={(event) => handleSortChange(event.target.value as SortOption)}
+                  onChange={(event) =>
+                    handleSortChange(event.target.value as SortOption)
+                  }
                   className="h-12 w-full appearance-none border border-charcoal/15 bg-white px-4 text-sm text-charcoal outline-none transition-colors duration-300 focus:border-gold"
                 >
                   {sortOptions.map((option) => (
@@ -192,12 +293,36 @@ export default function ShopPageClient() {
               type="button"
               onClick={() => handleCategoryChange('all')}
               className={`shrink-0 border px-5 py-3 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-300 ${
-                selectedCategory === 'all'
+                selectedCategory === 'all' && selectedCollection === ''
                   ? 'border-maroon bg-maroon text-white'
                   : 'border-charcoal/15 bg-white text-charcoal hover:border-gold'
               }`}
             >
               All
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleCollectionChange('new-arrivals')}
+              className={`shrink-0 border px-5 py-3 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-300 ${
+                selectedCollection === 'new-arrivals'
+                  ? 'border-maroon bg-maroon text-white'
+                  : 'border-charcoal/15 bg-white text-charcoal hover:border-gold'
+              }`}
+            >
+              New
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleCollectionChange('best-sellers')}
+              className={`shrink-0 border px-5 py-3 text-[11px] font-medium uppercase tracking-[0.18em] transition-colors duration-300 ${
+                selectedCollection === 'best-sellers'
+                  ? 'border-maroon bg-maroon text-white'
+                  : 'border-charcoal/15 bg-white text-charcoal hover:border-gold'
+              }`}
+            >
+              Best Sellers
             </button>
 
             {activeCategories.map((category) => (
@@ -223,8 +348,9 @@ export default function ShopPageClient() {
                   <p className="text-xs font-medium uppercase tracking-[0.26em] text-gold-dark">
                     Refine
                   </p>
+
                   <h3 className="mt-2 font-heading text-2xl text-charcoal">
-                    Categories
+                    Collections
                   </h3>
                 </div>
 
@@ -233,43 +359,92 @@ export default function ShopPageClient() {
                     type="button"
                     onClick={() => handleCategoryChange('all')}
                     className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors duration-300 ${
-                      selectedCategory === 'all'
+                      selectedCategory === 'all' && selectedCollection === ''
                         ? 'bg-cream text-maroon'
                         : 'text-charcoal/70 hover:bg-cream hover:text-maroon'
                     }`}
                   >
                     <span>All Collections</span>
-                    <span>{MOCK_PRODUCTS.filter((product) => product.isActive).length}</span>
+                    <span>
+                      {MOCK_PRODUCTS.filter((product) => product.isActive).length}
+                    </span>
                   </button>
 
-                  {activeCategories.map((category) => {
-                    const categoryCount = MOCK_PRODUCTS.filter(
-                      (product) =>
-                        product.isActive && product.category === category.slug
-                    ).length;
+                  <button
+                    type="button"
+                    onClick={() => handleCollectionChange('new-arrivals')}
+                    className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors duration-300 ${
+                      selectedCollection === 'new-arrivals'
+                        ? 'bg-cream text-maroon'
+                        : 'text-charcoal/70 hover:bg-cream hover:text-maroon'
+                    }`}
+                  >
+                    <span>New Arrivals</span>
+                    <span>
+                      {
+                        MOCK_PRODUCTS.filter(
+                          (product) => product.isActive && product.isNewArrival
+                        ).length
+                      }
+                    </span>
+                  </button>
 
-                    return (
-                      <button
-                        key={category.id}
-                        type="button"
-                        onClick={() => handleCategoryChange(category.slug)}
-                        className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors duration-300 ${
-                          selectedCategory === category.slug
-                            ? 'bg-cream text-maroon'
-                            : 'text-charcoal/70 hover:bg-cream hover:text-maroon'
-                        }`}
-                      >
-                        <span>{category.name}</span>
-                        <span>{categoryCount}</span>
-                      </button>
-                    );
-                  })}
+                  <button
+                    type="button"
+                    onClick={() => handleCollectionChange('best-sellers')}
+                    className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors duration-300 ${
+                      selectedCollection === 'best-sellers'
+                        ? 'bg-cream text-maroon'
+                        : 'text-charcoal/70 hover:bg-cream hover:text-maroon'
+                    }`}
+                  >
+                    <span>Best Sellers</span>
+                    <span>
+                      {
+                        MOCK_PRODUCTS.filter(
+                          (product) => product.isActive && product.isBestSeller
+                        ).length
+                      }
+                    </span>
+                  </button>
+                </div>
+
+                <div className="mt-8 border-t border-beige pt-6">
+                  <h3 className="font-heading text-2xl text-charcoal">
+                    Categories
+                  </h3>
+
+                  <div className="mt-4 space-y-2">
+                    {activeCategories.map((category) => {
+                      const categoryCount = MOCK_PRODUCTS.filter(
+                        (product) =>
+                          product.isActive && product.category === category.slug
+                      ).length;
+
+                      return (
+                        <button
+                          key={category.id}
+                          type="button"
+                          onClick={() => handleCategoryChange(category.slug)}
+                          className={`flex w-full items-center justify-between px-3 py-3 text-left text-sm transition-colors duration-300 ${
+                            selectedCategory === category.slug
+                              ? 'bg-cream text-maroon'
+                              : 'text-charcoal/70 hover:bg-cream hover:text-maroon'
+                          }`}
+                        >
+                          <span>{category.name}</span>
+                          <span>{categoryCount}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 <div className="mt-8 border-t border-beige pt-6">
                   <p className="font-subheading text-xl text-maroon">
                     Crafted slowly, worn beautifully.
                   </p>
+
                   <p className="mt-3 text-sm leading-7 text-charcoal/60">
                     Each product celebrates hand embroidery, breathable fabrics, and
                     heritage-inspired silhouettes.
@@ -296,7 +471,9 @@ export default function ShopPageClient() {
                       <button
                         type="button"
                         onClick={() =>
-                          setVisibleCount((current) => current + PRODUCTS_PER_PAGE)
+                          setVisibleCount(
+                            (current) => current + PRODUCTS_PER_PAGE
+                          )
                         }
                         className="btn-luxury btn-luxury-secondary"
                       >
@@ -322,12 +499,7 @@ export default function ShopPageClient() {
 
                   <button
                     type="button"
-                    onClick={() => {
-                      setSelectedCategory('all');
-                      setSearchQuery('');
-                      setSortBy('newest');
-                      setVisibleCount(PRODUCTS_PER_PAGE);
-                    }}
+                    onClick={handleResetFilters}
                     className="btn-luxury btn-luxury-primary mt-8"
                   >
                     Reset Filters
