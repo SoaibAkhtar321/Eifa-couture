@@ -1,16 +1,10 @@
-'use client';
-
-import { useRef } from 'react';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { useScrollAnimation, luxuryTransition } from '@/hooks/useScrollAnimation';
+
 import { getNewArrivals } from '@/lib/mock-data';
 import { formatPrice } from '@/lib/utils';
 
 export default function NewArrivalsSection() {
-  const { ref, isInView } = useScrollAnimation({ margin: '-50px' });
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  const products = getNewArrivals();
+  const products = getNewArrivals().slice(0, 6);
 
   const productImages = [
     '/images/products/product-2.png',
@@ -21,190 +15,83 @@ export default function NewArrivalsSection() {
     '/images/products/dupatta-cream.png',
   ];
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = 400;
-      scrollContainerRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth',
-      });
-    }
-  };
-
   return (
-    <section className="section-padding bg-cream" aria-labelledby="new-arrivals-heading">
-      <div ref={ref}>
-        {/* ── Section Header ── */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={luxuryTransition}
-          className="luxury-container flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12 md:mb-16"
-        >
-          <div className="flex-1">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-px bg-gold" />
-              <span className="text-gold text-xs tracking-[0.3em] uppercase font-body">
-                Just Arrived
-              </span>
-            </div>
-            <h2 id="new-arrivals-heading" className="font-heading text-3xl md:text-5xl text-charcoal">
-              New Arrivals
-            </h2>
-            <p className="font-subheading text-lg text-charcoal/60 mt-3 italic max-w-md">
-              Fresh silhouettes inspired by Mughal gardens and Lucknowi heritage
-            </p>
-          </div>
+    <section className="bg-cream py-10 md:py-16 lg:py-24" aria-labelledby="new-arrivals-heading">
+      <div className="luxury-container">
+        <div className="mb-8 text-center md:mb-12">
+          <span className="mb-3 block font-body text-[10px] uppercase tracking-[0.28em] text-gold md:text-xs">
+            Just Arrived
+          </span>
 
-          {/* Scroll Controls - Hidden on mobile, shown on md+ */}
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => scroll('left')}
-              className="hidden md:flex w-12 h-12 border border-charcoal/20 items-center justify-center hover:border-gold hover:text-gold transition-colors duration-300 flex-shrink-0"
-              aria-label="Scroll left"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M19 12H5M12 19l-7-7 7-7" />
-              </svg>
-            </button>
-            <button
-              onClick={() => scroll('right')}
-              className="hidden md:flex w-12 h-12 border border-charcoal/20 items-center justify-center hover:border-gold hover:text-gold transition-colors duration-300 flex-shrink-0"
-              aria-label="Scroll right"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
-        </motion.div>
+          <h2
+            id="new-arrivals-heading"
+            className="font-heading text-2xl text-charcoal md:text-5xl lg:text-6xl"
+          >
+            New Arrivals
+          </h2>
 
-        {/* ── Responsive Grid/Carousel ── */}
-        <div
-          ref={scrollContainerRef}
-          className="hidden md:flex gap-6 overflow-x-auto scrollbar-hide px-6 md:px-12 lg:px-16 pb-4 snap-x snap-mandatory"
-          style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-        >
+          <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
+
+          <p className="mx-auto mt-4 max-w-xl font-subheading text-base italic text-charcoal/60 md:text-xl">
+            Fresh silhouettes inspired by Mughal gardens and Lucknowi heritage.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-6 lg:gap-6">
           {products.map((product, idx) => (
-            <motion.article
-              key={product.id}
-              initial={{ opacity: 0, x: 40 }}
-              animate={isInView ? { opacity: 1, x: 0 } : {}}
-              transition={{ ...luxuryTransition, delay: idx * 0.1 }}
-              className="flex-shrink-0 w-[280px] sm:w-[320px] md:w-[340px] lg:w-[380px] snap-start group"
-            >
+            <article key={product.id} className="group">
               <Link href={`/product/${product.slug}`} className="block h-full">
-                {/* Image */}
-                <div className="img-zoom relative aspect-[3/4] overflow-hidden bg-beige">
-                  <img
-                    src={productImages[idx % productImages.length]}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
+                <div className="flex h-full flex-col overflow-hidden bg-white">
+                  <div className="relative aspect-[4/5] overflow-hidden bg-beige">
+                    <img
+                      src={productImages[idx % productImages.length]}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                      loading="lazy"
+                    />
 
-                  {/* New Badge */}
-                  <span className="absolute top-4 left-4 bg-gold text-white text-[10px] tracking-[0.2em] uppercase px-4 py-1.5 font-body font-medium z-10">
-                    New
-                  </span>
-
-                  {/* Quick view on hover */}
-                  <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-charcoal/60 to-transparent translate-y-full group-hover:translate-y-0 transition-transform duration-500">
-                    <span className="text-white text-xs tracking-[0.15em] uppercase font-body">
-                      Quick View →
+                    <span className="absolute left-2 top-2 z-10 bg-gold px-2 py-1 font-body text-[8px] font-medium uppercase tracking-[0.12em] text-white md:left-3 md:top-3 md:px-3 md:py-1.5 md:text-[10px]">
+                      New
                     </span>
                   </div>
-                </div>
 
-                {/* Product Info */}
-                <div className="mt-5">
-                  <p className="text-[11px] text-gold/80 tracking-[0.2em] uppercase font-body mb-1.5">
-                    {product.fabric}
-                  </p>
-                  <h3 className="font-heading text-base md:text-lg text-charcoal group-hover:text-maroon transition-colors duration-300 line-clamp-2">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center gap-3 mt-2">
-                    <span className="font-subheading text-lg text-charcoal font-semibold">
-                      {formatPrice(product.price)}
-                    </span>
-                    {product.compareAtPrice && (
-                      <span className="font-body text-sm text-charcoal/40 line-through">
-                        {formatPrice(product.compareAtPrice)}
+                  <div className="flex flex-grow flex-col justify-between px-2.5 py-3 md:p-5">
+                    <div>
+                      <p className="mb-1 font-body text-[9px] uppercase tracking-[0.16em] text-gold md:text-[11px]">
+                        {product.fabric}
+                      </p>
+
+                      <h3 className="line-clamp-2 font-heading text-sm leading-snug text-charcoal transition-colors duration-300 group-hover:text-maroon md:text-lg">
+                        {product.name}
+                      </h3>
+                    </div>
+
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5 md:mt-4 md:gap-3">
+                      <span className="font-subheading text-base font-semibold text-charcoal md:text-xl">
+                        {formatPrice(product.price)}
                       </span>
-                    )}
+
+                      {product.compareAtPrice && (
+                        <span className="font-body text-[11px] text-charcoal/40 line-through md:text-sm">
+                          {formatPrice(product.compareAtPrice)}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </Link>
-            </motion.article>
+            </article>
           ))}
         </div>
 
-        {/* ── Mobile Grid (2 columns) ── */}
-        <motion.div
-          variants={{
-            hidden: {},
-            visible: { transition: { staggerChildren: 0.1 } },
-          }}
-          initial="hidden"
-          animate={isInView ? 'visible' : 'hidden'}
-          className="md:hidden grid grid-cols-2 gap-4 px-4"
-        >
-          {products.slice(0, 4).map((product, idx) => (
-            <motion.article
-              key={product.id}
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0, transition: luxuryTransition },
-              }}
-              className="group"
-            >
-              <Link href={`/product/${product.slug}`} className="block">
-                {/* Image */}
-                <div className="img-zoom relative aspect-[3/4] overflow-hidden bg-beige mb-3">
-                  <img
-                    src={productImages[idx % productImages.length]}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-
-                  {/* New Badge */}
-                  <span className="absolute top-2 left-2 bg-gold text-white text-[9px] tracking-[0.2em] uppercase px-2.5 py-1 font-body font-medium z-10">
-                    New
-                  </span>
-                </div>
-
-                {/* Product Info */}
-                <div>
-                  <p className="text-[10px] text-gold/80 tracking-[0.15em] uppercase font-body mb-1">
-                    {product.fabric}
-                  </p>
-                  <h3 className="font-heading text-sm text-charcoal group-hover:text-maroon transition-colors duration-300 line-clamp-2">
-                    {product.name}
-                  </h3>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    <span className="font-subheading text-base text-charcoal font-semibold">
-                      {formatPrice(product.price)}
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            </motion.article>
-          ))}
-        </motion.div>
-
-        {/* View All link */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.6, duration: 0.5 }}
-          className="text-center mt-12"
-        >
-          <Link href="/new-arrivals" className="link-luxury font-body text-sm tracking-[0.15em] uppercase">
-            View All New Arrivals
+        <div className="mt-8 text-center md:mt-12">
+          <Link
+            href="/new-arrivals"
+            className="btn-luxury btn-luxury-secondary px-6 py-3 text-[11px] md:px-10 md:py-4 md:text-sm"
+          >
+            View New Arrivals
           </Link>
-        </motion.div>
+        </div>
       </div>
     </section>
   );
