@@ -1,9 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
-
+import { useLayoutEffect } from 'react'; // Changed from useEffect
 import Link from 'next/link';
-import { motion } from 'framer-motion';
 
 import ProductImageGallery from '@/components/product/ProductImageGallery';
 import ProductInfo from '@/components/product/ProductInfo';
@@ -21,8 +19,10 @@ export default function ProductDetailsClient({
   product,
   relatedProducts,
 }: ProductDetailsClientProps) {
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  
+  // useLayoutEffect runs BEFORE the browser paints, eliminating the "scroll" jump
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, [product?.slug]);
 
   if (!product) return null;
@@ -35,37 +35,19 @@ export default function ProductDetailsClient({
             aria-label="Breadcrumb"
             className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-charcoal/45 sm:text-[11px]"
           >
-            <Link
-              href="/"
-              className="transition-colors duration-300 hover:text-maroon"
-            >
-              Home
-            </Link>
-
+            <Link href="/" className="transition-colors duration-300 hover:text-maroon">Home</Link>
             <span>/</span>
-
-            <Link
-              href="/shop"
-              className="transition-colors duration-300 hover:text-maroon"
-            >
-              Shop
-            </Link>
-
+            <Link href="/shop" className="transition-colors duration-300 hover:text-maroon">Shop</Link>
             <span>/</span>
-
-            <span className="line-clamp-1 text-charcoal/70">
-              {product.name || 'Product Details'}
-            </span>
+            <span className="line-clamp-1 text-charcoal/70">{product.name || 'Product Details'}</span>
           </nav>
         </div>
       </section>
 
-      <section className="pb-12 pt-6 sm:pb-16 sm:pt-8 lg:pb-20 lg:pt-12">
+      {/* Added min-h-[80vh] to keep the structure stable while loading */}
+      <section className="pb-12 pt-6 sm:pb-16 sm:pt-8 lg:pb-20 lg:pt-12 min-h-[400vh]">
         <div className="luxury-container">
-          <div
-            // Ensures the layout preserves structural height while inner client components hydrate
-            className="grid gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:gap-12 xl:gap-16 min-h-[600px] items-start"
-          >
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:gap-12 xl:gap-16 items-start">
             {product.images?.length > 0 && (
               <ProductImageGallery product={product} />
             )}
@@ -75,7 +57,6 @@ export default function ProductDetailsClient({
       </section>
 
       <ProductReviews product={product} />
-
       <RelatedProducts products={relatedProducts} />
     </main>
   );

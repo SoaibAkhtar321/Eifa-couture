@@ -25,6 +25,7 @@ const quickLinks: MenuLink[] = [
   { label: 'Shop All', href: '/shop' },
   { label: 'New Arrivals', href: '/shop?collection=new-arrivals' },
   { label: 'Best Sellers', href: '/shop?collection=best-sellers' },
+  { label: 'Sign In / Register', href: '/login' }, // ── Added Account Link Here ──
 ];
 
 const supportLinks: MenuLink[] = [
@@ -233,7 +234,7 @@ export default function MobileMenu() {
               <button
                 type="button"
                 onClick={closeMobileMenu}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-beige bg-white text-2xl text-charcoal/60 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white min-h-[44px] min-w-[44px]"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-beige bg-white text-2xl text-charcoal/60 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white min-h-[44px] min-w-[44px] cursor-pointer"
                 aria-label="Close menu"
               >
                 ×
@@ -297,10 +298,10 @@ export default function MobileMenu() {
                       key={link.href}
                       href={link.href}
                       onClick={handleLinkClick}
-                      className="min-h-[44px] flex items-center justify-between py-3 font-body text-[13px] font-medium uppercase tracking-[0.28em] text-charcoal transition-colors duration-300 hover:text-maroon"
+                      className="min-h-[44px] flex items-center justify-between py-3 font-body text-[13px] font-medium uppercase tracking-[0.28em] text-charcoal transition-colors duration-300 hover:text-maroon group"
                     >
                       <span>{link.label}</span>
-                      <span className="text-gold">→</span>
+                      <span className="text-gold transition-transform duration-300 group-hover:translate-x-1">→</span>
                     </Link>
                   ))}
                 </motion.nav>
@@ -321,7 +322,7 @@ export default function MobileMenu() {
                         <button
                           type="button"
                           onClick={() => handleToggleAccordion(section.label)}
-                          className="min-h-[44px] flex w-full items-center justify-between gap-4 px-4 py-4 text-left"
+                          className="min-h-[44px] flex w-full items-center justify-between gap-4 px-4 py-4 text-left cursor-pointer"
                           aria-label={
                             isExpanded
                               ? `Collapse ${section.label}`

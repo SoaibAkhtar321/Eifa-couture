@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -38,29 +38,73 @@ function getProductImage(product: Product) {
 }
 
 export default function CheckoutPage() {
+  const [isMounted, setIsMounted] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isBuyNowMode, setIsBuyNowMode] = useState(false);
+  const [buyNowItem, setBuyNowItem] = useState<any>(null);
 
-  const items = useCartStore((state) => state.items);
-  const subtotal = useCartStore((state) => state.getTotal());
+  // Global Cart State
+  const cartItems = useCartStore((state) => state.items);
+  const cartSubtotal = useCartStore((state) => state.getTotal());
   const clearCart = useCartStore((state) => state.clearCart);
 
-  const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
+  // Detect Buy Now mode on mount
+  useEffect(() => {
+    setIsMounted(true);
+    
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get('mode') === 'buy-now') {
+      setIsBuyNowMode(true);
+      
+      const storedItem = sessionStorage.getItem('eifa-buy-now');
+      if (storedItem) {
+        try {
+          const parsed = JSON.parse(storedItem);
+          // Map to match standard cart item structure
+          setBuyNowItem({
+            id: 'buy-now-item',
+            product: parsed.product,
+            selectedSize: parsed.size,
+            selectedColor: parsed.color,
+            quantity: parsed.quantity,
+          });
+        } catch (error) {
+          console.error('Failed to parse buy now item');
+        }
+      }
+    }
+  }, []);
+
+  // Determine which items and subtotal to display
+  const displayItems = isBuyNowMode && buyNowItem ? [buyNowItem] : cartItems;
+  const displaySubtotal = isBuyNowMode && buyNowItem 
+    ? buyNowItem.product.price * buyNowItem.quantity 
+    : cartSubtotal;
+
+  const itemCount = displayItems.reduce((sum, item) => sum + item.quantity, 0);
 
   const shippingCharge = useMemo(() => {
-    if (items.length === 0) return 0;
+    if (displayItems.length === 0) return 0;
 
-    return subtotal >= SHIPPING_INFO.freeShippingThreshold
+    return displaySubtotal >= SHIPPING_INFO.freeShippingThreshold
       ? 0
       : SHIPPING_INFO.standardShippingCost;
-  }, [items.length, subtotal]);
+  }, [displayItems.length, displaySubtotal]);
 
-  const total = subtotal + shippingCharge;
+  const total = displaySubtotal + shippingCharge;
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     setIsSubmitted(true);
-    clearCart();
+    
+    // Only clear global cart if it was a standard checkout
+    if (isBuyNowMode) {
+      sessionStorage.removeItem('eifa-buy-now');
+    } else {
+      clearCart();
+    }
+    
     event.currentTarget.reset();
 
     window.scrollTo({
@@ -68,6 +112,9 @@ export default function CheckoutPage() {
       behavior: 'smooth',
     });
   };
+
+  // Prevent hydration mismatch
+  if (!isMounted) return null;
 
   return (
     <>
@@ -129,8 +176,7 @@ export default function CheckoutPage() {
                 </h2>
 
                 <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-charcoal/55 sm:text-base">
-                  Your demo order has been received and your shopping bag has
-                  been cleared. Real payment and order saving can be connected
+                  Your demo order has been received. Real payment and order saving can be connected
                   in the next phase.
                 </p>
 
@@ -150,7 +196,7 @@ export default function CheckoutPage() {
                   </Link>
                 </div>
               </div>
-            ) : items.length === 0 ? (
+            ) : displayItems.length === 0 ? (
               <div className="mx-auto max-w-xl border border-beige bg-white px-6 py-12 text-center">
                 <h2 className="font-heading text-3xl text-charcoal">
                   Your bag is empty
@@ -323,7 +369,7 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="divide-y divide-beige/70">
-                    {items.map((item) => {
+                    {displayItems.map((item) => {
                       const itemKey = `${item.product.id}-${item.selectedSize}-${item.selectedColor}`;
                       const productImage = getProductImage(item.product);
 
@@ -364,7 +410,7 @@ export default function CheckoutPage() {
                   <div className="mt-5 space-y-3 border-t border-beige pt-5">
                     <div className="flex items-center justify-between text-sm text-charcoal/60">
                       <span>Subtotal</span>
-                      <span>{formatPrice(subtotal)}</span>
+                      <span>{formatPrice(displaySubtotal)}</span>
                     </div>
 
                     <div className="flex items-center justify-between text-sm text-charcoal/60">

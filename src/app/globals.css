@@ -135,11 +135,11 @@
    BASE STYLES
    ============================================ */
 
-html {
+/* html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
+} */
 
 body {
   font-family: var(--font-body);

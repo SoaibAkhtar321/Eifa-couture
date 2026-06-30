@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { Cormorant_Garamond, Inter, Playfair_Display } from 'next/font/google';
-
+import ScrollRestoration from '@/components/providers/ScrollRestoration';
 import './globals.css';
 
 const playfairDisplay = Playfair_Display({
@@ -99,12 +99,12 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfairDisplay.variable} ${cormorantGaramond.variable} ${inter.variable} scroll-smooth antialiased`}
+      className={`${playfairDisplay.variable} ${cormorantGaramond.variable} ${inter.variable} antialiased`}
     >
       <body className="min-h-screen bg-ivory font-body text-charcoal selection:bg-maroon selection:text-white">
-        {/* Architectural wrapper prevents touch interception and manages stacking contexts */}
+        <ScrollRestoration />
         <div className="relative flex min-h-screen flex-col overflow-x-hidden">
-          <div className="flex-1 w-full relative z-10 pointer-events-auto">
+          <div className="flex-1 w-full relative z-10">
             {children}
           </div>
         </div>
