@@ -99,11 +99,15 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfairDisplay.variable} ${cormorantGaramond.variable} ${inter.variable}`}
+      className={`${playfairDisplay.variable} ${cormorantGaramond.variable} ${inter.variable} scroll-smooth antialiased`}
     >
-      <body className="min-h-screen bg-ivory font-body text-charcoal antialiased">
-    
-        {children}
+      <body className="min-h-screen bg-ivory font-body text-charcoal selection:bg-maroon selection:text-white">
+        {/* Architectural wrapper prevents touch interception and manages stacking contexts */}
+        <div className="relative flex min-h-screen flex-col overflow-x-hidden">
+          <div className="flex-1 w-full relative z-10 pointer-events-auto">
+            {children}
+          </div>
+        </div>
       </body>
     </html>
   );

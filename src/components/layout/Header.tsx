@@ -1,14 +1,11 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-
 import Image from 'next/image';
 import Link from 'next/link';
-
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 
 import { MOCK_CATEGORIES } from '@/lib/mock-data';
-
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
 import { useWishlistStore } from '@/store/wishlist-store';
@@ -30,18 +27,12 @@ const dropdownVariants: Variants = {
   hidden: {
     opacity: 0,
     y: 8,
-    transition: {
-      duration: 0.2,
-      ease: 'easeInOut',
-    },
+    transition: { duration: 0.2, ease: 'easeInOut' },
   },
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.25,
-      ease: 'easeOut',
-    },
+    transition: { duration: 0.25, ease: 'easeOut' },
   },
 };
 
@@ -59,13 +50,11 @@ function toCategoryLink(category: { name: string; slug: string }) {
 function isMenCategory(category: { name: string; slug: string }) {
   const name = category.name.toLowerCase();
   const slug = category.slug.toLowerCase();
-
   return name.startsWith('men') || slug.startsWith('mens-');
 }
 
 function isAccessoryCategory(category: { name: string; slug: string }) {
   const value = `${category.name} ${category.slug}`.toLowerCase();
-
   return (
     value.includes('accessor') ||
     value.includes('bag') ||
@@ -159,11 +148,8 @@ export default function Header() {
     const handleScroll = () => {
       setScrolled(window.scrollY > 18);
     };
-
     handleScroll();
-
     window.addEventListener('scroll', handleScroll, { passive: true });
-
     return () => {
       window.removeEventListener('scroll', handleScroll);
     };
@@ -177,7 +163,6 @@ export default function Header() {
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyDown);
-
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
@@ -187,8 +172,9 @@ export default function Header() {
     <>
       <AnnouncementBar />
 
+      {/* Increased Z-Index stacking context avoids invisible fixed overlay blocks */}
       <header
-        className={`sticky top-0 z-[80] border-b border-beige transition-all duration-500 ${
+        className={`sticky top-0 z-[130] border-b border-beige transition-all duration-500 pointer-events-auto ${
           scrolled
             ? 'bg-ivory/96 shadow-[0_8px_24px_rgba(0,0,0,0.045)] backdrop-blur-md'
             : 'bg-ivory/92 backdrop-blur-sm'
@@ -198,7 +184,7 @@ export default function Header() {
           <div className="flex h-[72px] items-center justify-between gap-4 sm:h-[78px] lg:h-[84px]">
             <Link
               href="/"
-              className="group flex min-w-0 shrink items-center"
+              className="group flex min-w-0 shrink items-center min-h-[44px] min-w-[44px] pointer-events-auto"
               aria-label="Eifa Couture home"
             >
               {!logoFailed ? (
@@ -218,7 +204,6 @@ export default function Header() {
                   <span className="font-heading text-[24px] uppercase tracking-[0.24em] text-charcoal sm:text-[28px]">
                     Eifa Couture
                   </span>
-
                   <span className="mt-1 font-body text-[9px] uppercase tracking-[0.36em] text-gold sm:text-[10px]">
                     Lucknowi Chikankari
                   </span>
@@ -227,7 +212,7 @@ export default function Header() {
             </Link>
 
             <nav
-              className="hidden items-center gap-6 lg:flex xl:gap-8"
+              className="hidden items-center gap-6 lg:flex xl:gap-8 pointer-events-auto"
               aria-label="Main navigation"
             >
               {navLinks.map((link) => {
@@ -236,7 +221,7 @@ export default function Header() {
                 return (
                   <div
                     key={link.label}
-                    className="relative"
+                    className="relative pointer-events-auto"
                     onMouseEnter={() => {
                       if (hasChildren) setHoveredNav(link.label);
                     }}
@@ -244,7 +229,7 @@ export default function Header() {
                   >
                     <Link
                       href={link.href}
-                      className="relative flex items-center gap-1 py-2 font-body text-[11px] uppercase tracking-[0.15em] text-charcoal/75 transition-colors duration-300 hover:text-maroon xl:text-[12px]"
+                      className="relative flex items-center gap-1 py-2 font-body text-[11px] uppercase tracking-[0.15em] text-charcoal/75 transition-colors duration-300 hover:text-maroon xl:text-[12px] min-h-[44px] pointer-events-auto"
                       aria-haspopup={hasChildren ? 'true' : undefined}
                       aria-expanded={
                         hasChildren ? hoveredNav === link.label : undefined
@@ -262,7 +247,7 @@ export default function Header() {
                           strokeWidth="2"
                           strokeLinecap="round"
                           strokeLinejoin="round"
-                          className={`transition-transform duration-200 ${
+                          className={`pointer-events-none transition-transform duration-200 ${
                             hoveredNav === link.label ? 'rotate-180' : ''
                           }`}
                           aria-hidden="true"
@@ -296,7 +281,7 @@ export default function Header() {
                                   <Link
                                     key={child.href}
                                     href={child.href}
-                                    className="block px-7 py-2.5 font-subheading text-[15px] tracking-wide text-charcoal/68 transition-all duration-200 hover:bg-cream/60 hover:text-maroon"
+                                    className="block px-7 py-2.5 font-subheading text-[15px] tracking-wide text-charcoal/68 transition-all duration-200 hover:bg-cream/60 hover:text-maroon pointer-events-auto"
                                   >
                                     {child.label}
                                   </Link>
@@ -306,7 +291,7 @@ export default function Header() {
                               <div className="border-t border-beige">
                                 <Link
                                   href={link.href}
-                                  className="block px-7 py-3 font-body text-[11px] uppercase tracking-[0.18em] text-gold transition-colors duration-200 hover:text-maroon"
+                                  className="block px-7 py-3 font-body text-[11px] uppercase tracking-[0.18em] text-gold transition-colors duration-200 hover:text-maroon pointer-events-auto"
                                 >
                                   View All Collection →
                                 </Link>
@@ -321,19 +306,18 @@ export default function Header() {
               })}
             </nav>
 
-            <div className="flex shrink-0 items-center gap-2 sm:gap-3 lg:gap-4">
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
               <HeaderSearch />
 
               <Link
                 href="/wishlist"
-                className="relative hidden h-10 w-10 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon sm:flex sm:h-11 sm:w-11"
+                className="relative hidden h-11 w-11 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon sm:flex min-h-[44px] min-w-[44px] pointer-events-auto"
                 aria-label={`Wishlist${
-                  visibleWishlistCount > 0
-                    ? ` (${visibleWishlistCount} items)`
-                    : ''
+                  visibleWishlistCount > 0 ? ` (${visibleWishlistCount} items)` : ''
                 }`}
               >
                 <svg
+                  className="pointer-events-none"
                   width="21"
                   height="21"
                   viewBox="0 0 24 24"
@@ -348,7 +332,7 @@ export default function Header() {
                 </svg>
 
                 {visibleWishlistCount > 0 && (
-                  <span className="absolute right-0 top-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-maroon px-1 font-body text-[10px] font-medium text-white">
+                  <span className="absolute right-1 top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-maroon px-1 font-body text-[10px] font-medium text-white">
                     {visibleWishlistCount > 99 ? '99+' : visibleWishlistCount}
                   </span>
                 )}
@@ -357,14 +341,13 @@ export default function Header() {
               <button
                 type="button"
                 onClick={openCart}
-                className="relative flex h-10 w-10 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon sm:h-11 sm:w-11"
+                className="relative flex h-11 w-11 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon min-h-[44px] min-w-[44px] pointer-events-auto cursor-pointer"
                 aria-label={`Shopping bag${
-                  visibleCartItemCount > 0
-                    ? ` (${visibleCartItemCount} items)`
-                    : ''
+                  visibleCartItemCount > 0 ? ` (${visibleCartItemCount} items)` : ''
                 }`}
               >
                 <svg
+                  className="pointer-events-none"
                   width="22"
                   height="22"
                   viewBox="0 0 24 24"
@@ -381,7 +364,7 @@ export default function Header() {
                 </svg>
 
                 {visibleCartItemCount > 0 && (
-                  <span className="absolute right-0 top-0 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-maroon px-1 font-body text-[10px] font-medium text-white">
+                  <span className="absolute right-1 top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-maroon px-1 font-body text-[10px] font-medium text-white">
                     {visibleCartItemCount > 99 ? '99+' : visibleCartItemCount}
                   </span>
                 )}
@@ -389,10 +372,11 @@ export default function Header() {
 
               <Link
                 href="/account"
-                className="hidden h-10 w-10 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon lg:flex"
+                className="hidden h-11 w-11 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon lg:flex min-h-[44px] min-w-[44px] pointer-events-auto"
                 aria-label="My Account"
               >
                 <svg
+                  className="pointer-events-none"
                   width="21"
                   height="21"
                   viewBox="0 0 24 24"
@@ -411,10 +395,11 @@ export default function Header() {
               <button
                 type="button"
                 onClick={openMobileMenu}
-                className="flex h-10 w-10 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon lg:hidden"
+                className="flex h-11 w-11 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon lg:hidden min-h-[44px] min-w-[44px] pointer-events-auto cursor-pointer"
                 aria-label="Open menu"
               >
                 <svg
+                  className="pointer-events-none"
                   width="25"
                   height="25"
                   viewBox="0 0 24 24"

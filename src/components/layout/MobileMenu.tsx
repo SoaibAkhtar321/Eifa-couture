@@ -1,14 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-
 import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 
 import { SOCIAL_LINKS } from '@/lib/constants';
 import { MOCK_CATEGORIES } from '@/lib/mock-data';
-
 import { useUIStore } from '@/store/ui-store';
 
 type MenuLink = {
@@ -49,13 +47,11 @@ function toMenuLink(category: { name: string; slug: string }): MenuLink {
 
 function isMenCategory(category: { name: string; slug: string }) {
   const value = `${category.name} ${category.slug}`.toLowerCase();
-
   return value.includes('men') || value.includes('mens');
 }
 
 function isAccessoryCategory(category: { name: string; slug: string }) {
   const value = `${category.name} ${category.slug}`.toLowerCase();
-
   return (
     value.includes('accessor') ||
     value.includes('bag') ||
@@ -97,42 +93,15 @@ function buildDynamicMenuSections(): MenuSection[] {
 }
 
 const overlayVariants: Variants = {
-  hidden: {
-    opacity: 0,
-  },
-  visible: {
-    opacity: 1,
-    transition: {
-      duration: 0.25,
-    },
-  },
-  exit: {
-    opacity: 0,
-    transition: {
-      duration: 0.2,
-      delay: 0.08,
-    },
-  },
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.25 } },
+  exit: { opacity: 0, transition: { duration: 0.2, delay: 0.08 } },
 };
 
 const panelVariants: Variants = {
-  hidden: {
-    x: '100%',
-  },
-  visible: {
-    x: 0,
-    transition: {
-      duration: 0.42,
-      ease: [0.25, 0.46, 0.45, 0.94],
-    },
-  },
-  exit: {
-    x: '100%',
-    transition: {
-      duration: 0.32,
-      ease: [0.55, 0.06, 0.68, 0.19],
-    },
-  },
+  hidden: { x: '100%' },
+  visible: { x: 0, transition: { duration: 0.42, ease: [0.25, 0.46, 0.45, 0.94] } },
+  exit: { x: '100%', transition: { duration: 0.32, ease: [0.55, 0.06, 0.68, 0.19] } },
 };
 
 const listVariants: Variants = {
@@ -146,17 +115,11 @@ const listVariants: Variants = {
 };
 
 const itemVariants: Variants = {
-  hidden: {
-    opacity: 0,
-    x: 22,
-  },
+  hidden: { opacity: 0, x: 22 },
   visible: {
     opacity: 1,
     x: 0,
-    transition: {
-      duration: 0.32,
-      ease: [0.25, 0.46, 0.45, 0.94],
-    },
+    transition: { duration: 0.32, ease: [0.25, 0.46, 0.45, 0.94] },
   },
 };
 
@@ -172,25 +135,31 @@ export default function MobileMenu() {
   const closeMobileMenu = useUIStore((state) => state.closeMobileMenu);
 
   const womenQuickHref =
-    menuSections
-      .find((section) => section.label === 'Shop Women')
-      ?.children[0]?.href ?? '/shop?category=womens-kurtas';
+    menuSections.find((section) => section.label === 'Shop Women')?.children[0]?.href ??
+    '/shop?category=womens-kurtas';
 
   const menQuickHref =
-    menuSections
-      .find((section) => section.label === 'Shop Men')
-      ?.children[0]?.href ?? '/shop?category=mens-kurtas';
+    menuSections.find((section) => section.label === 'Shop Men')?.children[0]?.href ??
+    '/shop?category=mens-kurtas';
 
+  // Body scroll lock with guaranteed teardown
   useEffect(() => {
-    if (!isMobileMenuOpen) return;
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
+    if (isMobileMenuOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
   }, [isMobileMenuOpen]);
+
+  // Fallback programmatic body scroll cleanup on unmount/route transitions
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   const handleToggleAccordion = (label: string) => {
     setExpandedItem((current) => (current === label ? null : label));
@@ -209,27 +178,32 @@ export default function MobileMenu() {
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="fixed inset-0 z-[120] lg:hidden"
+          className="fixed inset-0 z-[120] lg:hidden h-dvh w-screen overflow-hidden"
         >
-          <button
-            type="button"
+          {/* Backdrop layer with pointer-events toggled strictly based on open state */}
+          <div
+            role="button"
+            tabIndex={-1}
             aria-label="Close menu"
             onClick={closeMobileMenu}
-            className="absolute inset-0 bg-charcoal/50 backdrop-blur-[2px]"
+            className={`absolute inset-0 z-0 h-full w-full cursor-pointer bg-charcoal/50 backdrop-blur-[2px] transition-opacity duration-300 ${
+              isMobileMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'
+            }`}
           />
 
+          {/* Menu panel with explicit z-index avoiding touch interception */}
           <motion.aside
             variants={panelVariants}
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="absolute inset-y-0 right-0 flex h-dvh w-full flex-col overflow-hidden bg-ivory shadow-[-12px_0_45px_rgba(0,0,0,0.12)] sm:max-w-[460px]"
+            className="absolute inset-y-0 right-0 z-10 flex h-dvh w-full flex-col overflow-y-auto bg-ivory shadow-[-12px_0_45px_rgba(0,0,0,0.12)] sm:max-w-[460px] pointer-events-auto"
           >
-            <div className="flex items-center justify-between border-b border-beige bg-ivory px-5 py-4">
+            <div className="flex items-center justify-between border-b border-beige bg-ivory px-5 py-4 shrink-0">
               <Link
                 href="/"
                 onClick={handleLinkClick}
-                className="group flex items-center"
+                className="group flex items-center min-h-[44px] min-w-[44px]"
                 aria-label="Eifa Couture — Home"
               >
                 {!logoFailed ? (
@@ -259,7 +233,7 @@ export default function MobileMenu() {
               <button
                 type="button"
                 onClick={closeMobileMenu}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-beige bg-white text-2xl text-charcoal/60 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-beige bg-white text-2xl text-charcoal/60 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white min-h-[44px] min-w-[44px]"
                 aria-label="Close menu"
               >
                 ×
@@ -282,7 +256,7 @@ export default function MobileMenu() {
                     <Link
                       href={womenQuickHref}
                       onClick={handleLinkClick}
-                      className="border border-maroon bg-maroon px-4 py-4 text-center text-[12px] font-medium uppercase tracking-[0.22em] text-white transition-all duration-300 hover:bg-charcoal"
+                      className="min-h-[44px] flex items-center justify-center border border-maroon bg-maroon px-4 py-4 text-center text-[12px] font-medium uppercase tracking-[0.22em] text-white transition-all duration-300 hover:bg-charcoal"
                     >
                       Women
                     </Link>
@@ -290,7 +264,7 @@ export default function MobileMenu() {
                     <Link
                       href={menQuickHref}
                       onClick={handleLinkClick}
-                      className="border border-gold bg-gold px-4 py-4 text-center text-[12px] font-medium uppercase tracking-[0.22em] text-charcoal transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
+                      className="min-h-[44px] flex items-center justify-center border border-gold bg-gold px-4 py-4 text-center text-[12px] font-medium uppercase tracking-[0.22em] text-charcoal transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
                     >
                       Men
                     </Link>
@@ -298,7 +272,7 @@ export default function MobileMenu() {
                     <Link
                       href="/shop?collection=new-arrivals"
                       onClick={handleLinkClick}
-                      className="border border-beige bg-white px-4 py-4 text-center text-[12px] font-medium uppercase tracking-[0.22em] text-charcoal transition-all duration-300 hover:border-maroon hover:text-maroon"
+                      className="min-h-[44px] flex items-center justify-center border border-beige bg-white px-4 py-4 text-center text-[12px] font-medium uppercase tracking-[0.22em] text-charcoal transition-all duration-300 hover:border-maroon hover:text-maroon"
                     >
                       New
                     </Link>
@@ -306,7 +280,7 @@ export default function MobileMenu() {
                     <Link
                       href="/shop?collection=best-sellers"
                       onClick={handleLinkClick}
-                      className="border border-beige bg-white px-4 py-4 text-center text-[12px] font-medium uppercase tracking-[0.22em] text-charcoal transition-all duration-300 hover:border-maroon hover:text-maroon"
+                      className="min-h-[44px] flex items-center justify-center border border-beige bg-white px-4 py-4 text-center text-[12px] font-medium uppercase tracking-[0.22em] text-charcoal transition-all duration-300 hover:border-maroon hover:text-maroon"
                     >
                       Best
                     </Link>
@@ -316,14 +290,14 @@ export default function MobileMenu() {
                 <motion.nav
                   variants={itemVariants}
                   aria-label="Mobile quick navigation"
-                  className="border-y border-beige py-3"
+                  className="border-y border-beige py-3 space-y-1"
                 >
                   {quickLinks.map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}
                       onClick={handleLinkClick}
-                      className="flex items-center justify-between py-3 font-body text-[13px] font-medium uppercase tracking-[0.28em] text-charcoal transition-colors duration-300 hover:text-maroon"
+                      className="min-h-[44px] flex items-center justify-between py-3 font-body text-[13px] font-medium uppercase tracking-[0.28em] text-charcoal transition-colors duration-300 hover:text-maroon"
                     >
                       <span>{link.label}</span>
                       <span className="text-gold">→</span>
@@ -347,7 +321,7 @@ export default function MobileMenu() {
                         <button
                           type="button"
                           onClick={() => handleToggleAccordion(section.label)}
-                          className="flex w-full items-center justify-between gap-4 px-4 py-4 text-left"
+                          className="min-h-[44px] flex w-full items-center justify-between gap-4 px-4 py-4 text-left"
                           aria-label={
                             isExpanded
                               ? `Collapse ${section.label}`
@@ -366,7 +340,7 @@ export default function MobileMenu() {
                           </span>
 
                           <span
-                            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-beige text-xl text-maroon transition-transform duration-300 ${
+                            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-beige text-xl text-maroon transition-transform duration-300 min-h-[44px] min-w-[44px] ${
                               isExpanded ? 'rotate-45 bg-cream' : ''
                             }`}
                           >
@@ -389,7 +363,7 @@ export default function MobileMenu() {
                                     key={child.href}
                                     href={child.href}
                                     onClick={handleLinkClick}
-                                    className="flex items-center justify-between py-2.5 font-subheading text-[18px] tracking-wide text-charcoal/68 transition-colors duration-300 hover:text-maroon"
+                                    className="min-h-[44px] flex items-center justify-between py-2.5 font-subheading text-[18px] tracking-wide text-charcoal/68 transition-colors duration-300 hover:text-maroon"
                                   >
                                     <span>{child.label}</span>
                                     <span className="text-sm text-gold">→</span>
@@ -415,7 +389,7 @@ export default function MobileMenu() {
                         key={link.href}
                         href={link.href}
                         onClick={handleLinkClick}
-                        className="flex items-center justify-between py-2.5 font-subheading text-[18px] tracking-wide text-charcoal/62 transition-colors duration-300 hover:text-maroon"
+                        className="min-h-[44px] flex items-center justify-between py-2.5 font-subheading text-[18px] tracking-wide text-charcoal/62 transition-colors duration-300 hover:text-maroon"
                       >
                         <span>{link.label}</span>
                         <span className="text-sm text-gold">→</span>
@@ -426,7 +400,7 @@ export default function MobileMenu() {
               </motion.div>
             </div>
 
-            <div className="border-t border-beige bg-ivory px-5 py-4">
+            <div className="border-t border-beige bg-ivory px-5 py-4 shrink-0">
               <div className="grid grid-cols-3 gap-3">
                 {SOCIAL_LINKS.slice(0, 3).map((social) => (
                   <a
@@ -434,7 +408,7 @@ export default function MobileMenu() {
                     href={social.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="border border-beige bg-white px-3 py-3 text-center text-[10px] font-medium uppercase tracking-[0.18em] text-charcoal/60 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
+                    className="min-h-[44px] flex items-center justify-center border border-beige bg-white px-3 py-3 text-center text-[10px] font-medium uppercase tracking-[0.18em] text-charcoal/60 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
                   >
                     {social.name}
                   </a>

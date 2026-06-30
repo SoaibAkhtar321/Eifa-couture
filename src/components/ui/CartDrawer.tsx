@@ -79,16 +79,24 @@ export default function CartDrawer() {
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
   const freeShippingDelta = SHIPPING_INFO.freeShippingThreshold - total;
 
+  // Body scroll lock with guaranteed teardown on state change
   useEffect(() => {
-    if (!isCartOpen) return;
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
+    if (isCartOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
   }, [isCartOpen]);
+
+  // Fallback programmatic body scroll cleanup on unmount/route transitions
+  useEffect(() => {
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, []);
 
   return (
     <AnimatePresence>
@@ -100,7 +108,9 @@ export default function CartDrawer() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 z-[100] bg-charcoal/40 backdrop-blur-sm"
+            className={`fixed inset-0 z-[100] bg-charcoal/40 backdrop-blur-sm ${
+              isCartOpen ? 'pointer-events-auto' : 'pointer-events-none'
+            }`}
             onClick={closeCart}
             aria-hidden="true"
           />
@@ -111,7 +121,7 @@ export default function CartDrawer() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed bottom-0 right-0 top-0 z-[110] flex w-full max-w-[460px] flex-col bg-ivory shadow-2xl"
+            className="fixed bottom-0 right-0 top-0 z-[110] flex w-full max-w-[460px] flex-col bg-ivory shadow-2xl pointer-events-auto"
             role="dialog"
             aria-modal="true"
             aria-label="Shopping bag"
@@ -393,12 +403,12 @@ export default function CartDrawer() {
 
                 <div className="space-y-3 px-5 py-5 sm:px-6">
                   <Link
-  href="/checkout"
-  onClick={closeCart}
-  className="btn-luxury btn-luxury-primary w-full text-center"
->
-  Checkout
-</Link>
+                    href="/checkout"
+                    onClick={closeCart}
+                    className="btn-luxury btn-luxury-primary w-full text-center"
+                  >
+                    Checkout
+                  </Link>
 
                   <Link
                     href="/shop"

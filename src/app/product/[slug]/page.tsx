@@ -90,10 +90,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <>
       <Header />
 
-      <ProductDetailsClient
-        product={product}
-        relatedProducts={relatedProducts}
-      />
+      {/* Suppressing hydration warnings prevents React from tearing down the DOM tree when server/client layouts slightly desync in dev mode */}
+      <main 
+        id="product-main-content"
+        className="w-full scroll-mt-[72px] sm:scroll-mt-[78px] lg:scroll-mt-[84px]"
+        suppressHydrationWarning
+      >
+        <ProductDetailsClient
+          product={product}
+          relatedProducts={relatedProducts}
+        />
+      </main>
 
       <Footer />
       <CartDrawer />

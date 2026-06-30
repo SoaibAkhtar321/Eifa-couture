@@ -1,5 +1,3 @@
-"use client";
-
 /* ============================================
    EIFA COUTURE — UI Store (Zustand)
    Global UI state management
@@ -21,6 +19,9 @@ interface UIState {
 
   openSearch: () => void;
   closeSearch: () => void;
+  
+  // Ensures all overlays are safely closed and touch interaction is restored
+  resetOverlays: () => void;
 }
 
 export const useUIStore = create<UIState>()((set) => ({
@@ -45,4 +46,11 @@ export const useUIStore = create<UIState>()((set) => ({
   openSearch: () =>
     set({ isSearchOpen: true, isCartOpen: false, isMobileMenuOpen: false }),
   closeSearch: () => set({ isSearchOpen: false }),
+
+  resetOverlays: () =>
+    set({
+      isCartOpen: false,
+      isMobileMenuOpen: false,
+      isSearchOpen: false,
+    }),
 }));

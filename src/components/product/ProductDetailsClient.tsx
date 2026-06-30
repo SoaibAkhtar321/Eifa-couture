@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect } from 'react';
+import { useEffect } from 'react';
 
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -21,36 +21,14 @@ export default function ProductDetailsClient({
   product,
   relatedProducts,
 }: ProductDetailsClientProps) {
-  useLayoutEffect(() => {
-    const html = document.documentElement;
-    const previousScrollBehavior = html.style.scrollBehavior;
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+  }, [product?.slug]);
 
-    html.style.scrollBehavior = 'auto';
-
-    window.scrollTo({
-      top: 0,
-      left: 0,
-      behavior: 'auto',
-    });
-
-    const frame = window.requestAnimationFrame(() => {
-      window.scrollTo({
-        top: 0,
-        left: 0,
-        behavior: 'auto',
-      });
-
-      html.style.scrollBehavior = previousScrollBehavior;
-    });
-
-    return () => {
-      window.cancelAnimationFrame(frame);
-      html.style.scrollBehavior = previousScrollBehavior;
-    };
-  }, [product.slug]);
+  if (!product) return null;
 
   return (
-    <main className="bg-ivory">
+    <main className="bg-ivory w-full overflow-x-hidden">
       <section className="border-b border-beige bg-gradient-to-b from-cream/60 to-ivory">
         <div className="luxury-container py-4 sm:py-5">
           <nav
@@ -76,7 +54,7 @@ export default function ProductDetailsClient({
             <span>/</span>
 
             <span className="line-clamp-1 text-charcoal/70">
-              {product.name}
+              {product.name || 'Product Details'}
             </span>
           </nav>
         </div>
@@ -84,15 +62,15 @@ export default function ProductDetailsClient({
 
       <section className="pb-12 pt-6 sm:pb-16 sm:pt-8 lg:pb-20 lg:pt-12">
         <div className="luxury-container">
-          <motion.div
-            initial={{ opacity: 0, y: 18 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="grid gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:gap-12 xl:gap-16"
+          <div
+            // Ensures the layout preserves structural height while inner client components hydrate
+            className="grid gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:gap-12 xl:gap-16 min-h-[600px] items-start"
           >
-            <ProductImageGallery product={product} />
+            {product.images?.length > 0 && (
+              <ProductImageGallery product={product} />
+            )}
             <ProductInfo product={product} />
-          </motion.div>
+          </div>
         </div>
       </section>
 
