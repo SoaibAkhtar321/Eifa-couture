@@ -177,3 +177,44 @@ export function isInStock(
   const key = getStockKey(size, color);
   return (stock[key] ?? 0) > 0;
 }
+
+/**
+ * Split text into segments around a case-insensitive match of `query`,
+ * for rendering highlighted search matches. Returns the original text
+ * as a single non-matching segment if there's no match.
+ * @example highlightSegments("Chanderi Silk Kurta", "silk")
+ *   → [{ text: "Chanderi ", match: false }, { text: "Silk", match: true }, { text: " Kurta", match: false }]
+ */
+export interface TextSegment {
+  text: string;
+  match: boolean;
+}
+
+export function highlightSegments(text: string, query: string): TextSegment[] {
+  const trimmedQuery = query.trim();
+  if (!trimmedQuery) return [{ text, match: false }];
+
+  const lowerText = text.toLowerCase();
+  const lowerQuery = trimmedQuery.toLowerCase();
+  const matchIndex = lowerText.indexOf(lowerQuery);
+
+  if (matchIndex === -1) return [{ text, match: false }];
+
+  const segments: TextSegment[] = [];
+
+  if (matchIndex > 0) {
+    segments.push({ text: text.slice(0, matchIndex), match: false });
+  }
+
+  segments.push({
+    text: text.slice(matchIndex, matchIndex + trimmedQuery.length),
+    match: true,
+  });
+
+  const remainder = text.slice(matchIndex + trimmedQuery.length);
+  if (remainder) {
+    segments.push({ text: remainder, match: false });
+  }
+
+  return segments;
+}

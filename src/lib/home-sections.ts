@@ -31,7 +31,7 @@ export const MOCK_HOME_SECTIONS: HomeSection[] = [
       'Handcrafted crochet bags made with a refined silk finish, designed to complete ethnic and festive looks with elegance.',
     secondaryDescription:
       'Lightweight, graceful, and statement-worthy — these bags pair beautifully with Chikankari kurtas, sarees, festive sets, and occasion wear.',
-    imageUrl: '/images/categories/accessories.png',
+    imageUrl: '/images/categories/dupattas.png',
     imageAlt: 'Crochet silk bags by Eifa Couture',
     href: '/shop?category=crochet-bags',
     primaryCta: 'Shop Bags',

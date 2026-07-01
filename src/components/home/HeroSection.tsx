@@ -102,6 +102,13 @@ export default function HeroSection() {
             >
               Shop Men
             </Link>
+
+            <Link
+              href="/shop?category=accessories"
+              className="col-span-2 inline-flex min-h-12 items-center justify-center border border-gold/70 bg-transparent px-5 py-3 font-body text-[11px] font-medium uppercase tracking-[0.18em] text-gold backdrop-blur-sm transition-all duration-300 hover:bg-gold hover:text-charcoal sm:col-span-1 sm:px-8"
+            >
+              Shop Accessories
+            </Link>
           </div>
 
           <div className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:mt-7">
