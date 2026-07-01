@@ -90,13 +90,14 @@ export default async function ProductPage({ params }: ProductPageProps) {
     <>
       <Header />
 
-      {/* Suppressing hydration warnings prevents React from tearing down the DOM tree when server/client layouts slightly desync in dev mode */}
-      <main 
+      <main
         id="product-main-content"
         className="w-full scroll-mt-[72px] sm:scroll-mt-[78px] lg:scroll-mt-[84px]"
-        suppressHydrationWarning
       >
+        {/* key={slug} forces a full unmount/remount on every product change,
+            clearing leftover gallery/review/carousel state from the previous product */}
         <ProductDetailsClient
+          key={slug}
           product={product}
           relatedProducts={relatedProducts}
         />
