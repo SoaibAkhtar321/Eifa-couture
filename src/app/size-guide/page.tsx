@@ -1,9 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/ui/CartDrawer';
 
 export const metadata: Metadata = {
   title: 'Size Guide | Eifa Couture',
@@ -55,7 +52,6 @@ const fitTips = [
 export default function SizeGuidePage() {
   return (
     <>
-      <Header />
 
       <main className="bg-ivory">
         <section className="border-b border-beige bg-gradient-to-b from-cream/70 to-ivory">
@@ -238,8 +234,6 @@ export default function SizeGuidePage() {
         </section>
       </main>
 
-      <Footer />
-      <CartDrawer />
     </>
   );
 }

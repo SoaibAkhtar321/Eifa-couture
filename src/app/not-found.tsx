@@ -1,14 +1,8 @@
 import Link from 'next/link';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/ui/CartDrawer';
-
 export default function NotFoundPage() {
   return (
     <>
-      <Header />
-
       <main className="bg-ivory">
         <section className="min-h-[68vh] border-b border-beige bg-gradient-to-b from-cream/70 to-ivory">
           <div className="luxury-container flex min-h-[68vh] items-center justify-center py-16 text-center">
@@ -44,9 +38,6 @@ export default function NotFoundPage() {
           </div>
         </section>
       </main>
-
-      <Footer />
-      <CartDrawer />
     </>
   );
 }

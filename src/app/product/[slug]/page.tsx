@@ -1,10 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import ProductDetailsClient from '@/components/product/ProductDetailsClient';
-import CartDrawer from '@/components/ui/CartDrawer';
 
 import { MOCK_PRODUCTS } from '@/lib/mock-data';
 
@@ -88,7 +85,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   return (
     <>
-      <Header />
 
       <main
         id="product-main-content"
@@ -103,8 +99,6 @@ export default async function ProductPage({ params }: ProductPageProps) {
         />
       </main>
 
-      <Footer />
-      <CartDrawer />
     </>
   );
 }

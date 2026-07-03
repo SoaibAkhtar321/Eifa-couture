@@ -2,6 +2,10 @@ import type { Metadata } from 'next';
 import { Cormorant_Garamond, Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+import CartDrawer from '@/components/ui/CartDrawer';
+
 const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
@@ -102,9 +106,14 @@ export default function RootLayout({
     >
       <body className="min-h-screen bg-ivory font-body text-charcoal selection:bg-maroon selection:text-white">
         <div className="relative flex min-h-screen flex-col overflow-x-hidden">
+          <Header />
+
           <div className="flex-1 w-full relative z-10">
             {children}
           </div>
+
+          <Footer />
+          <CartDrawer />
         </div>
       </body>
     </html>

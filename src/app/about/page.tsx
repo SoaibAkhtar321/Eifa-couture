@@ -2,9 +2,6 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/ui/CartDrawer';
 
 export const metadata: Metadata = {
   title: 'Our Story | Eifa Couture',
@@ -54,7 +51,6 @@ const timeline = [
 export default function AboutPage() {
   return (
     <>
-      <Header />
 
       <main className="bg-ivory">
         <section className="relative overflow-hidden border-b border-beige bg-charcoal text-white">
@@ -232,8 +228,6 @@ export default function AboutPage() {
         </section>
       </main>
 
-      <Footer />
-      <CartDrawer />
     </>
   );
 }

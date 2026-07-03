@@ -1,9 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/ui/CartDrawer';
 import ShopPageClient from '@/components/shop/ShopPageClient';
 
 export const metadata: Metadata = {
@@ -15,7 +12,6 @@ export const metadata: Metadata = {
 export default function ShopPage() {
   return (
     <>
-      <Header />
 
       <main>
         <Suspense
@@ -33,8 +29,6 @@ export default function ShopPage() {
         </Suspense>
       </main>
 
-      <Footer />
-      <CartDrawer />
     </>
   );
 }

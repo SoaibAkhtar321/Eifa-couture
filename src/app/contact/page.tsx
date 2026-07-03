@@ -1,9 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/ui/CartDrawer';
 
 export const metadata: Metadata = {
   title: 'Contact Us | Eifa Couture',
@@ -46,7 +43,6 @@ const enquiryTypes = [
 export default function ContactPage() {
   return (
     <>
-      <Header />
 
       <main className="bg-ivory">
         <section className="border-b border-beige bg-gradient-to-b from-cream/70 to-ivory">
@@ -266,8 +262,6 @@ export default function ContactPage() {
         </section>
       </main>
 
-      <Footer />
-      <CartDrawer />
     </>
   );
 }

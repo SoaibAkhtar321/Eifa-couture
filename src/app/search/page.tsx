@@ -6,9 +6,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/ui/CartDrawer';
 
 import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '@/lib/mock-data';
 import {
@@ -317,7 +314,6 @@ export default function SearchPage() {
 
   return (
     <>
-      <Header />
 
       <main className="bg-ivory">
         {/* Compact search bar — replaces the old hero + separate input */}
@@ -791,8 +787,6 @@ export default function SearchPage() {
         )}
       </AnimatePresence>
 
-      <Footer />
-      <CartDrawer />
     </>
   );
 }

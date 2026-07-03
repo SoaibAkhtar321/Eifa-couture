@@ -4,9 +4,6 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/ui/CartDrawer';
 
 import { SHIPPING_INFO } from '@/lib/constants';
 import { formatPrice } from '@/lib/utils';
@@ -118,7 +115,6 @@ export default function CheckoutPage() {
 
   return (
     <>
-      <Header />
 
       <main className="bg-ivory">
         <section className="border-b border-beige bg-gradient-to-b from-cream/70 to-ivory">
@@ -439,8 +435,6 @@ export default function CheckoutPage() {
         </section>
       </main>
 
-      <Footer />
-      <CartDrawer />
     </>
   );
 }

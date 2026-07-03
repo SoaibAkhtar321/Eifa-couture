@@ -1,8 +1,5 @@
 import type { Metadata } from 'next';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/ui/CartDrawer';
 
 import HeroSection from '@/components/home/HeroSection';
 import FeaturedCollection from '@/components/home/FeaturedCollection';
@@ -24,7 +21,6 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <>
-      <Header />
 
       <main>
         <HeroSection />
@@ -39,8 +35,6 @@ export default function HomePage() {
         <HeritageSection />
       </main>
 
-      <Footer />
-      <CartDrawer />
     </>
   );
 }

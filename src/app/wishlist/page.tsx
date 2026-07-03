@@ -5,9 +5,6 @@ import { useEffect, useMemo, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/ui/CartDrawer';
 
 import { MOCK_PRODUCTS } from '@/lib/mock-data';
 import { formatPrice } from '@/lib/utils';
@@ -79,7 +76,6 @@ export default function WishlistPage() {
 
   return (
     <>
-      <Header />
 
       <main className="bg-ivory">
         <section className="border-b border-beige bg-gradient-to-b from-cream/70 to-ivory">
@@ -249,8 +245,6 @@ export default function WishlistPage() {
         </section>
       </main>
 
-      <Footer />
-      <CartDrawer />
     </>
   );
 }

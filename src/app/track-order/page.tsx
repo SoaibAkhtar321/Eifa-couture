@@ -3,9 +3,6 @@
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/ui/CartDrawer';
 
 const orderSteps = [
   {
@@ -40,7 +37,6 @@ export default function TrackOrderPage() {
 
   return (
     <>
-      <Header />
 
       <main className="bg-ivory">
         <section className="border-b border-beige bg-gradient-to-b from-cream/70 to-ivory">
@@ -191,8 +187,6 @@ export default function TrackOrderPage() {
         </section>
       </main>
 
-      <Footer />
-      <CartDrawer />
     </>
   );
 }

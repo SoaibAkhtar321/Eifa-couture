@@ -2,9 +2,6 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import CartDrawer from '@/components/ui/CartDrawer';
 
 import { MOCK_ORDERS } from '@/lib/mock-data';
 import { formatDate, formatPrice } from '@/lib/utils';
@@ -195,7 +192,6 @@ export default function AccountOrdersPage() {
 
   return (
     <>
-      <Header />
 
       <main className="bg-ivory">
         <section className="border-b border-beige bg-gradient-to-b from-cream/70 to-ivory">
@@ -288,8 +284,6 @@ export default function AccountOrdersPage() {
         </section>
       </main>
 
-      <Footer />
-      <CartDrawer />
     </>
   );
 }
