@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { MOCK_PRODUCTS } from '@/lib/mock-data';
 import {
   addRecentSearch,
@@ -131,16 +132,7 @@ export default function HeaderSearch() {
 
   // Lock background scroll while the search overlay is open (matters most
   // for the mobile full-screen takeover).
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [isOpen]);
+  useBodyScrollLock(isOpen);
 
   const closeSearch = () => {
     closeSearchStore();
@@ -205,7 +197,7 @@ export default function HeaderSearch() {
   };
 
   return (
-    <div ref={searchRef} className="relative z-[140]">
+    <div ref={searchRef} className="relative z-(--z-dropdown)">
       <button
         type="button"
         onClick={() => {
@@ -238,7 +230,7 @@ export default function HeaderSearch() {
 
       {isOpen && (
         <div
-          className="fixed inset-0 z-[150] flex flex-col bg-ivory sm:inset-x-auto sm:inset-y-auto sm:left-auto sm:right-6 sm:top-[98px] sm:z-[140] sm:h-auto sm:w-[430px] sm:border sm:border-beige sm:bg-white sm:shadow-[0_18px_55px_rgba(0,0,0,0.16)] lg:right-10 lg:top-[104px]"
+          className="fixed inset-0 z-(--z-fullscreen) flex flex-col bg-ivory sm:inset-x-auto sm:inset-y-auto sm:left-auto sm:right-6 sm:top-[98px] sm:z-(--z-dropdown) sm:h-auto sm:w-[430px] sm:border sm:border-beige sm:bg-white sm:shadow-[0_18px_55px_rgba(0,0,0,0.16)] lg:right-10 lg:top-[104px]"
           role="dialog"
           aria-modal="true"
           aria-label="Search"
@@ -314,7 +306,7 @@ export default function HeaderSearch() {
           <div
             id="header-search-results"
             role="listbox"
-            className="flex-1 overflow-y-auto sm:max-h-[420px] sm:flex-none"
+            className="flex-1 overflow-y-auto overscroll-y-contain sm:max-h-[420px] sm:flex-none"
           >
             {!query.trim() ? (
               <div className="p-5">

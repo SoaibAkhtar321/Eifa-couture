@@ -55,7 +55,7 @@ export default function Header() {
       <AnnouncementBar />
 
       <header
-        className={`sticky top-0 z-[130] border-b border-beige transition-all duration-500 pointer-events-auto ${
+        className={`sticky top-0 z-(--z-header) border-b border-beige transition-all duration-500 pointer-events-auto ${
           scrolled
             ? 'bg-ivory/96 shadow-[0_8px_24px_rgba(0,0,0,0.045)] backdrop-blur-md'
             : 'bg-ivory/92 backdrop-blur-sm'

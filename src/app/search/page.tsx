@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 
 
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '@/lib/mock-data';
 import {
   addRecentSearch,
@@ -219,16 +220,7 @@ export default function SearchPage() {
   }, [isSortMenuOpen]);
 
   // Lock background scroll while the mobile filter sheet is open.
-  useEffect(() => {
-    if (!isFilterSheetOpen) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-    };
-  }, [isFilterSheetOpen]);
+  useBodyScrollLock(isFilterSheetOpen);
 
   const handleClearRecent = () => {
     clearRecentSearches();
@@ -472,7 +464,7 @@ export default function SearchPage() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -6 }}
                             transition={{ duration: 0.15 }}
-                            className="absolute right-0 top-full z-[120] mt-2 w-52 border border-beige bg-white shadow-[0_12px_35px_rgba(0,0,0,0.12)]"
+                            className="absolute right-0 top-full z-(--z-dropdown) mt-2 w-52 border border-beige bg-white shadow-[0_12px_35px_rgba(0,0,0,0.12)]"
                           >
                             {sortOptions.map((option) => (
                               <button
@@ -682,14 +674,14 @@ export default function SearchPage() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setIsFilterSheetOpen(false)}
-              className="fixed inset-0 z-[160] bg-charcoal/40 backdrop-blur-sm lg:hidden"
+              className="fixed inset-0 z-(--z-backdrop) bg-charcoal/40 backdrop-blur-sm lg:hidden"
             />
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-x-0 bottom-0 z-[170] max-h-[80vh] overflow-y-auto rounded-t-2xl border-t border-beige bg-white p-6 shadow-2xl lg:hidden"
+              className="fixed inset-x-0 bottom-0 z-(--z-drawer) max-h-[80vh] overflow-y-auto overscroll-y-contain rounded-t-2xl border-t border-beige bg-white p-6 shadow-2xl lg:hidden"
             >
               <div className="mb-5 flex items-center justify-between border-b border-beige pb-4">
                 <h4 className="font-heading text-xl text-charcoal">Sort &amp; Filter</h4>

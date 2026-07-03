@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { SOCIAL_LINKS } from '@/lib/constants';
 import { useUIStore } from '@/store/ui-store';
 
@@ -69,17 +70,7 @@ export default function MobileMenu() {
   const isMobileMenuOpen = useUIStore((state) => state.isMobileMenuOpen);
   const closeMobileMenu = useUIStore((state) => state.closeMobileMenu);
 
-  // Lock background scroll while the menu is open.
-  useEffect(() => {
-    if (!isMobileMenuOpen) return;
-
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.body.style.overflow = originalOverflow;
-    };
-  }, [isMobileMenuOpen]);
+  useBodyScrollLock(isMobileMenuOpen);
 
   // Close on Escape — no history/popstate involvement, so it can never
   // desync from Next's router. Closing via the browser/gesture back button
@@ -111,7 +102,7 @@ export default function MobileMenu() {
           initial="hidden"
           animate="visible"
           exit="exit"
-          className="fixed inset-0 z-[140] lg:hidden h-dvh w-screen overflow-hidden"
+          className="fixed inset-0 z-(--z-drawer) lg:hidden h-dvh w-screen overflow-hidden"
         >
           <div
             role="button"
@@ -169,7 +160,7 @@ export default function MobileMenu() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-5 py-6">
+            <div className="flex-1 overflow-y-auto overscroll-y-contain px-5 py-6">
               <motion.div
                 variants={listVariants}
                 initial="hidden"

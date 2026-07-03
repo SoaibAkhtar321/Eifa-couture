@@ -150,6 +150,26 @@ body {
   overflow-x: hidden;
 }
 
+/* ============================================
+   Z-INDEX SCALE
+   Single source of truth for stacking layers.
+   Use via Tailwind's z-(--token) syntax, e.g. z-(--z-drawer).
+   Mirrored in src/lib/z-index.ts for non-Tailwind (inline style) usage —
+   keep both in sync if these change.
+
+   Gaps of 10 are intentional: leaves room to slot a new layer in later
+   (e.g. a confirm-dialog nested inside a drawer) without renumbering
+   everything else.
+   ============================================ */
+:root {
+  --z-header: 30;      /* Sticky site header */
+  --z-dropdown: 40;     /* In-page dropdowns/popovers (e.g. search-page filter menu) */
+  --z-backdrop: 50;     /* Dim/blur background layer behind any overlay */
+  --z-drawer: 60;        /* Slide-in panels & bottom sheets (cart, mobile menu, filter/sort) */
+  --z-fullscreen: 70;   /* Full-screen takeovers (mobile search, image lightbox) */
+  --z-toast: 80;         /* Reserved for toast/snackbar notifications, above everything */
+}
+
 /* ── Selection Colors ── */
 ::selection {
   background-color: var(--color-maroon);

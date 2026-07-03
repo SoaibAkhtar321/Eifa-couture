@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import type { Product } from '@/types';
 
 interface ProductImageGalleryProps {
@@ -15,6 +16,7 @@ export default function ProductImageGallery({
 }: ProductImageGalleryProps) {
   const [selectedImage, setSelectedImage] = useState(product.images[0]);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+  useBodyScrollLock(isZoomOpen);
 
   return (
     <div className="w-full min-h-[450px] sm:min-h-[550px]">
@@ -77,7 +79,7 @@ export default function ProductImageGallery({
 
       {isZoomOpen && (
         <div 
-          className="fixed inset-0 z-[150] flex items-center justify-center bg-charcoal/95 p-4"
+          className="fixed inset-0 z-(--z-fullscreen) flex items-center justify-center bg-charcoal/95 p-4"
           role="dialog"
           aria-modal="true"
         >

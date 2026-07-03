@@ -4,6 +4,7 @@ import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import ShopProductCard from '@/components/shop/ShopProductCard';
+import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '@/lib/mock-data';
 import type { Product, SortOption } from '@/types';
 
@@ -166,6 +167,7 @@ export default function ShopPageClient() {
   
   // Mobile controls for bottom-sheet overlay
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
+  useBodyScrollLock(isMobileFiltersOpen);
 
   const activeCategories = useMemo(
     () =>
@@ -624,14 +626,14 @@ export default function ShopPageClient() {
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={() => setIsMobileFiltersOpen(false)}
-              className="fixed inset-0 bg-charcoal/40 z-[160] backdrop-blur-sm"
+              className="fixed inset-0 bg-charcoal/40 z-(--z-backdrop) backdrop-blur-sm"
             />
             <motion.div
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-x-0 bottom-0 z-[170] rounded-t-2xl border-t border-beige bg-white p-6 shadow-2xl max-h-[80vh] overflow-y-auto"
+              className="fixed inset-x-0 bottom-0 z-(--z-drawer) rounded-t-2xl border-t border-beige bg-white p-6 shadow-2xl max-h-[80vh] overflow-y-auto overscroll-y-contain"
             >
               <div className="flex items-center justify-between mb-5 border-b border-beige pb-4">
                 <h4 className="font-heading text-xl text-charcoal">Refine & Sort</h4>
