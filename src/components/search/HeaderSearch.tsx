@@ -13,6 +13,7 @@ import {
   removeRecentSearch,
 } from '@/lib/search-history';
 import { formatPrice, highlightSegments } from '@/lib/utils';
+import { useUIStore } from '@/store/ui-store';
 
 import type { Product } from '@/types';
 
@@ -67,7 +68,15 @@ export default function HeaderSearch() {
   const searchRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const [isOpen, setIsOpen] = useState(false);
+  // Search-open state now lives in the shared UI store, same as cart and
+  // the mobile menu. This is what keeps only one full-screen overlay open
+  // at a time — previously this was local state, so opening the cart or
+  // mobile menu while search was open left the search overlay stacked on
+  // top of it, silently eating taps.
+  const isOpen = useUIStore((state) => state.isSearchOpen);
+  const openSearch = useUIStore((state) => state.openSearch);
+  const closeSearchStore = useUIStore((state) => state.closeSearch);
+
   const [query, setQuery] = useState('');
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -101,13 +110,13 @@ export default function HeaderSearch() {
     const handleClickOutside = (event: MouseEvent) => {
       if (!searchRef.current) return;
       if (!searchRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        closeSearchStore();
       }
     };
 
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        setIsOpen(false);
+        closeSearchStore();
       }
     };
 
@@ -118,7 +127,7 @@ export default function HeaderSearch() {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isOpen]);
+  }, [isOpen, closeSearchStore]);
 
   // Lock background scroll while the search overlay is open (matters most
   // for the mobile full-screen takeover).
@@ -134,7 +143,7 @@ export default function HeaderSearch() {
   }, [isOpen]);
 
   const closeSearch = () => {
-    setIsOpen(false);
+    closeSearchStore();
     setQuery('');
     setHighlightedIndex(-1);
   };
@@ -144,7 +153,7 @@ export default function HeaderSearch() {
     if (!trimmed) return;
 
     setRecentSearches(addRecentSearch(trimmed));
-    setIsOpen(false);
+    closeSearchStore();
     setQuery('');
     setHighlightedIndex(-1);
     router.push(`/search?q=${encodeURIComponent(trimmed)}`);
@@ -152,7 +161,7 @@ export default function HeaderSearch() {
 
   const goToProduct = (product: Product) => {
     addRecentSearch(query.trim() || product.name);
-    setIsOpen(false);
+    closeSearchStore();
     setQuery('');
     setHighlightedIndex(-1);
     router.push(`/product/${product.slug}`);
@@ -200,13 +209,12 @@ export default function HeaderSearch() {
       <button
         type="button"
         onClick={() => {
-          setIsOpen((current) => {
-            const next = !current;
-            if (next) {
-              setRecentSearches(getRecentSearches());
-            }
-            return next;
-          });
+          if (isOpen) {
+            closeSearch();
+          } else {
+            setRecentSearches(getRecentSearches());
+            openSearch();
+          }
         }}
         className="flex h-10 w-10 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon sm:h-11 sm:w-11"
         aria-label="Toggle search"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
@@ -69,58 +69,38 @@ export default function MobileMenu() {
   const isMobileMenuOpen = useUIStore((state) => state.isMobileMenuOpen);
   const closeMobileMenu = useUIStore((state) => state.closeMobileMenu);
 
-  const historyPushedRef = useRef(false);
-
+  // Lock background scroll while the menu is open.
   useEffect(() => {
-    if (isMobileMenuOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
+    if (!isMobileMenuOpen) return;
 
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+    };
   }, [isMobileMenuOpen]);
 
+  // Close on Escape — no history/popstate involvement, so it can never
+  // desync from Next's router. Closing via the browser/gesture back button
+  // now behaves like normal navigation instead of being intercepted.
   useEffect(() => {
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, []);
+    if (!isMobileMenuOpen) return;
 
-  useEffect(() => {
-    if (isMobileMenuOpen && !historyPushedRef.current) {
-      window.history.pushState({ mobileMenuOpen: true }, '');
-      historyPushedRef.current = true;
-
-      const handlePopState = () => {
-        historyPushedRef.current = false;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
         closeMobileMenu();
-      };
+      }
+    };
 
-      window.addEventListener('popstate', handlePopState);
-
-      return () => {
-        window.removeEventListener('popstate', handlePopState);
-      };
-    }
-
-    if (!isMobileMenuOpen) {
-      historyPushedRef.current = false;
-    }
+    document.addEventListener('keydown', handleEscape);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+    };
   }, [isMobileMenuOpen, closeMobileMenu]);
 
-  const handleClose = () => {
-    if (window.history.state?.mobileMenuOpen) {
-      window.history.back();
-    } else {
-      closeMobileMenu();
-    }
-    historyPushedRef.current = false;
-  };
-
   const handleLinkClick = () => {
-    handleClose();
+    closeMobileMenu();
   };
 
   return (
@@ -137,10 +117,8 @@ export default function MobileMenu() {
             role="button"
             tabIndex={-1}
             aria-label="Close menu"
-            onClick={handleClose}
-            className={`absolute inset-0 z-0 h-full w-full cursor-pointer bg-charcoal/50 backdrop-blur-[2px] transition-opacity duration-300 ${
-              isMobileMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'
-            }`}
+            onClick={closeMobileMenu}
+            className="absolute inset-0 z-0 h-full w-full cursor-pointer bg-charcoal/50 backdrop-blur-[2px] pointer-events-auto"
           />
 
           <motion.aside
@@ -183,7 +161,7 @@ export default function MobileMenu() {
 
               <button
                 type="button"
-                onClick={handleClose}
+                onClick={closeMobileMenu}
                 className="flex h-11 w-11 items-center justify-center rounded-full border border-beige bg-white text-2xl text-charcoal/60 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white min-h-[44px] min-w-[44px] cursor-pointer"
                 aria-label="Close menu"
               >
