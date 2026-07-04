@@ -6,36 +6,31 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import ShopProductCard from '@/components/shop/ShopProductCard';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '@/lib/mock-data';
+import {
+  PRICE_FILTER_OPTIONS,
+  SORT_OPTIONS,
+  productMatchesPrice,
+  productMatchesSearch,
+  sortProducts,
+  type PriceFilter,
+} from '@/lib/search';
 import type { Product, SortOption } from '@/types';
 
 const PRODUCTS_PER_PAGE = 8;
 
 type CollectionFilter = 'all' | 'new-arrivals' | 'best-sellers';
 
-type PriceFilter =
-  | 'all'
-  | 'under-2000'
-  | '2000-4000'
-  | '4000-7000'
-  | '7000-plus';
-
 type AvailabilityFilter = 'all' | 'in-stock';
 
-const sortOptions: { label: string; value: SortOption }[] = [
-  { label: 'Newest First', value: 'newest' },
-  { label: 'Price: Low to High', value: 'price-low-high' },
-  { label: 'Price: High to Low', value: 'price-high-low' },
-  { label: 'Best Sellers', value: 'popularity' },
-  { label: 'Name: A to Z', value: 'name-a-z' },
-];
+// The shop page browses a catalogue rather than search results, so it
+// excludes 'relevance' from the shared sort list — everything else
+// (labels included) comes straight from lib/search.ts.
+const sortOptions = SORT_OPTIONS.filter(
+  (option): option is { label: string; value: SortOption } =>
+    option.value !== 'relevance'
+);
 
-const priceFilterOptions: { label: string; value: PriceFilter }[] = [
-  { label: 'All Prices', value: 'all' },
-  { label: 'Under ₹2,000', value: 'under-2000' },
-  { label: '₹2,000 - ₹4,000', value: '2000-4000' },
-  { label: '₹4,000 - ₹7,000', value: '4000-7000' },
-  { label: 'Above ₹7,000', value: '7000-plus' },
-];
+const priceFilterOptions = PRICE_FILTER_OPTIONS;
 
 function getCollectionFromUrl(value: string | null): CollectionFilter {
   if (value === 'new-arrivals' || value === 'best-sellers') {
@@ -50,67 +45,6 @@ function getCategoryBySlug(slug: string) {
 
 function isProductInStock(product: Product) {
   return Object.values(product.stock).some((quantity) => quantity > 0);
-}
-
-function productMatchesPrice(product: Product, priceFilter: PriceFilter) {
-  switch (priceFilter) {
-    case 'under-2000':
-      return product.price < 2000;
-    case '2000-4000':
-      return product.price >= 2000 && product.price <= 4000;
-    case '4000-7000':
-      return product.price > 4000 && product.price <= 7000;
-    case '7000-plus':
-      return product.price > 7000;
-    case 'all':
-    default:
-      return true;
-  }
-}
-
-function productMatchesSearch(product: Product, searchQuery: string) {
-  const normalizedSearch = searchQuery.trim().toLowerCase();
-  if (!normalizedSearch) return true;
-
-  const searchableText = [
-    product.name,
-    product.shortDescription,
-    product.description,
-    product.category,
-    product.subcategory,
-    product.fabric,
-    ...(product.tags ?? []),
-  ]
-    .join(' ')
-    .toLowerCase();
-
-  return searchableText.includes(normalizedSearch);
-}
-
-function sortProducts(products: Product[], sortBy: SortOption) {
-  const sortedProducts = [...products];
-
-  switch (sortBy) {
-    case 'price-low-high':
-      return sortedProducts.sort((a, b) => a.price - b.price);
-    case 'price-high-low':
-      return sortedProducts.sort((a, b) => b.price - a.price);
-    case 'popularity':
-      return sortedProducts.sort(
-        (a, b) => Number(b.isBestSeller) - Number(a.isBestSeller)
-      );
-    case 'name-a-z':
-      return sortedProducts.sort((a, b) => a.name.localeCompare(b.name));
-    case 'name-z-a':
-      return sortedProducts.sort((a, b) => b.name.localeCompare(a.name));
-    case 'rating':
-    case 'newest':
-    default:
-      return sortedProducts.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-  }
 }
 
 function getPageTitle(categorySlug: string, collection: CollectionFilter) {

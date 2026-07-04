@@ -10,6 +10,15 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '@/lib/mock-data';
 import {
+  PRICE_FILTER_OPTIONS,
+  SORT_OPTIONS,
+  productMatchesPrice,
+  productMatchesSearch,
+  sortProducts,
+  type PriceFilter,
+  type SearchSortOption,
+} from '@/lib/search';
+import {
   addRecentSearch,
   clearRecentSearches,
   getRecentSearches,
@@ -32,28 +41,21 @@ const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
 
 const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
 
-type SearchSortOption =
-  | 'relevance'
-  | 'price-low-high'
-  | 'price-high-low'
-  | 'newest';
-
-type PriceFilter = 'all' | 'under-2000' | '2000-4000' | '4000-7000' | '7000-plus';
-
-const sortOptions: { label: string; value: SearchSortOption }[] = [
-  { label: 'Relevance', value: 'relevance' },
-  { label: 'Newest First', value: 'newest' },
-  { label: 'Price: Low to High', value: 'price-low-high' },
-  { label: 'Price: High to Low', value: 'price-high-low' },
+// This page only offers the subset of the shared sort list that makes
+// sense for search results (no name-a-z / popularity here) — the labels
+// themselves still come from lib/search.ts so they can't drift from the
+// shop page's copy.
+const SEARCH_SORT_VALUES: SearchSortOption[] = [
+  'relevance',
+  'newest',
+  'price-low-high',
+  'price-high-low',
 ];
+const sortOptions = SORT_OPTIONS.filter((option) =>
+  SEARCH_SORT_VALUES.includes(option.value)
+);
 
-const priceFilterOptions: { label: string; value: PriceFilter }[] = [
-  { label: 'All Prices', value: 'all' },
-  { label: 'Under ₹2,000', value: 'under-2000' },
-  { label: '₹2,000 - ₹4,000', value: '2000-4000' },
-  { label: '₹4,000 - ₹7,000', value: '4000-7000' },
-  { label: 'Above ₹7,000', value: '7000-plus' },
-];
+const priceFilterOptions = PRICE_FILTER_OPTIONS;
 
 function getProductImage(product: Product) {
   const image = product.images?.[0];
@@ -85,82 +87,6 @@ function HighlightedText({ text, query }: { text: string; query: string }) {
       )}
     </>
   );
-}
-
-/**
- * Relevance score — matches in the product name/tags rank higher than
- * matches that only occur in the longer description or fabric text.
- */
-function getRelevanceScore(product: Product, searchText: string): number {
-  let score = 0;
-
-  if (product.name.toLowerCase().includes(searchText)) score += 5;
-  if (product.tags?.some((tag) => tag.toLowerCase().includes(searchText)))
-    score += 4;
-  if (product.shortDescription.toLowerCase().includes(searchText)) score += 3;
-  if (product.category.toLowerCase().includes(searchText)) score += 2;
-  if (product.fabric.toLowerCase().includes(searchText)) score += 2;
-  if (product.description.toLowerCase().includes(searchText)) score += 1;
-  if (product.isBestSeller) score += 1;
-
-  return score;
-}
-
-function productMatchesSearch(product: Product, searchText: string) {
-  const searchableText = [
-    product.name,
-    product.shortDescription,
-    product.description,
-    product.category,
-    product.fabric,
-    ...(product.tags ?? []),
-  ]
-    .join(' ')
-    .toLowerCase();
-
-  return product.isActive && searchableText.includes(searchText);
-}
-
-function productMatchesPrice(product: Product, priceFilter: PriceFilter) {
-  switch (priceFilter) {
-    case 'under-2000':
-      return product.price < 2000;
-    case '2000-4000':
-      return product.price >= 2000 && product.price <= 4000;
-    case '4000-7000':
-      return product.price > 4000 && product.price <= 7000;
-    case '7000-plus':
-      return product.price > 7000;
-    case 'all':
-    default:
-      return true;
-  }
-}
-
-function sortProducts(
-  products: Product[],
-  sortBy: SearchSortOption,
-  searchText: string
-) {
-  const sorted = [...products];
-
-  switch (sortBy) {
-    case 'price-low-high':
-      return sorted.sort((a, b) => a.price - b.price);
-    case 'price-high-low':
-      return sorted.sort((a, b) => b.price - a.price);
-    case 'newest':
-      return sorted.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-    case 'relevance':
-    default:
-      return sorted.sort(
-        (a, b) =>
-          getRelevanceScore(b, searchText) - getRelevanceScore(a, searchText)
-      );
-  }
 }
 
 function chipClass(isActive: boolean) {
