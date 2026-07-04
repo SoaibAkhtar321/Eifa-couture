@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -56,6 +56,43 @@ const sortOptions = SORT_OPTIONS.filter((option) =>
 );
 
 const priceFilterOptions = PRICE_FILTER_OPTIONS;
+const RECENT_SEARCHES_CHANGE_EVENT = 'eifa-recent-searches-change';
+
+type QueryState = {
+  source: string;
+  value: string;
+};
+
+function getLocationSearchSnapshot() {
+  if (typeof window === 'undefined') return '';
+  return window.location.search;
+}
+
+function getRecentSearchesSnapshot() {
+  return JSON.stringify(getRecentSearches());
+}
+
+function subscribeToRecentSearches(onStoreChange: () => void) {
+  if (typeof window === 'undefined') return () => {};
+
+  window.addEventListener('storage', onStoreChange);
+  window.addEventListener(RECENT_SEARCHES_CHANGE_EVENT, onStoreChange);
+
+  return () => {
+    window.removeEventListener('storage', onStoreChange);
+    window.removeEventListener(RECENT_SEARCHES_CHANGE_EVENT, onStoreChange);
+  };
+}
+
+function notifyRecentSearchesChanged() {
+  window.dispatchEvent(new Event(RECENT_SEARCHES_CHANGE_EVENT));
+}
+
+function updateRecentSearch(term: string) {
+  const updated = addRecentSearch(term);
+  notifyRecentSearchesChanged();
+  return updated;
+}
 
 function getProductImage(product: Product) {
   const image = product.images?.[0];
@@ -98,28 +135,43 @@ function chipClass(isActive: boolean) {
 }
 
 export default function SearchPage() {
-  const [query, setQuery] = useState('');
+  const locationSearch = useSyncExternalStore(
+    () => () => {},
+    getLocationSearchSnapshot,
+    () => ''
+  );
+  const initialQuery = useMemo(() => {
+    const params = new URLSearchParams(locationSearch);
+    return params.get('q') || '';
+  }, [locationSearch]);
+  const [queryState, setQueryState] = useState<QueryState>({
+    source: '',
+    value: '',
+  });
+  const query =
+    queryState.source === locationSearch ? queryState.value : initialQuery;
   const [sortBy, setSortBy] = useState<SearchSortOption>('relevance');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [priceFilter, setPriceFilter] = useState<PriceFilter>('all');
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const recentSearchesSnapshot = useSyncExternalStore(
+    subscribeToRecentSearches,
+    getRecentSearchesSnapshot,
+    () => '[]'
+  );
+  const recentSearches = useMemo(
+    () => JSON.parse(recentSearchesSnapshot) as string[],
+    [recentSearchesSnapshot]
+  );
 
   const [isSortMenuOpen, setIsSortMenuOpen] = useState(false);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
   const sortMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const initialQuery = params.get('q') || '';
-
-    setQuery(initialQuery);
-
     if (initialQuery.trim()) {
-      setRecentSearches(addRecentSearch(initialQuery));
-    } else {
-      setRecentSearches(getRecentSearches());
+      updateRecentSearch(initialQuery);
     }
-  }, []);
+  }, [initialQuery]);
 
   // Close the sort popover on outside click / Escape.
   useEffect(() => {
@@ -150,17 +202,17 @@ export default function SearchPage() {
 
   const handleClearRecent = () => {
     clearRecentSearches();
-    setRecentSearches([]);
+    notifyRecentSearchesChanged();
   };
 
   const handleRecentSearchClick = (term: string) => {
-    setQuery(term);
-    setRecentSearches(addRecentSearch(term));
+    setQueryState({ source: locationSearch, value: term });
+    updateRecentSearch(term);
   };
 
   const submitQuery = () => {
     if (query.trim()) {
-      setRecentSearches(addRecentSearch(query));
+      updateRecentSearch(query);
     }
   };
 
@@ -225,9 +277,6 @@ export default function SearchPage() {
     setPriceFilter('all');
   };
 
-  const currentSortLabel =
-    sortOptions.find((option) => option.value === sortBy)?.label ?? 'Relevance';
-
   const hasResults = query.trim().length > 0 && filteredProducts.length > 0;
 
   return (
@@ -269,7 +318,12 @@ export default function SearchPage() {
               <input
                 type="search"
                 value={query}
-                onChange={(event) => setQuery(event.target.value)}
+                onChange={(event) =>
+                  setQueryState({
+                    source: locationSearch,
+                    value: event.target.value,
+                  })
+                }
                 onKeyDown={(event) => {
                   if (event.key === 'Enter') submitQuery();
                 }}

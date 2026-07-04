@@ -5,7 +5,7 @@
    Responsive breakpoint detection
    ============================================ */
 
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 /**
  * Custom hook for responsive design breakpoint detection.
@@ -26,29 +26,24 @@ import { useState, useEffect, useCallback } from "react";
  * ```
  */
 export function useMediaQuery(query: string): boolean {
-  const getMatches = useCallback((): boolean => {
+  const getSnapshot = useCallback((): boolean => {
     if (typeof window === "undefined") return false;
     return window.matchMedia(query).matches;
   }, [query]);
 
-  const [matches, setMatches] = useState<boolean>(false);
+  const subscribe = useCallback(
+    (onStoreChange: () => void) => {
+      if (typeof window === "undefined") return () => {};
 
-  useEffect(() => {
     const mediaQuery = window.matchMedia(query);
+      mediaQuery.addEventListener("change", onStoreChange);
 
-    // Set initial value
-    setMatches(mediaQuery.matches);
+      return () => mediaQuery.removeEventListener("change", onStoreChange);
+    },
+    [query]
+  );
 
-    // Listen for changes
-    const handleChange = (event: MediaQueryListEvent) => {
-      setMatches(event.matches);
-    };
-
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, [query, getMatches]);
-
-  return matches;
+  return useSyncExternalStore(subscribe, getSnapshot, () => false);
 }
 
 /* ── Pre-defined Breakpoint Hooks ── */

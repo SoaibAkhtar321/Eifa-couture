@@ -2,13 +2,7 @@
 
 import { useRef } from "react";
 
-interface UseScrollAnimationOptions {
-  once?: boolean;
-  margin?: string;
-  amount?: "some" | "all" | number;
-}
-
-export function useScrollAnimation(_options: UseScrollAnimationOptions = {}) {
+export function useScrollAnimation() {
   const ref = useRef<HTMLDivElement>(null);
 
   return {

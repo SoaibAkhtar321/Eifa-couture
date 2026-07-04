@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { MOCK_CATEGORIES } from '@/lib/mock-data';
@@ -49,11 +50,13 @@ export default function ShopByCategorySection() {
                 className="relative block aspect-[4/5] overflow-hidden bg-charcoal"
                 aria-label={`Explore ${category.name}`}
               >
-                <img
+                <Image
                   src={category.image}
                   alt={category.name}
-                  className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  loading={index < 2 ? 'eager' : 'lazy'}
+                  fill
+                  priority={index < 2}
+                  sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/25 to-transparent" />

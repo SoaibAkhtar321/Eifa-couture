@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 import { getFeaturedProducts } from '@/lib/mock-data';
 import { formatPrice, getDiscountPercentage } from '@/lib/utils';
@@ -45,11 +46,12 @@ export default function FeaturedCollection() {
                 <Link href={`/product/${product.slug}`} className="block h-full">
                   <div className="flex h-full flex-col overflow-hidden bg-white">
                     <div className="relative aspect-[4/5] overflow-hidden bg-beige">
-                      <img
+                      <Image
                         src={productImages[idx]}
                         alt={product.name}
-                        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                        loading="lazy"
+                        fill
+                        sizes="(max-width: 1024px) 50vw, 25vw"
+                        className="object-cover transition-transform duration-700 group-hover:scale-105"
                       />
 
                       {discount > 0 && (

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 import { getNewArrivals } from '@/lib/mock-data';
@@ -43,11 +44,12 @@ export default function NewArrivalsSection() {
               <Link href={`/product/${product.slug}`} className="block h-full">
                 <div className="flex h-full flex-col overflow-hidden bg-white">
                   <div className="relative aspect-[4/5] overflow-hidden bg-beige">
-                    <img
+                    <Image
                       src={productImages[idx % productImages.length]}
                       alt={product.name}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                      loading="lazy"
+                      fill
+                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
 
                     <span className="absolute left-2 top-2 z-10 bg-gold px-2 py-1 font-body text-[8px] font-medium uppercase tracking-[0.12em] text-white md:left-3 md:top-3 md:px-3 md:py-1.5 md:text-[10px]">

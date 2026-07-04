@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 export default function HeritageSection() {
   return (
     <section
@@ -71,11 +73,12 @@ export default function HeritageSection() {
 
           <div className="relative">
             <div className="relative aspect-[4/5] overflow-hidden bg-maroon-dark sm:aspect-[16/10] lg:aspect-[4/5]">
-              <img
+              <Image
                 src="/images/about/heritage.png"
                 alt="Artisan handcrafting Chikankari embroidery"
-                className="h-full w-full object-cover"
-                loading="lazy"
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
               />
 
               <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-maroon-dark/90 to-transparent p-4 md:p-7">

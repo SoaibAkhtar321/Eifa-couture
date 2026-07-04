@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function MensCollectionSection() {
@@ -77,11 +78,12 @@ export default function MensCollectionSection() {
           </div>
 
           <div className="relative order-1 aspect-[4/5] overflow-hidden bg-charcoal sm:aspect-[16/10] lg:order-2 lg:aspect-auto lg:min-h-[620px]">
-            <img
+            <Image
               src="/images/collections/men.png"
               alt="Men's Chikankari Kurta Collection"
-              className="h-full w-full object-cover object-top"
-              loading="lazy"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover object-top"
             />
 
             <div className="absolute inset-0 bg-gradient-to-t from-charcoal/25 to-transparent lg:bg-gradient-to-l lg:from-transparent lg:to-charcoal/30" />

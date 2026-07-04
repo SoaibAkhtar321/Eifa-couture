@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -28,6 +28,15 @@ const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
 };
 
 const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
+const subscribeToHydration = () => () => {};
+
+function useHasHydrated() {
+  return useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false
+  );
+}
 
 function getProductImage(product: Product) {
   const image = product.images?.[0];
@@ -40,7 +49,7 @@ function getProductImage(product: Product) {
 }
 
 export default function WishlistPage() {
-  const [hasMounted, setHasMounted] = useState(false);
+  const hasHydrated = useHasHydrated();
 
   const wishlistItems = useWishlistStore((state) => state.items);
   const removeWishlistItem = useWishlistStore((state) => state.removeItem);
@@ -48,12 +57,8 @@ export default function WishlistPage() {
   const addItem = useCartStore((state) => state.addItem);
   const openCart = useUIStore((state) => state.openCart);
 
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
   const wishlistProducts = useMemo(() => {
-    if (!hasMounted) return [];
+    if (!hasHydrated) return [];
 
     return wishlistItems
       .map((productId) =>
@@ -62,7 +67,7 @@ export default function WishlistPage() {
         )
       )
       .filter((product): product is Product => Boolean(product));
-  }, [hasMounted, wishlistItems]);
+  }, [hasHydrated, wishlistItems]);
 
   const handleAddToCart = (product: Product) => {
     const defaultSize = product.sizes[0];
@@ -112,7 +117,7 @@ export default function WishlistPage() {
 
         <section className="py-10 sm:py-14 lg:py-20">
           <div className="luxury-container">
-            {!hasMounted ? (
+            {!hasHydrated ? (
               <div className="mx-auto max-w-xl border border-beige bg-white px-6 py-12 text-center">
                 <h2 className="font-heading text-3xl text-charcoal">
                   Loading Wishlist

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react';
+import { useLayoutEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import ShopProductCard from '@/components/shop/ShopProductCard';
@@ -21,6 +21,28 @@ const PRODUCTS_PER_PAGE = 8;
 type CollectionFilter = 'all' | 'new-arrivals' | 'best-sellers';
 
 type AvailabilityFilter = 'all' | 'in-stock';
+
+type VisibleCountState = {
+  filterKey: string;
+  count: number;
+};
+
+type FilterInputsProps = {
+  searchQuery: string;
+  sortBy: SortOption;
+  selectedSize: string;
+  selectedFabric: string;
+  selectedPrice: PriceFilter;
+  availability: AvailabilityFilter;
+  availableSizes: string[];
+  availableFabrics: string[];
+  onSearchQueryChange: (value: string) => void;
+  onSortByChange: (value: SortOption) => void;
+  onSelectedSizeChange: (value: string) => void;
+  onSelectedFabricChange: (value: string) => void;
+  onSelectedPriceChange: (value: PriceFilter) => void;
+  onAvailabilityChange: (value: AvailabilityFilter) => void;
+};
 
 // The shop page browses a catalogue rather than search results, so it
 // excludes 'relevance' from the shared sort list — everything else
@@ -83,6 +105,98 @@ function chipClass(isActive: boolean) {
   }`;
 }
 
+function FilterInputs({
+  searchQuery,
+  sortBy,
+  selectedSize,
+  selectedFabric,
+  selectedPrice,
+  availability,
+  availableSizes,
+  availableFabrics,
+  onSearchQueryChange,
+  onSortByChange,
+  onSelectedSizeChange,
+  onSelectedFabricChange,
+  onSelectedPriceChange,
+  onAvailabilityChange,
+}: FilterInputsProps) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+      <input
+        type="search"
+        value={searchQuery}
+        onChange={(event) => onSearchQueryChange(event.target.value)}
+        placeholder="Search products..."
+        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none transition-colors placeholder:text-charcoal/35 focus:border-gold sm:col-span-2 lg:col-span-1 xl:col-span-2"
+      />
+
+      <select
+        value={sortBy}
+        onChange={(event) => onSortByChange(event.target.value as SortOption)}
+        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+      >
+        {sortOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            Sort: {option.label}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={selectedSize}
+        onChange={(event) => onSelectedSizeChange(event.target.value)}
+        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+      >
+        <option value="all">All Sizes</option>
+        {availableSizes.map((size) => (
+          <option key={size} value={size}>
+            Size {size}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={selectedFabric}
+        onChange={(event) => onSelectedFabricChange(event.target.value)}
+        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+      >
+        <option value="all">All Fabrics</option>
+        {availableFabrics.map((fabric) => (
+          <option key={fabric} value={fabric}>
+            {fabric}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={selectedPrice}
+        onChange={(event) =>
+          onSelectedPriceChange(event.target.value as PriceFilter)
+        }
+        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+      >
+        {priceFilterOptions.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+
+      <select
+        value={availability}
+        onChange={(event) =>
+          onAvailabilityChange(event.target.value as AvailabilityFilter)
+        }
+        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+      >
+        <option value="all">All Availability</option>
+        <option value="in-stock">In Stock Only</option>
+      </select>
+    </div>
+  );
+}
+
 export default function ShopPageClient() {
   const router = useRouter();
   const pathname = usePathname();
@@ -97,7 +211,6 @@ export default function ShopPageClient() {
   const [selectedFabric, setSelectedFabric] = useState('all');
   const [selectedPrice, setSelectedPrice] = useState<PriceFilter>('all');
   const [availability, setAvailability] = useState<AvailabilityFilter>('all');
-  const [visibleCount, setVisibleCount] = useState(PRODUCTS_PER_PAGE);
   
   // Mobile controls for bottom-sheet overlay
   const [isMobileFiltersOpen, setIsMobileFiltersOpen] = useState(false);
@@ -192,6 +305,25 @@ export default function ShopPageClient() {
     sortBy,
   ]);
 
+  const filterKey = [
+    collectionFromUrl,
+    effectiveCategory,
+    searchQuery,
+    selectedSize,
+    selectedFabric,
+    selectedPrice,
+    availability,
+    sortBy,
+  ].join('|');
+  const [visibleCountState, setVisibleCountState] =
+    useState<VisibleCountState>({
+      filterKey,
+      count: PRODUCTS_PER_PAGE,
+    });
+  const visibleCount =
+    visibleCountState.filterKey === filterKey
+      ? visibleCountState.count
+      : PRODUCTS_PER_PAGE;
   const visibleProducts = filteredProducts.slice(0, visibleCount);
   
   useLayoutEffect(() => {
@@ -246,19 +378,6 @@ export default function ShopPageClient() {
     selectedPrice !== 'all' ||
     availability !== 'all';
 
-  useEffect(() => {
-    setVisibleCount(PRODUCTS_PER_PAGE);
-  }, [
-    collectionFromUrl,
-    effectiveCategory,
-    searchQuery,
-    selectedSize,
-    selectedFabric,
-    selectedPrice,
-    availability,
-    sortBy,
-  ]);
-
   const updateShopUrl = (params: {
     category?: string;
     collection?: CollectionFilter;
@@ -304,85 +423,8 @@ export default function ShopPageClient() {
     setSelectedFabric('all');
     setSelectedPrice('all');
     setAvailability('all');
-    setVisibleCount(PRODUCTS_PER_PAGE);
     router.push(pathname, { scroll: false });
   };
-
-  // Reusable Form Controls for forms / bottom-sheets
-  const FilterInputs = () => (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-      <input
-        type="search"
-        value={searchQuery}
-        onChange={(event) => setSearchQuery(event.target.value)}
-        placeholder="Search products..."
-        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none transition-colors placeholder:text-charcoal/35 focus:border-gold sm:col-span-2 lg:col-span-1 xl:col-span-2"
-      />
-
-      <select
-        value={sortBy}
-        onChange={(event) => setSortBy(event.target.value as SortOption)}
-        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
-      >
-        {sortOptions.map((option) => (
-          <option key={option.value} value={option.value}>
-            Sort: {option.label}
-          </option>
-        ))}
-      </select>
-
-      <select
-        value={selectedSize}
-        onChange={(event) => setSelectedSize(event.target.value)}
-        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
-      >
-        <option value="all">All Sizes</option>
-        {availableSizes.map((size) => (
-          <option key={size} value={size}>
-            Size {size}
-          </option>
-        ))}
-      </select>
-
-      <select
-        value={selectedFabric}
-        onChange={(event) => setSelectedFabric(event.target.value)}
-        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
-      >
-        <option value="all">All Fabrics</option>
-        {availableFabrics.map((fabric) => (
-          <option key={fabric} value={fabric}>
-            {fabric}
-          </option>
-        ))}
-      </select>
-
-      <select
-        value={selectedPrice}
-        onChange={(event) =>
-          setSelectedPrice(event.target.value as PriceFilter)
-        }
-        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
-      >
-        {priceFilterOptions.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-
-      <select
-        value={availability}
-        onChange={(event) =>
-          setAvailability(event.target.value as AvailabilityFilter)
-        }
-        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
-      >
-        <option value="all">All Availability</option>
-        <option value="in-stock">In Stock Only</option>
-      </select>
-    </div>
-  );
 
   return (
     <main className="bg-ivory relative z-10">
@@ -496,7 +538,22 @@ export default function ShopPageClient() {
 
           {/* Desktop Select Filters Panel */}
           <div className="hidden lg:block">
-            <FilterInputs />
+            <FilterInputs
+              searchQuery={searchQuery}
+              sortBy={sortBy}
+              selectedSize={selectedSize}
+              selectedFabric={selectedFabric}
+              selectedPrice={selectedPrice}
+              availability={availability}
+              availableSizes={availableSizes}
+              availableFabrics={availableFabrics}
+              onSearchQueryChange={setSearchQuery}
+              onSortByChange={setSortBy}
+              onSelectedSizeChange={setSelectedSize}
+              onSelectedFabricChange={setSelectedFabric}
+              onSelectedPriceChange={setSelectedPrice}
+              onAvailabilityChange={setAvailability}
+            />
           </div>
         </div>
 
@@ -518,7 +575,13 @@ export default function ShopPageClient() {
                 <button
                   type="button"
                   onClick={() =>
-                    setVisibleCount((current) => current + PRODUCTS_PER_PAGE)
+                    setVisibleCountState((current) => ({
+                      filterKey,
+                      count:
+                        current.filterKey === filterKey
+                          ? current.count + PRODUCTS_PER_PAGE
+                          : PRODUCTS_PER_PAGE * 2,
+                    }))
                   }
                   className="btn-luxury btn-luxury-secondary"
                 >
@@ -579,7 +642,22 @@ export default function ShopPageClient() {
                 </button>
               </div>
               <div className="mb-6">
-                <FilterInputs />
+                <FilterInputs
+                  searchQuery={searchQuery}
+                  sortBy={sortBy}
+                  selectedSize={selectedSize}
+                  selectedFabric={selectedFabric}
+                  selectedPrice={selectedPrice}
+                  availability={availability}
+                  availableSizes={availableSizes}
+                  availableFabrics={availableFabrics}
+                  onSearchQueryChange={setSearchQuery}
+                  onSortByChange={setSortBy}
+                  onSelectedSizeChange={setSelectedSize}
+                  onSelectedFabricChange={setSelectedFabric}
+                  onSelectedPriceChange={setSelectedPrice}
+                  onAvailabilityChange={setAvailability}
+                />
               </div>
               <button 
                 onClick={() => setIsMobileFiltersOpen(false)}

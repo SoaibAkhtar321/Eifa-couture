@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useSyncExternalStore } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
@@ -32,6 +32,15 @@ const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
 };
 
 const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
+const subscribeToHydration = () => () => {};
+
+function useHasHydrated() {
+  return useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false
+  );
+}
 
 function getProductImage(product: Product) {
   const image = product.images?.[0];
@@ -47,7 +56,7 @@ export default function ShopProductCard({
   product,
   index,
 }: ShopProductCardProps) {
-  const [hasMounted, setHasMounted] = useState(false);
+  const hasHydrated = useHasHydrated();
 
   const addItem = useCartStore((state) => state.addItem);
   const openCart = useUIStore((state) => state.openCart);
@@ -57,11 +66,7 @@ export default function ShopProductCard({
     state.isInWishlist(product.id)
   );
 
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
-  const visibleIsInWishlist = hasMounted ? isInWishlist : false;
+  const visibleIsInWishlist = hasHydrated ? isInWishlist : false;
   const productImage = getProductImage(product);
 
   const discount = product.compareAtPrice

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
@@ -14,11 +14,20 @@ interface ProductInfoProps {
   product: Product;
 }
 
+const subscribeToHydration = () => () => {};
+
+function useHasHydrated() {
+  return useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false
+  );
+}
+
 export default function ProductInfo({ product }: ProductInfoProps) {
   const router = useRouter();
-  
-  // Hydration fix: Track if component has mounted
-  const [isMounted, setIsMounted] = useState(false);
+
+  const hasHydrated = useHasHydrated();
   const [selectedSize, setSelectedSize] = useState(product.sizes[0] ?? '');
   const [selectedColor, setSelectedColor] = useState(product.colors[0]?.name ?? '');
   const [quantity, setQuantity] = useState(1);
@@ -27,10 +36,6 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const openCart = useUIStore((state) => state.openCart);
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
   const isInWishlist = useWishlistStore((state) => state.isInWishlist(product.id));
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   const discount = product.compareAtPrice
     ? getDiscountPercentage(product.compareAtPrice, product.price)
@@ -174,12 +179,12 @@ export default function ProductInfo({ product }: ProductInfoProps) {
               width="20"
               height="20"
               viewBox="0 0 24 24"
-              fill={isMounted && isInWishlist ? 'currentColor' : 'none'}
+              fill={hasHydrated && isInWishlist ? 'currentColor' : 'none'}
               stroke="currentColor"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className={isMounted && isInWishlist ? 'text-maroon' : ''}
+              className={hasHydrated && isInWishlist ? 'text-maroon' : ''}
             >
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
             </svg>

@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useMemo, useState, useSyncExternalStore } from 'react';
 
 import { useReviewStore } from '@/store/review-store';
 
@@ -24,8 +24,18 @@ function formatReviewDate(date: string) {
   }).format(new Date(date));
 }
 
+const subscribeToHydration = () => () => {};
+
+function useHasHydrated() {
+  return useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false
+  );
+}
+
 export default function ProductReviews({ product }: ProductReviewsProps) {
-  const [hasMounted, setHasMounted] = useState(false);
+  const hasHydrated = useHasHydrated();
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
@@ -34,12 +44,8 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
   const reviews = useReviewStore((state) => state.reviews);
   const addReview = useReviewStore((state) => state.addReview);
 
-  useEffect(() => {
-    setHasMounted(true);
-  }, []);
-
   const productReviews = useMemo(() => {
-    if (!hasMounted) return [];
+    if (!hasHydrated) return [];
 
     return reviews
       .filter((review) => review.productId === product.id)
@@ -47,7 +53,7 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
         (a, b) =>
           new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
       );
-  }, [hasMounted, product.id, reviews]);
+  }, [hasHydrated, product.id, reviews]);
 
   const reviewSummary = useMemo(() => {
     if (productReviews.length === 0) {
@@ -106,7 +112,7 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
             </h2>
 
             <div className="mt-6 border border-beige bg-white p-6">
-              {hasMounted && reviewSummary.reviewCount > 0 ? (
+              {hasHydrated && reviewSummary.reviewCount > 0 ? (
                 <>
                   <div className="flex items-end gap-3">
                     <span className="font-heading text-6xl leading-none text-maroon">
@@ -234,7 +240,7 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
               </div>
             </div>
 
-            {!hasMounted ? (
+            {!hasHydrated ? (
               <div className="border border-beige bg-white p-6 text-center">
                 <p className="text-sm text-charcoal/55">Loading reviews...</p>
               </div>

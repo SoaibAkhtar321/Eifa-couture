@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default function WomensCollectionSection() {
@@ -6,11 +7,12 @@ export default function WomensCollectionSection() {
       <div className="luxury-container">
         <div className="grid grid-cols-1 overflow-hidden bg-white lg:grid-cols-2">
           <div className="relative aspect-[4/5] overflow-hidden bg-beige sm:aspect-[16/10] lg:aspect-auto lg:min-h-[620px]">
-            <img
+            <Image
               src="/images/collections/women.png"
               alt="Women&apos;s Chikankari Collection"
-              className="h-full w-full object-cover"
-              loading="lazy"
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
             />
 
             <div className="absolute inset-0 bg-gradient-to-t from-charcoal/25 to-transparent lg:bg-gradient-to-r lg:from-transparent lg:to-ivory/10" />

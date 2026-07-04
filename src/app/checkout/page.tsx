@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useEffect, useMemo, useState } from 'react';
+import { FormEvent, useMemo, useState, useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -9,7 +9,7 @@ import { SHIPPING_INFO } from '@/lib/constants';
 import { formatPrice } from '@/lib/utils';
 import { useCartStore } from '@/store/cart-store';
 
-import type { Product } from '@/types';
+import type { CartItem, Product } from '@/types';
 
 const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
   'womens-kurtas': '/images/categories/kurtas.png',
@@ -23,6 +23,58 @@ const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
 };
 
 const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
+const subscribeToHydration = () => () => {};
+
+type BuyNowSessionItem = {
+  product: Product;
+  size: string;
+  color: string;
+  quantity: number;
+};
+
+function useHasHydrated() {
+  return useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false
+  );
+}
+
+function getBuyNowSnapshot() {
+  if (typeof window === 'undefined') return '';
+
+  const searchParams = new URLSearchParams(window.location.search);
+  if (searchParams.get('mode') !== 'buy-now') return '';
+
+  return sessionStorage.getItem('eifa-buy-now') ?? 'null';
+}
+
+function parseBuyNowItem(snapshot: string): CartItem | null {
+  if (!snapshot || snapshot === 'null') return null;
+
+  try {
+    const parsed = JSON.parse(snapshot) as Partial<BuyNowSessionItem>;
+
+    if (
+      !parsed.product ||
+      !parsed.size ||
+      !parsed.color ||
+      typeof parsed.quantity !== 'number'
+    ) {
+      return null;
+    }
+
+    return {
+      product: parsed.product,
+      selectedSize: parsed.size,
+      selectedColor: parsed.color,
+      quantity: parsed.quantity,
+    };
+  } catch {
+    console.error('Failed to parse buy now item');
+    return null;
+  }
+}
 
 function getProductImage(product: Product) {
   const image = product.images?.[0];
@@ -35,42 +87,23 @@ function getProductImage(product: Product) {
 }
 
 export default function CheckoutPage() {
-  const [isMounted, setIsMounted] = useState(false);
+  const hasHydrated = useHasHydrated();
   const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isBuyNowMode, setIsBuyNowMode] = useState(false);
-  const [buyNowItem, setBuyNowItem] = useState<any>(null);
+  const buyNowSnapshot = useSyncExternalStore(
+    subscribeToHydration,
+    getBuyNowSnapshot,
+    () => ''
+  );
+  const isBuyNowMode = buyNowSnapshot.length > 0;
+  const buyNowItem = useMemo(
+    () => parseBuyNowItem(buyNowSnapshot),
+    [buyNowSnapshot]
+  );
 
   // Global Cart State
   const cartItems = useCartStore((state) => state.items);
   const cartSubtotal = useCartStore((state) => state.getTotal());
   const clearCart = useCartStore((state) => state.clearCart);
-
-  // Detect Buy Now mode on mount
-  useEffect(() => {
-    setIsMounted(true);
-    
-    const searchParams = new URLSearchParams(window.location.search);
-    if (searchParams.get('mode') === 'buy-now') {
-      setIsBuyNowMode(true);
-      
-      const storedItem = sessionStorage.getItem('eifa-buy-now');
-      if (storedItem) {
-        try {
-          const parsed = JSON.parse(storedItem);
-          // Map to match standard cart item structure
-          setBuyNowItem({
-            id: 'buy-now-item',
-            product: parsed.product,
-            selectedSize: parsed.size,
-            selectedColor: parsed.color,
-            quantity: parsed.quantity,
-          });
-        } catch (error) {
-          console.error('Failed to parse buy now item');
-        }
-      }
-    }
-  }, []);
 
   // Determine which items and subtotal to display
   const displayItems = isBuyNowMode && buyNowItem ? [buyNowItem] : cartItems;
@@ -111,7 +144,7 @@ export default function CheckoutPage() {
   };
 
   // Prevent hydration mismatch
-  if (!isMounted) return null;
+  if (!hasHydrated) return null;
 
   return (
     <>
