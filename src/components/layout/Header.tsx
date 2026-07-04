@@ -1,235 +1,136 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
-import { MOCK_PRODUCTS } from '@/lib/mock-data';
-import { POPULAR_SEARCHES, productMatchesSearch, rankProducts } from '@/lib/search';
-import {
-  addRecentSearch,
-  clearRecentSearches,
-  getRecentSearches,
-  removeRecentSearch,
-} from '@/lib/search-history';
-import { formatPrice, highlightSegments } from '@/lib/utils';
+import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
+import { useWishlistStore } from '@/store/wishlist-store';
 
-import type { Product } from '@/types';
+import AnnouncementBar from './AnnouncementBar';
+import MobileMenu from './MobileMenu';
+import HeaderSearch from '@/components/search/HeaderSearch';
 
-const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
-  'womens-kurtas': '/images/categories/kurtas.png',
-  'mens-kurtas': '/images/categories/men-kurtas.png',
-  anarkalis: '/images/categories/anarkali.png',
-  dupattas: '/images/categories/dupattas.png',
-  sarees: '/images/categories/sarees.png',
-  'palazzo-sets': '/images/categories/palazzo.png',
-  'bridal-collection': '/images/categories/bridal.png',
-  accessories: '/images/categories/dupattas.png',
-  'crochet-bags': '/images/categories/dupattas.png',
-};
+// ── Minimalist Luxury Navigation ──
+const CORE_LINKS = [
+  { label: 'Women', href: '/shop?category=womens-kurtas' },
+  { label: 'Men', href: '/shop?category=mens-kurtas' },
+  { label: 'Bridal', href: '/shop?category=bridal-collection' },
+  { label: 'New Arrivals', href: '/shop?collection=new-arrivals' },
+  { label: 'Best Sellers', href: '/shop?collection=best-sellers' },
+];
 
-const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
+const subscribeToHydration = () => () => {};
 
-function getProductImage(product: Product) {
-  const image = product.images?.[0];
-  if (!image || image.includes('picsum.photos')) {
-    return CATEGORY_FALLBACK_IMAGES[product.category] || DEFAULT_PRODUCT_IMAGE;
-  }
-  return image;
-}
-
-/** Renders text with the matching portion of `query` visually highlighted. */
-function HighlightedText({ text, query }: { text: string; query: string }) {
-  const segments = highlightSegments(text, query);
-
-  return (
-    <>
-      {segments.map((segment, index) =>
-        segment.match ? (
-          <mark
-            key={index}
-            className="bg-gold/25 text-maroon font-medium not-italic"
-          >
-            {segment.text}
-          </mark>
-        ) : (
-          <span key={index}>{segment.text}</span>
-        )
-      )}
-    </>
+function useHasHydrated() {
+  return useSyncExternalStore(
+    subscribeToHydration,
+    () => true,
+    () => false
   );
 }
 
-export default function HeaderSearch() {
-  const router = useRouter();
-  const searchRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement | null>(null);
+export default function Header() {
+  const [scrolled, setScrolled] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
+  const hasMounted = useHasHydrated();
 
-  // Search-open state now lives in the shared UI store, same as cart and
-  // the mobile menu. This is what keeps only one full-screen overlay open
-  // at a time — previously this was local state, so opening the cart or
-  // mobile menu while search was open left the search overlay stacked on
-  // top of it, silently eating taps.
-  const isOpen = useUIStore((state) => state.isSearchOpen);
-  const openSearch = useUIStore((state) => state.openSearch);
-  const closeSearchStore = useUIStore((state) => state.closeSearch);
+  const openCart = useUIStore((state) => state.openCart);
+  const openMobileMenu = useUIStore((state) => state.openMobileMenu);
 
-  const [query, setQuery] = useState('');
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const cartItemCount = useCartStore((state) => state.getItemCount());
+  const wishlistCount = useWishlistStore((state) => state.items.length);
 
-  const filteredProducts = useMemo(() => {
-    if (!query.trim()) return [];
-
-    const matched = MOCK_PRODUCTS.filter((product) =>
-      productMatchesSearch(product, query)
-    );
-    return rankProducts(matched, query).slice(0, 6);
-  }, [query]);
-
-  // Highlight index resets whenever the query changes — handled inline in
-  // the input's onChange handler below (not via effect) to avoid an extra
-  // render pass.
+  const visibleCartItemCount = hasMounted ? cartItemCount : 0;
+  const visibleWishlistCount = hasMounted ? wishlistCount : 0;
 
   useEffect(() => {
-    if (!isOpen) return;
-
-    const handleClickOutside = (event: MouseEvent) => {
-      if (!searchRef.current) return;
-      if (!searchRef.current.contains(event.target as Node)) {
-        closeSearchStore();
-      }
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 18);
     };
-
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        closeSearchStore();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleEscape);
-
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('scroll', handleScroll);
     };
-  }, [isOpen, closeSearchStore]);
-
-  // Lock background scroll while the search overlay is open (matters most
-  // for the mobile full-screen takeover).
-  useBodyScrollLock(isOpen);
-
-  const closeSearch = () => {
-    closeSearchStore();
-    setQuery('');
-    setHighlightedIndex(-1);
-  };
-
-  const runSearch = (term: string) => {
-    const trimmed = term.trim();
-    if (!trimmed) return;
-
-    setRecentSearches(addRecentSearch(trimmed));
-    closeSearchStore();
-    setQuery('');
-    setHighlightedIndex(-1);
-    router.push(`/search?q=${encodeURIComponent(trimmed)}`);
-  };
-
-  const goToProduct = (product: Product) => {
-    addRecentSearch(query.trim() || product.name);
-    closeSearchStore();
-    setQuery('');
-    setHighlightedIndex(-1);
-    router.push(`/product/${product.slug}`);
-  };
-
-  const handleClearRecent = () => {
-    clearRecentSearches();
-    setRecentSearches([]);
-  };
-
-  const handleRemoveRecent = (term: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    setRecentSearches(removeRecentSearch(term));
-  };
-
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!filteredProducts.length) {
-      if (event.key === 'Enter') {
-        event.preventDefault();
-        runSearch(query);
-      }
-      return;
-    }
-
-    if (event.key === 'ArrowDown') {
-      event.preventDefault();
-      setHighlightedIndex((current) =>
-        current < filteredProducts.length - 1 ? current + 1 : current
-      );
-    } else if (event.key === 'ArrowUp') {
-      event.preventDefault();
-      setHighlightedIndex((current) => (current > -1 ? current - 1 : -1));
-    } else if (event.key === 'Enter') {
-      event.preventDefault();
-      if (highlightedIndex >= 0 && filteredProducts[highlightedIndex]) {
-        goToProduct(filteredProducts[highlightedIndex]);
-      } else {
-        runSearch(query);
-      }
-    }
-  };
+  }, []);
 
   return (
-    <div ref={searchRef} className="relative z-(--z-dropdown)">
-      <button
-        type="button"
-        onClick={() => {
-          if (isOpen) {
-            closeSearch();
-          } else {
-            setRecentSearches(getRecentSearches());
-            openSearch();
-          }
-        }}
-        className="flex h-10 w-10 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon sm:h-11 sm:w-11"
-        aria-label="Toggle search"
-        aria-expanded={isOpen}
-      >
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.55"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-      </button>
+    <>
+      <AnnouncementBar />
 
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-(--z-fullscreen) flex flex-col bg-ivory sm:inset-x-auto sm:inset-y-auto sm:left-auto sm:right-6 sm:top-[98px] sm:z-(--z-dropdown) sm:h-auto sm:w-[430px] sm:border sm:border-beige sm:bg-white sm:shadow-[0_18px_55px_rgba(0,0,0,0.16)] lg:right-10 lg:top-[104px]"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Search"
-        >
-          <div className="border-b border-beige p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex flex-1 items-center gap-3 border border-beige bg-ivory px-4 py-3 sm:bg-ivory">
+      <header
+        className={`sticky top-0 z-(--z-header) border-b border-beige transition-all duration-500 pointer-events-auto ${
+          scrolled
+            ? 'bg-ivory/96 shadow-[0_8px_24px_rgba(0,0,0,0.045)] backdrop-blur-md'
+            : 'bg-ivory/92 backdrop-blur-sm'
+        }`}
+      >
+        <div className="luxury-container">
+          <div className="flex h-[72px] items-center justify-between gap-4 sm:h-[78px] lg:h-[84px]">
+            
+            {/* ── Logo ── */}
+            <Link
+              href="/"
+              className="group flex min-w-0 shrink items-center min-h-[44px] min-w-[44px] pointer-events-auto"
+              aria-label="Eifa Couture home"
+            >
+              {!logoFailed ? (
+                <span className="relative block h-[62px] w-[82px] sm:h-[68px] sm:w-[92px] lg:h-[76px] lg:w-[105px]">
+                  <Image
+                    src="/images/eifa-logo-header.png"
+                    alt="Eifa Couture"
+                    fill
+                    priority
+                    sizes="105px"
+                    className="object-contain object-left"
+                    onError={() => setLogoFailed(true)}
+                  />
+                </span>
+              ) : (
+                <span className="flex flex-col">
+                  <span className="font-heading text-[24px] uppercase tracking-[0.24em] text-charcoal sm:text-[28px]">
+                    Eifa Couture
+                  </span>
+                  <span className="mt-1 font-body text-[9px] uppercase tracking-[0.36em] text-gold sm:text-[10px]">
+                    Lucknowi Chikankari
+                  </span>
+                </span>
+              )}
+            </Link>
+
+            {/* ── Desktop Navigation ── */}
+            <nav
+              className="hidden items-center gap-8 lg:flex pointer-events-auto"
+              aria-label="Main navigation"
+            >
+              {CORE_LINKS.map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="relative py-2 font-body text-[11px] uppercase tracking-[0.15em] text-charcoal/75 transition-colors duration-300 hover:text-maroon xl:text-[12px] min-h-[44px] flex items-center group"
+                >
+                  {link.label}
+                  <span className="absolute bottom-1 left-0 h-px w-0 bg-gold transition-all duration-300 group-hover:w-full" />
+                </Link>
+              ))}
+            </nav>
+
+            {/* ── Header Actions ── */}
+            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
+              <HeaderSearch />
+
+              {/* Login / Register (Desktop Only) */}
+              <Link
+                href="/login"
+                className="hidden items-center gap-2 text-charcoal/55 transition-colors duration-300 hover:text-maroon lg:flex px-2 pointer-events-auto"
+                aria-label="Sign In or Register"
+              >
                 <svg
-                  width="19"
-                  height="19"
+                  className="pointer-events-none"
+                  width="20"
+                  height="20"
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -237,213 +138,106 @@ export default function HeaderSearch() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   aria-hidden="true"
-                  className="shrink-0 text-charcoal/40"
                 >
-                  <circle cx="11" cy="11" r="8" />
-                  <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
                 </svg>
+                <span className="font-body text-[10px] uppercase tracking-[0.15em] hidden xl:block">
+                  Sign In
+                </span>
+              </Link>
 
-                <label htmlFor="header-search-input" className="sr-only">
-                  Search products
-                </label>
-                <input
-                  ref={inputRef}
-                  id="header-search-input"
-                  type="search"
-                  value={query}
-                  onChange={(event) => {
-                    setQuery(event.target.value);
-                    setHighlightedIndex(-1);
-                  }}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Search kurtas, sarees, bags..."
-                  className="w-full bg-transparent text-sm text-charcoal outline-none placeholder:text-charcoal/35"
-                  autoFocus
-                  role="combobox"
-                  aria-expanded={filteredProducts.length > 0}
-                  aria-controls="header-search-results"
-                  aria-activedescendant={
-                    highlightedIndex >= 0
-                      ? `header-search-result-${highlightedIndex}`
-                      : undefined
-                  }
-                />
-
-                {query && (
-                  <button
-                    type="button"
-                    onClick={() => setQuery('')}
-                    className="text-xl leading-none text-charcoal/35 hover:text-maroon cursor-pointer"
-                    aria-label="Clear search"
-                  >
-                    ×
-                  </button>
+              {/* Wishlist */}
+              <Link
+                href="/wishlist"
+                className="relative hidden h-11 w-11 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon sm:flex min-h-[44px] min-w-[44px] pointer-events-auto"
+                aria-label={`Wishlist${
+                  visibleWishlistCount > 0 ? ` (${visibleWishlistCount} items)` : ''
+                }`}
+              >
+                <svg
+                  className="pointer-events-none"
+                  width="21"
+                  height="21"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.55"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                </svg>
+                {visibleWishlistCount > 0 && (
+                  <span className="absolute right-1 top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-maroon px-1 font-body text-[10px] font-medium text-white">
+                    {visibleWishlistCount > 99 ? '99+' : visibleWishlistCount}
+                  </span>
                 )}
-              </div>
+              </Link>
 
-              {/* Cancel button — always available, primary affordance on mobile full-screen takeover */}
+              {/* Cart */}
               <button
                 type="button"
-                onClick={closeSearch}
-                className="shrink-0 font-body text-[11px] uppercase tracking-[0.16em] text-charcoal/55 hover:text-maroon"
+                onClick={openCart}
+                className="relative flex h-11 w-11 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon min-h-[44px] min-w-[44px] pointer-events-auto cursor-pointer"
+                aria-label={`Shopping bag${
+                  visibleCartItemCount > 0 ? ` (${visibleCartItemCount} items)` : ''
+                }`}
               >
-                Cancel
+                <svg
+                  className="pointer-events-none"
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.55"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
+                  <line x1="3" y1="6" x2="21" y2="6" />
+                  <path d="M16 10a4 4 0 0 1-8 0" />
+                </svg>
+                {visibleCartItemCount > 0 && (
+                  <span className="absolute right-1 top-1.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-maroon px-1 font-body text-[10px] font-medium text-white">
+                    {visibleCartItemCount > 99 ? '99+' : visibleCartItemCount}
+                  </span>
+                )}
+              </button>
+
+              {/* Mobile Hamburger Menu */}
+              <button
+                type="button"
+                onClick={openMobileMenu}
+                className="flex h-11 w-11 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon lg:hidden min-h-[44px] min-w-[44px] pointer-events-auto cursor-pointer"
+                aria-label="Open menu"
+              >
+                <svg
+                  className="pointer-events-none"
+                  width="25"
+                  height="25"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.45"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <line x1="4" y1="7" x2="20" y2="7" />
+                  <line x1="4" y1="12" x2="18" y2="12" />
+                  <line x1="4" y1="17" x2="16" y2="17" />
+                </svg>
               </button>
             </div>
           </div>
-
-          <div
-            id="header-search-results"
-            role="listbox"
-            className="flex-1 overflow-y-auto overscroll-y-contain sm:max-h-[420px] sm:flex-none"
-          >
-            {!query.trim() ? (
-              <div className="p-5">
-                {recentSearches.length > 0 && (
-                  <div className="mb-6">
-                    <div className="flex items-center justify-between">
-                      <p className="font-body text-[10px] uppercase tracking-[0.26em] text-gold">
-                        Recent Searches
-                      </p>
-                      <button
-                        type="button"
-                        onClick={handleClearRecent}
-                        className="font-body text-[10px] uppercase tracking-[0.16em] text-charcoal/40 hover:text-maroon"
-                      >
-                        Clear
-                      </button>
-                    </div>
-
-                    <div className="mt-4 flex flex-col gap-1">
-                      {recentSearches.map((term) => (
-                        <button
-                          key={term}
-                          type="button"
-                          onClick={() => runSearch(term)}
-                          className="group flex items-center justify-between gap-3 rounded-sm px-2 py-2 text-left text-sm text-charcoal/75 transition-colors hover:bg-cream/60 hover:text-maroon cursor-pointer"
-                        >
-                          <span className="flex items-center gap-3">
-                            <svg
-                              width="15"
-                              height="15"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="1.55"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              aria-hidden="true"
-                              className="shrink-0 text-charcoal/30"
-                            >
-                              <circle cx="12" cy="12" r="9" />
-                              <path d="M12 7v5l3 3" />
-                            </svg>
-                            {term}
-                          </span>
-
-                          <span
-                            role="button"
-                            tabIndex={0}
-                            onClick={(event) => handleRemoveRecent(term, event)}
-                            className="shrink-0 text-base leading-none text-charcoal/25 opacity-0 transition-opacity hover:text-maroon group-hover:opacity-100"
-                            aria-label={`Remove ${term} from recent searches`}
-                          >
-                            ×
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <p className="font-body text-[10px] uppercase tracking-[0.26em] text-gold">
-                  Popular Searches
-                </p>
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {POPULAR_SEARCHES.map((term) => (
-                    <button
-                      key={term}
-                      type="button"
-                      onClick={() => runSearch(term)}
-                      className="border border-beige bg-cream px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-charcoal/60 transition-colors hover:border-maroon hover:text-maroon cursor-pointer"
-                    >
-                      {term}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <div className="p-6 text-center">
-                <h3 className="font-heading text-2xl text-charcoal">
-                  No products found
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-charcoal/55">
-                  Try searching kurta, saree, dupatta, bridal, men, or bags.
-                </p>
-                <Link
-                  href="/shop"
-                  onClick={closeSearch}
-                  className="btn-luxury btn-luxury-secondary mt-5 inline-flex"
-                >
-                  View Collection
-                </Link>
-              </div>
-            ) : (
-              <div className="divide-y divide-beige">
-                {filteredProducts.map((product, index) => (
-                  <button
-                    key={product.id}
-                    id={`header-search-result-${index}`}
-                    type="button"
-                    role="option"
-                    aria-selected={highlightedIndex === index}
-                    onClick={() => goToProduct(product)}
-                    onMouseEnter={() => setHighlightedIndex(index)}
-                    className={`flex w-full gap-4 p-4 text-left transition-colors cursor-pointer ${
-                      highlightedIndex === index ? 'bg-cream/70' : 'hover:bg-cream/60'
-                    }`}
-                  >
-                    <div className="relative h-20 w-16 shrink-0 overflow-hidden bg-cream">
-                      <Image
-                        src={getProductImage(product)}
-                        alt={product.name}
-                        fill
-                        sizes="64px"
-                        className="object-cover"
-                      />
-                    </div>
-
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] uppercase tracking-[0.22em] text-gold">
-                        {product.fabric}
-                      </p>
-                      <h3 className="mt-1 line-clamp-1 font-heading text-xl text-charcoal">
-                        <HighlightedText text={product.name} query={query} />
-                      </h3>
-                      <p className="mt-1 line-clamp-1 text-xs text-charcoal/50">
-                        {product.shortDescription}
-                      </p>
-                      <p className="mt-2 text-sm font-medium text-maroon">
-                        {formatPrice(product.price)}
-                      </p>
-                    </div>
-                  </button>
-                ))}
-
-                <div className="p-4">
-                  <button
-                    type="button"
-                    onClick={() => runSearch(query)}
-                    className="block w-full border border-beige bg-ivory px-4 py-3 text-center text-[11px] uppercase tracking-[0.2em] text-charcoal/60 transition-colors hover:border-maroon hover:text-maroon cursor-pointer"
-                  >
-                    View all results
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
-      )}
-    </div>
+      </header>
+
+      <MobileMenu />
+    </>
   );
 }
