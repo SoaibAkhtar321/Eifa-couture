@@ -26,6 +26,31 @@ create trigger trg_profiles_updated_at
   before update on profiles
   for each row execute function set_updated_at();
 
+-- ── Shared helper: current app role (used heavily by RLS in 0005) ──
+-- Reads role from the caller's own profile row. STABLE + SECURITY DEFINER
+-- so it can be used inside policies without recursive RLS evaluation.
+-- Moved here (from 0001) because it selects from `profiles`, which must
+-- exist before this function body can be validated by Postgres.
+create or replace function auth_role()
+returns user_role
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select role from profiles where id = auth.uid();
+$$;
+
+create or replace function is_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select coalesce(auth_role() in ('admin', 'superadmin'), false);
+$$;
+
 -- Auto-create a profile row whenever a new auth user signs up
 -- (covers email/password and Google OAuth, since both hit auth.users).
 create or replace function handle_new_auth_user()

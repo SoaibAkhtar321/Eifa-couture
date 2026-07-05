@@ -70,25 +70,9 @@ begin
 end;
 $$;
 
--- ── Shared helper: current app role (used heavily by RLS in 0003) ──
--- Reads role from the caller's own profile row. STABLE + SECURITY DEFINER
--- so it can be used inside policies without recursive RLS evaluation.
-create or replace function auth_role()
-returns user_role
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select role from profiles where id = auth.uid();
-$$;
-
-create or replace function is_admin()
-returns boolean
-language sql
-stable
-security definer
-set search_path = public
-as $$
-  select coalesce(auth_role() in ('admin', 'superadmin'), false);
-$$;
+-- NOTE: auth_role() / is_admin() are defined in 0002_core_tables.sql,
+-- immediately after the `profiles` table is created, since both
+-- functions select from `profiles` and Postgres validates function
+-- bodies against the catalog at CREATE FUNCTION time. Defining them
+-- here (before `profiles` exists) breaks a fresh `supabase db push`
+-- with "relation profiles does not exist".

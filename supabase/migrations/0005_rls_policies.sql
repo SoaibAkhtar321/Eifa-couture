@@ -9,7 +9,8 @@
 --   admin      — full read/write on catalog & commerce tables via the
 --                admin panel. Cannot manage other admins' profiles/roles.
 --   superadmin — everything admin can, plus managing other users' roles.
--- `is_admin()` / `auth_role()` (defined in 0001) are SECURITY DEFINER
+-- `is_admin()` / `auth_role()` (defined in 0002, right after `profiles`
+-- is created) are SECURITY DEFINER
 -- functions so policies can check role without recursively re-querying
 -- `profiles` under RLS.
 
