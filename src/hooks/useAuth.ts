@@ -8,11 +8,9 @@
    store as implementation details — UI code should never import
    `lib/supabase/*` or `store/auth-store` directly.
 
-   This is architecture only for now: no login/register UI is wired
-   up yet, so `signOut` is the only action exposed today. Future
-   `signInWithPassword`, `signUp`, `resetPasswordForEmail`, etc. will
-   be added here as those flows are built, keeping this file the one
-   place components call into for auth.
+   Login, register, forgot-password, and Google OAuth all call into
+   this hook rather than touching Supabase directly — components stay
+   ignorant of the client/session plumbing.
    ============================================ */
 
 import { useMemo } from 'react';
@@ -31,6 +29,47 @@ export function useAuth() {
   // here and avoids threading the provider's instance through context.
   const supabase = useMemo(() => createClient(), []);
 
+  const signInWithPassword = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    return { error };
+  };
+
+  const signUp = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    return { error };
+  };
+
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
+    });
+    return { error };
+  };
+
+  const resetPasswordForEmail = async (email: string) => {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    return { error };
+  };
+
+  const updatePassword = async (password: string) => {
+    const { error } = await supabase.auth.updateUser({ password });
+    return { error };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -40,6 +79,11 @@ export function useAuth() {
     session,
     isLoading,
     isAuthenticated: !!user,
+    signInWithPassword,
+    signUp,
+    signInWithGoogle,
+    resetPasswordForEmail,
+    updatePassword,
     signOut,
   };
 }
