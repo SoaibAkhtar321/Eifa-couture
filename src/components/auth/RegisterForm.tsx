@@ -6,16 +6,23 @@
    Mirrors the exact card layout, spacing, and classes of LoginForm —
    no new visual language introduced. Rendered by
    src/app/register/page.tsx.
+
+   Confirm Email is OFF in Supabase, so a successful signUp already
+   returns an authenticated session — register behaves like login and
+   redirects immediately rather than showing a "check your email" step.
    ============================================ */
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useAuth } from '@/hooks/useAuth';
 import { isValidEmail } from '@/lib/utils';
 import GoogleAuthButton from './GoogleAuthButton';
 
 export default function RegisterForm() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { signUp, signInWithGoogle } = useAuth();
 
   const [fullName, setFullName] = useState('');
@@ -23,14 +30,29 @@ export default function RegisterForm() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  // Raw param (may be null) — forwarded to Login so the redirect
+  // survives a Login <-> Register detour. `redirectTo` is the
+  // resolved destination used for this form's own post-signup nav.
+  const redirectParam = searchParams.get('redirect');
+  const redirectTo = redirectParam || '/account';
+
+  const loginHref = redirectParam
+    ? `/login?redirect=${encodeURIComponent(redirectParam)}`
+    : '/login';
+
+  const resetFields = () => {
+    setFullName('');
+    setEmail('');
+    setPassword('');
+    setConfirmPassword('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setSuccessMessage(null);
 
     if (!fullName.trim()) {
       setError('Please enter your full name.');
@@ -58,15 +80,19 @@ export default function RegisterForm() {
       return;
     }
 
-    setSuccessMessage(
-      'Account created. Please check your email to confirm your address before signing in.'
-    );
+    // Confirm Email is OFF — signUp already produced an authenticated
+    // session, so behave exactly like a successful login: reset the
+    // form, then redirect and refresh so server components re-read
+    // the new session.
+    resetFields();
+    router.push(redirectTo);
+    router.refresh();
   };
 
   const handleGoogleSignIn = async () => {
     setError(null);
     setIsGoogleLoading(true);
-    const { error: oauthError } = await signInWithGoogle();
+    const { error: oauthError } = await signInWithGoogle(redirectParam || undefined);
 
     if (oauthError) {
       setError(oauthError.message);
@@ -79,7 +105,7 @@ export default function RegisterForm() {
       <div className="w-full max-w-md bg-white p-8 border border-beige shadow-sm">
         <div className="text-center mb-8">
           <h1 className="font-heading text-3xl text-charcoal mb-3">Create Account</h1>
-          <p className="font-body text-sm text-charcoal/60">
+          <p className="font-body text-sm text-charcoal/70">
             Join us to save your wishlist, track orders, and checkout faster.
           </p>
         </div>
@@ -96,7 +122,7 @@ export default function RegisterForm() {
         {/* ── Divider ── */}
         <div className="relative flex py-4 items-center mb-4">
           <div className="flex-grow border-t border-beige"></div>
-          <span className="flex-shrink mx-4 font-body text-[10px] uppercase tracking-[0.2em] text-charcoal/35">
+          <span className="flex-shrink mx-4 font-body text-[10px] uppercase tracking-[0.2em] text-charcoal/45">
             Or Use Email
           </span>
           <div className="flex-grow border-t border-beige"></div>
@@ -108,18 +134,12 @@ export default function RegisterForm() {
           </p>
         )}
 
-        {successMessage && (
-          <p className="mb-4 font-body text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-3">
-            {successMessage}
-          </p>
-        )}
-
         {/* ── Registration Form ── */}
         <form className="space-y-5" onSubmit={handleSubmit} noValidate>
           <div>
             <label
               htmlFor="fullName"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/60 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
             >
               Full Name
             </label>
@@ -128,7 +148,7 @@ export default function RegisterForm() {
               id="fullName"
               name="fullName"
               placeholder="Enter your full name"
-              className="w-full border border-beige bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/30"
+              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               autoComplete="name"
@@ -139,7 +159,7 @@ export default function RegisterForm() {
           <div>
             <label
               htmlFor="email"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/60 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
             >
               Email Address
             </label>
@@ -148,7 +168,7 @@ export default function RegisterForm() {
               id="email"
               name="email"
               placeholder="Enter your email"
-              className="w-full border border-beige bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/30"
+              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -159,7 +179,7 @@ export default function RegisterForm() {
           <div>
             <label
               htmlFor="password"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/60 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
             >
               Password
             </label>
@@ -168,7 +188,7 @@ export default function RegisterForm() {
               id="password"
               name="password"
               placeholder="At least 8 characters"
-              className="w-full border border-beige bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/30"
+              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
@@ -179,7 +199,7 @@ export default function RegisterForm() {
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/60 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
             >
               Confirm Password
             </label>
@@ -188,7 +208,7 @@ export default function RegisterForm() {
               id="confirmPassword"
               name="confirmPassword"
               placeholder="Re-enter your password"
-              className="w-full border border-beige bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/30"
+              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               autoComplete="new-password"
@@ -206,10 +226,10 @@ export default function RegisterForm() {
         </form>
 
         <div className="mt-8 text-center border-t border-beige pt-6">
-          <p className="font-body text-xs text-charcoal/50 mb-4">
+          <p className="font-body text-xs text-charcoal/60 mb-4">
             Already have an account?
           </p>
-          <Link href="/login" className="btn-luxury btn-luxury-secondary w-full">
+          <Link href={loginHref} className="btn-luxury btn-luxury-secondary w-full">
             Sign In
           </Link>
         </div>

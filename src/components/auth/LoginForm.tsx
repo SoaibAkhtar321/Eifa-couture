@@ -27,7 +27,15 @@ export default function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
-  const redirectTo = searchParams.get('redirect') || '/account';
+  // Raw param (may be null) — used to decide whether to forward it to
+  // Register. `redirectTo` below is the resolved destination used for
+  // this form's own post-login navigation.
+  const redirectParam = searchParams.get('redirect');
+  const redirectTo = redirectParam || '/account';
+
+  const registerHref = redirectParam
+    ? `/register?redirect=${encodeURIComponent(redirectParam)}`
+    : '/register';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +66,7 @@ export default function LoginForm() {
   const handleGoogleSignIn = async () => {
     setError(null);
     setIsGoogleLoading(true);
-    const { error: oauthError } = await signInWithGoogle();
+    const { error: oauthError } = await signInWithGoogle(redirectParam || undefined);
 
     if (oauthError) {
       setError(oauthError.message);
@@ -73,7 +81,7 @@ export default function LoginForm() {
       <div className="w-full max-w-md bg-white p-8 border border-beige shadow-sm">
         <div className="text-center mb-8">
           <h1 className="font-heading text-3xl text-charcoal mb-3">Welcome Back</h1>
-          <p className="font-body text-sm text-charcoal/60">
+          <p className="font-body text-sm text-charcoal/70">
             Sign in to access your wishlist and track orders.
           </p>
         </div>
@@ -89,7 +97,7 @@ export default function LoginForm() {
         {/* ── Divider ── */}
         <div className="relative flex py-4 items-center mb-4">
           <div className="flex-grow border-t border-beige"></div>
-          <span className="flex-shrink mx-4 font-body text-[10px] uppercase tracking-[0.2em] text-charcoal/35">
+          <span className="flex-shrink mx-4 font-body text-[10px] uppercase tracking-[0.2em] text-charcoal/45">
             Or Use Email
           </span>
           <div className="flex-grow border-t border-beige"></div>
@@ -106,7 +114,7 @@ export default function LoginForm() {
           <div>
             <label
               htmlFor="email"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/60 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
             >
               Email Address
             </label>
@@ -115,7 +123,7 @@ export default function LoginForm() {
               id="email"
               name="email"
               placeholder="Enter your email"
-              className="w-full border border-beige bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/30"
+              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -127,13 +135,13 @@ export default function LoginForm() {
             <div className="flex items-center justify-between mb-2">
               <label
                 htmlFor="password"
-                className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/60"
+                className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75"
               >
                 Password
               </label>
               <Link
                 href="/forgot-password"
-                className="font-body text-[9px] uppercase tracking-wider text-charcoal/40 hover:text-maroon transition-colors"
+                className="font-body text-[9px] uppercase tracking-wider text-charcoal/55 hover:text-maroon transition-colors"
               >
                 Forgot?
               </Link>
@@ -143,7 +151,7 @@ export default function LoginForm() {
               id="password"
               name="password"
               placeholder="Enter your password"
-              className="w-full border border-beige bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/30"
+              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
@@ -161,10 +169,10 @@ export default function LoginForm() {
         </form>
 
         <div className="mt-8 text-center border-t border-beige pt-6">
-          <p className="font-body text-xs text-charcoal/50 mb-4">
+          <p className="font-body text-xs text-charcoal/60 mb-4">
             Don&apos;t have an account yet?
           </p>
-          <Link href="/register" className="btn-luxury btn-luxury-secondary w-full">
+          <Link href={registerHref} className="btn-luxury btn-luxury-secondary w-full">
             Create Account
           </Link>
         </div>

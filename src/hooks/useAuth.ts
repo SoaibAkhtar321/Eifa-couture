@@ -23,10 +23,6 @@ export function useAuth() {
   const session = useAuthStore((state) => state.session);
   const isLoading = useAuthStore((state) => state.isLoading);
 
-  // Memoized per-hook-call rather than reused from AuthProvider's
-  // instance — auth actions are stateless calls against the same
-  // underlying session, so a lightweight local client is sufficient
-  // here and avoids threading the provider's instance through context.
   const supabase = useMemo(() => createClient(), []);
 
   const signInWithPassword = async (email: string, password: string) => {
@@ -63,14 +59,15 @@ export function useAuth() {
   const signOut = async () => {
     await supabase.auth.signOut();
   };
+
   const signInWithGoogle = async (redirectTo?: string) => {
-  const params = redirectTo ? `?next=${encodeURIComponent(redirectTo)}` : '';
-  const { error } = await supabase.auth.signInWithOAuth({
-    provider: 'google',
-    options: { redirectTo: `${window.location.origin}/auth/callback${params}` },
-  });
-  return { error };
-};
+    const params = redirectTo ? `?next=${encodeURIComponent(redirectTo)}` : '';
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: `${window.location.origin}/auth/callback${params}` },
+    });
+    return { error };
+  };
 
   return {
     user,

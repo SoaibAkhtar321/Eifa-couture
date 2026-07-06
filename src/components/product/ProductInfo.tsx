@@ -1,9 +1,10 @@
 'use client';
 
-import { useMemo, useState, useSyncExternalStore } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 
+import { useAuth } from '@/hooks/useAuth';
 import { formatPrice, getDiscountPercentage, isInStock } from '@/lib/utils';
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
@@ -13,6 +14,25 @@ import type { Product } from '@/types';
 interface ProductInfoProps {
   product: Product;
 }
+
+/* ============================================
+   Auth-gated shopping actions
+   ============================================
+   Guests can browse freely, but Add to Bag / Buy Now require a
+   session. When a guest triggers one of these, we stash what they
+   were trying to do here, send them to /login with a redirect back
+   to this exact product page, and replay the action once they
+   return authenticated — no popup, no modal, no lost intent.
+
+   Kept local to this file since it's the only consumer today;
+   promote to src/types if a second consumer (wishlist, reviews,
+   orders) shows up later.
+   ============================================ */
+type PendingAuthAction =
+  | { type: 'addToBag'; productId: string; size: string; color: string; quantity: number }
+  | { type: 'buyNow'; productId: string; size: string; color: string; quantity: number };
+
+const PENDING_ACTION_KEY = 'eifa-pending-action';
 
 const subscribeToHydration = () => () => {};
 
@@ -26,6 +46,8 @@ function useHasHydrated() {
 
 export default function ProductInfo({ product }: ProductInfoProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const { isAuthenticated } = useAuth();
 
   const hasHydrated = useHasHydrated();
   const [selectedSize, setSelectedSize] = useState(product.sizes[0] ?? '');
@@ -36,6 +58,10 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const openCart = useUIStore((state) => state.openCart);
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
   const isInWishlist = useWishlistStore((state) => state.isInWishlist(product.id));
+
+  // Guards the replay effect so a pending action only ever fires once,
+  // even if isAuthenticated flips more than once during hydration.
+  const hasReplayedRef = useRef(false);
 
   const discount = product.compareAtPrice
     ? getDiscountPercentage(product.compareAtPrice, product.price)
@@ -59,18 +85,86 @@ export default function ProductInfo({ product }: ProductInfoProps) {
     setQuantity(1);
   };
 
+  const savePendingActionAndRedirect = (action: PendingAuthAction) => {
+    sessionStorage.setItem(PENDING_ACTION_KEY, JSON.stringify(action));
+    router.push(`/login?redirect=${encodeURIComponent(pathname)}`);
+  };
+
   const handleAddToCart = () => {
     if (!hasStock) return;
+
+    if (!isAuthenticated) {
+      savePendingActionAndRedirect({
+        type: 'addToBag',
+        productId: product.id,
+        size: selectedSize,
+        color: selectedColor,
+        quantity,
+      });
+      return;
+    }
+
     addItem(product, selectedSize, selectedColor, quantity);
     openCart();
   };
 
   const handleBuyNow = () => {
     if (!hasStock) return;
+
+    if (!isAuthenticated) {
+      savePendingActionAndRedirect({
+        type: 'buyNow',
+        productId: product.id,
+        size: selectedSize,
+        color: selectedColor,
+        quantity,
+      });
+      return;
+    }
+
     const buyNowItem = { product, size: selectedSize, color: selectedColor, quantity };
     sessionStorage.setItem('eifa-buy-now', JSON.stringify(buyNowItem));
     router.push('/checkout?mode=buy-now');
   };
+
+  // Replays a pending action after the guest returns authenticated.
+  // Depends on isAuthenticated (not just mount) so it fires correctly
+  // once the session actually resolves, rather than racing hydration.
+  useEffect(() => {
+    if (!isAuthenticated || hasReplayedRef.current) return;
+
+    const raw = sessionStorage.getItem(PENDING_ACTION_KEY);
+    if (!raw) return;
+
+    hasReplayedRef.current = true;
+    sessionStorage.removeItem(PENDING_ACTION_KEY);
+
+    let action: PendingAuthAction;
+    try {
+      action = JSON.parse(raw);
+    } catch {
+      return; // Malformed payload — ignore silently.
+    }
+
+    // Only replay if this is the product page the action was created
+    // on; the login redirect already targets this exact page, but this
+    // guards against stale/cross-product sessionStorage state.
+    if (action.productId !== product.id) return;
+
+    if (action.type === 'addToBag') {
+      addItem(product, action.size, action.color, action.quantity);
+      openCart();
+    } else if (action.type === 'buyNow') {
+      const buyNowItem = {
+        product,
+        size: action.size,
+        color: action.color,
+        quantity: action.quantity,
+      };
+      sessionStorage.setItem('eifa-buy-now', JSON.stringify(buyNowItem));
+      router.push('/checkout?mode=buy-now');
+    }
+  }, [isAuthenticated, product, addItem, openCart, router]);
 
   return (
     <motion.div
