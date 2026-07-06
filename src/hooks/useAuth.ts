@@ -48,16 +48,6 @@ export function useAuth() {
     return { error };
   };
 
-  const signInWithGoogle = async () => {
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
-    return { error };
-  };
-
   const resetPasswordForEmail = async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${window.location.origin}/reset-password`,
@@ -73,6 +63,14 @@ export function useAuth() {
   const signOut = async () => {
     await supabase.auth.signOut();
   };
+  const signInWithGoogle = async (redirectTo?: string) => {
+  const params = redirectTo ? `?next=${encodeURIComponent(redirectTo)}` : '';
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    options: { redirectTo: `${window.location.origin}/auth/callback${params}` },
+  });
+  return { error };
+};
 
   return {
     user,
