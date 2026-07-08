@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 
 import ProductDetailsClient from '@/components/product/ProductDetailsClient';
 
-import { MOCK_PRODUCTS } from '@/lib/mock-data';
+import { createClient } from '@/lib/supabase/server';
+import { fetchProductBySlug, fetchRelatedProducts } from '@/lib/data/products';
 
 type ProductPageProps = {
   params: Promise<{
@@ -13,38 +14,12 @@ type ProductPageProps = {
 
 const RELATED_PRODUCTS_LIMIT = 4;
 
-function getActiveProductBySlug(slug: string) {
-  return MOCK_PRODUCTS.find((product) => product.slug === slug && product.isActive);
-}
-
-function getRelatedProducts(productId: string, category: string) {
-  const categoryRelatedProducts = MOCK_PRODUCTS.filter(
-    (product) =>
-      product.isActive &&
-      product.id !== productId &&
-      product.category === category
-  ).slice(0, RELATED_PRODUCTS_LIMIT);
-
-  if (categoryRelatedProducts.length > 0) {
-    return categoryRelatedProducts;
-  }
-
-  return MOCK_PRODUCTS.filter(
-    (product) => product.isActive && product.id !== productId
-  ).slice(0, RELATED_PRODUCTS_LIMIT);
-}
-
-export async function generateStaticParams() {
-  return MOCK_PRODUCTS.filter((product) => product.isActive).map((product) => ({
-    slug: product.slug,
-  }));
-}
-
 export async function generateMetadata({
   params,
 }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = getActiveProductBySlug(slug);
+  const supabase = await createClient();
+  const product = await fetchProductBySlug(supabase, slug);
 
   if (!product) {
     return {
@@ -75,13 +50,19 @@ export async function generateMetadata({
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = getActiveProductBySlug(slug);
+  const supabase = await createClient();
+  const product = await fetchProductBySlug(supabase, slug);
 
   if (!product) {
     notFound();
   }
 
-  const relatedProducts = getRelatedProducts(product.id, product.category);
+  const relatedProducts = await fetchRelatedProducts(
+    supabase,
+    product.id,
+    product.category,
+    RELATED_PRODUCTS_LIMIT
+  );
 
   return (
     <>

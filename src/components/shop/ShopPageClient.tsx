@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import ShopProductCard from '@/components/shop/ShopProductCard';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
-import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '@/lib/mock-data';
 import {
   PRICE_FILTER_OPTIONS,
   SORT_OPTIONS,
@@ -14,7 +13,7 @@ import {
   sortProducts,
   type PriceFilter,
 } from '@/lib/search';
-import type { Product, SortOption } from '@/types';
+import type { Category, Product, SortOption } from '@/types';
 
 const PRODUCTS_PER_PAGE = 8;
 
@@ -61,26 +60,34 @@ function getCollectionFromUrl(value: string | null): CollectionFilter {
   return 'all';
 }
 
-function getCategoryBySlug(slug: string) {
-  return MOCK_CATEGORIES.find((category) => category.slug === slug);
+function getCategoryBySlug(categories: Category[], slug: string) {
+  return categories.find((category) => category.slug === slug);
 }
 
 function isProductInStock(product: Product) {
   return Object.values(product.stock).some((quantity) => quantity > 0);
 }
 
-function getPageTitle(categorySlug: string, collection: CollectionFilter) {
+function getPageTitle(
+  categories: Category[],
+  categorySlug: string,
+  collection: CollectionFilter
+) {
   if (collection === 'new-arrivals') return 'New Arrivals';
   if (collection === 'best-sellers') return 'Best Sellers';
 
   if (categorySlug !== 'all') {
-    const activeCategory = getCategoryBySlug(categorySlug);
+    const activeCategory = getCategoryBySlug(categories, categorySlug);
     return activeCategory?.name ?? 'The Collection';
   }
   return 'The Collection';
 }
 
-function getPageDescription(categorySlug: string, collection: CollectionFilter) {
+function getPageDescription(
+  categories: Category[],
+  categorySlug: string,
+  collection: CollectionFilter
+) {
   if (collection === 'new-arrivals') {
     return 'Explore the newest handcrafted Chikankari pieces from Eifa Couture.';
   }
@@ -88,7 +95,7 @@ function getPageDescription(categorySlug: string, collection: CollectionFilter) 
     return 'Discover the most loved handcrafted pieces chosen by our customers.';
   }
   if (categorySlug !== 'all') {
-    const activeCategory = getCategoryBySlug(categorySlug);
+    const activeCategory = getCategoryBySlug(categories, categorySlug);
     return (
       activeCategory?.description ??
       'Discover handcrafted pieces shaped by Lucknowi heritage and quiet luxury.'
@@ -197,7 +204,12 @@ function FilterInputs({
   );
 }
 
-export default function ShopPageClient() {
+type ShopPageClientProps = {
+  categories: Category[];
+  products: Product[];
+};
+
+export default function ShopPageClient({ categories, products }: ShopPageClientProps) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -218,10 +230,11 @@ export default function ShopPageClient() {
 
   const activeCategories = useMemo(
     () =>
-      MOCK_CATEGORIES.filter((category) => category.isActive)
+      categories
+        .filter((category) => category.isActive)
         .slice()
         .sort((a, b) => a.order - b.order),
-    []
+    [categories]
   );
 
   const activeCategorySlugs = useMemo(
@@ -240,8 +253,8 @@ export default function ShopPageClient() {
     collectionFromUrl === 'all' ? categoryFromUrl : 'all';
 
   const activeProducts = useMemo(
-    () => MOCK_PRODUCTS.filter((product) => product.isActive),
-    []
+    () => products.filter((product) => product.isActive),
+    [products]
   );
 
   const availableSizes = useMemo(() => {
@@ -256,8 +269,9 @@ export default function ShopPageClient() {
     ).sort((a, b) => a.localeCompare(b));
   }, [activeProducts]);
 
-  const pageTitle = getPageTitle(effectiveCategory, collectionFromUrl);
+  const pageTitle = getPageTitle(activeCategories, effectiveCategory, collectionFromUrl);
   const pageDescription = getPageDescription(
+    activeCategories,
     effectiveCategory,
     collectionFromUrl
   );

@@ -14,7 +14,9 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
-import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '@/lib/mock-data';
+import { createClient } from '@/lib/supabase/client';
+import { fetchActiveCategories } from '@/lib/data/categories';
+import { fetchActiveProducts } from '@/lib/data/products';
 import {
   POPULAR_SEARCHES,
   getSearchSuggestions,
@@ -221,8 +223,27 @@ export default function HeaderSearch() {
   const [query, setQuery] = useState('');
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const debouncedQuery = useDebouncedValue(query, DEBOUNCE_DELAY);
   const searchText = debouncedQuery.trim();
+
+  useEffect(() => {
+    let isMounted = true;
+    const supabase = createClient();
+
+    Promise.all([fetchActiveProducts(supabase), fetchActiveCategories(supabase)]).then(
+      ([liveProducts, liveCategories]) => {
+        if (!isMounted) return;
+        setProducts(liveProducts);
+        setCategories(liveCategories);
+      }
+    );
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const suggestions = useMemo(() => {
     if (!searchText) {
@@ -231,8 +252,8 @@ export default function HeaderSearch() {
 
     const baseSuggestions = getSearchSuggestions(
       searchText,
-      MOCK_PRODUCTS,
-      MOCK_CATEGORIES,
+      products,
+      categories,
       PRODUCT_LIMIT
     );
 
@@ -245,7 +266,7 @@ export default function HeaderSearch() {
         searchText
       ).slice(0, PRODUCT_LIMIT),
     };
-  }, [searchText]);
+  }, [categories, products, searchText]);
 
   const emptyStateTerms = useMemo(
     () => getUniqueTerms(recentSearches, POPULAR_SEARCHES),

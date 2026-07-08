@@ -1,18 +1,17 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { getBestSellers } from '@/lib/mock-data';
+import { createClient } from '@/lib/supabase/server';
+import { fetchBestSellers } from '@/lib/data/products';
 import { formatPrice, getDiscountPercentage } from '@/lib/utils';
 
-export default function BestSellersSection() {
-  const products = getBestSellers().slice(0, 4);
+const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
 
-  const productImages = [
-    '/images/products/product-1.png',
-    '/images/products/product-3.png',
-    '/images/products/product-5.png',
-    '/images/products/palazzo-green.png',
-  ];
+export default async function BestSellersSection() {
+  const supabase = await createClient();
+  const products = await fetchBestSellers(supabase, 4);
+
+  if (products.length === 0) return null;
 
   return (
     <section className="bg-cream py-10 md:py-16 lg:py-24" aria-labelledby="bestsellers-heading">
@@ -37,7 +36,7 @@ export default function BestSellersSection() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
-          {products.map((product, idx) => {
+          {products.map((product) => {
             const discount = product.compareAtPrice
               ? getDiscountPercentage(product.compareAtPrice, product.price)
               : 0;
@@ -48,7 +47,7 @@ export default function BestSellersSection() {
                   <div className="flex h-full flex-col overflow-hidden bg-white">
                     <div className="relative aspect-[4/5] overflow-hidden bg-beige">
                       <Image
-                        src={productImages[idx % productImages.length]}
+                        src={product.images?.[0] || DEFAULT_PRODUCT_IMAGE}
                         alt={product.name}
                         fill
                         sizes="(max-width: 1024px) 50vw, 25vw"

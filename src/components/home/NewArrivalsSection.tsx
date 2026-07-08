@@ -1,20 +1,17 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { getNewArrivals } from '@/lib/mock-data';
+import { createClient } from '@/lib/supabase/server';
+import { fetchNewArrivals } from '@/lib/data/products';
 import { formatPrice } from '@/lib/utils';
 
-export default function NewArrivalsSection() {
-  const products = getNewArrivals().slice(0, 6);
+const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
 
-  const productImages = [
-    '/images/products/product-2.png',
-    '/images/products/product-4.png',
-    '/images/products/product-5.png',
-    '/images/products/saree-pink.png',
-    '/images/products/kurta-white.png',
-    '/images/products/dupatta-cream.png',
-  ];
+export default async function NewArrivalsSection() {
+  const supabase = await createClient();
+  const products = await fetchNewArrivals(supabase, 6);
+
+  if (products.length === 0) return null;
 
   return (
     <section className="bg-cream py-10 md:py-16 lg:py-24" aria-labelledby="new-arrivals-heading">
@@ -39,13 +36,13 @@ export default function NewArrivalsSection() {
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-6 lg:gap-6">
-          {products.map((product, idx) => (
+          {products.map((product) => (
             <article key={product.id} className="group">
               <Link href={`/product/${product.slug}`} className="block h-full">
                 <div className="flex h-full flex-col overflow-hidden bg-white">
                   <div className="relative aspect-[4/5] overflow-hidden bg-beige">
                     <Image
-                      src={productImages[idx % productImages.length]}
+                      src={product.images?.[0] || DEFAULT_PRODUCT_IMAGE}
                       alt={product.name}
                       fill
                       sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"

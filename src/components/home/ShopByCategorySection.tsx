@@ -1,16 +1,16 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
-import { MOCK_CATEGORIES } from '@/lib/mock-data';
+import { createClient } from '@/lib/supabase/server';
+import { fetchActiveCategories } from '@/lib/data/categories';
 
 function getCategoryHref(slug: string) {
   return `/shop?category=${slug}`;
 }
 
-export default function ShopByCategorySection() {
-  const categories = MOCK_CATEGORIES.filter((category) => category.isActive)
-    .slice()
-    .sort((a, b) => a.order - b.order);
+export default async function ShopByCategorySection() {
+  const supabase = await createClient();
+  const categories = await fetchActiveCategories(supabase);
 
   if (categories.length === 0) return null;
 

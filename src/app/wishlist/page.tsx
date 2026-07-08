@@ -1,12 +1,13 @@
 'use client';
 
-import { useMemo, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
 
 
-import { MOCK_PRODUCTS } from '@/lib/mock-data';
+import { createClient } from '@/lib/supabase/client';
+import { fetchProductsByIds } from '@/lib/data/products';
 import { formatPrice } from '@/lib/utils';
 
 import { useCartStore } from '@/store/cart-store';
@@ -57,17 +58,36 @@ export default function WishlistPage() {
   const addItem = useCartStore((state) => state.addItem);
   const openCart = useUIStore((state) => state.openCart);
 
+  const [fetchedProducts, setFetchedProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    if (!hasHydrated || wishlistItems.length === 0) return;
+
+    let isMounted = true;
+    const supabase = createClient();
+
+    fetchProductsByIds(supabase, wishlistItems).then((products) => {
+      if (isMounted) setFetchedProducts(products);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [hasHydrated, wishlistItems]);
+
   const wishlistProducts = useMemo(() => {
     if (!hasHydrated) return [];
 
-    return wishlistItems
-      .map((productId) =>
-        MOCK_PRODUCTS.find(
-          (product) => product.id === productId && product.isActive
-        )
-      )
-      .filter((product): product is Product => Boolean(product));
-  }, [hasHydrated, wishlistItems]);
+    const wishlistIdSet = new Set(wishlistItems);
+    const wishlistOrder = new Map(wishlistItems.map((id, index) => [id, index]));
+
+    return fetchedProducts
+      .filter((product) => product.isActive && wishlistIdSet.has(product.id))
+      .slice()
+      .sort(
+        (a, b) => (wishlistOrder.get(a.id) ?? 0) - (wishlistOrder.get(b.id) ?? 0)
+      );
+  }, [fetchedProducts, hasHydrated, wishlistItems]);
 
   const handleAddToCart = (product: Product) => {
     const defaultSize = product.sizes[0];

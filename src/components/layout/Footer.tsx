@@ -1,7 +1,9 @@
 import Link from 'next/link';
 
 import { SOCIAL_LINKS } from '@/lib/constants';
-import { MOCK_CATEGORIES } from '@/lib/mock-data';
+import { createClient } from '@/lib/supabase/server';
+import { fetchActiveCategories } from '@/lib/data/categories';
+import type { Category } from '@/types';
 
 type FooterLink = {
   label: string;
@@ -31,20 +33,19 @@ function getCategoryHref(slug: string) {
   return `/shop?category=${slug}`;
 }
 
-function getShopLinks(): FooterLink[] {
-  const categoryLinks = MOCK_CATEGORIES.filter((category) => category.isActive)
-    .slice()
-    .sort((a, b) => a.order - b.order)
-    .map((category) => ({
-      label: category.name,
-      href: getCategoryHref(category.slug),
-    }));
+function getShopLinks(categories: Category[]): FooterLink[] {
+  const categoryLinks = categories.map((category) => ({
+    label: category.name,
+    href: getCategoryHref(category.slug),
+  }));
 
   return [...collectionLinks, ...categoryLinks];
 }
 
-export default function Footer() {
-  const shopLinks = getShopLinks();
+export default async function Footer() {
+  const supabase = await createClient();
+  const categories = await fetchActiveCategories(supabase);
+  const shopLinks = getShopLinks(categories);
   const currentYear = new Date().getFullYear();
 
   return (

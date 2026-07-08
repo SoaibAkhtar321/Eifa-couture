@@ -8,7 +8,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
-import { MOCK_CATEGORIES, MOCK_PRODUCTS } from '@/lib/mock-data';
+import { createClient } from '@/lib/supabase/client';
+import { fetchActiveCategories } from '@/lib/data/categories';
+import { fetchActiveProducts } from '@/lib/data/products';
 import {
   PRICE_FILTER_OPTIONS,
   SORT_OPTIONS,
@@ -25,7 +27,7 @@ import {
 } from '@/lib/search-history';
 import { formatPrice, highlightSegments } from '@/lib/utils';
 
-import type { Product } from '@/types';
+import type { Category, Product } from '@/types';
 
 const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
   'womens-kurtas': '/images/categories/kurtas.png',
@@ -153,6 +155,25 @@ export default function SearchPage() {
   const [sortBy, setSortBy] = useState<SearchSortOption>('relevance');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [priceFilter, setPriceFilter] = useState<PriceFilter>('all');
+  const [allProducts, setAllProducts] = useState<Product[]>([]);
+  const [allCategories, setAllCategories] = useState<Category[]>([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const supabase = createClient();
+
+    Promise.all([fetchActiveProducts(supabase), fetchActiveCategories(supabase)]).then(
+      ([products, categories]) => {
+        if (!isMounted) return;
+        setAllProducts(products);
+        setAllCategories(categories);
+      }
+    );
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
   const recentSearchesSnapshot = useSyncExternalStore(
     subscribeToRecentSearches,
     getRecentSearchesSnapshot,
@@ -221,20 +242,20 @@ export default function SearchPage() {
   const searchMatchedProducts = useMemo(() => {
     if (!searchText) return [];
 
-    return MOCK_PRODUCTS.filter((product) =>
+    return allProducts.filter((product) =>
       productMatchesSearch(product, searchText)
     );
-  }, [searchText]);
+  }, [allProducts, searchText]);
 
   const availableCategories = useMemo(() => {
     const categorySlugs = new Set(
       searchMatchedProducts.map((product) => product.category)
     );
 
-    return MOCK_CATEGORIES.filter(
-      (category) => category.isActive && categorySlugs.has(category.slug)
-    ).sort((a, b) => a.order - b.order);
-  }, [searchMatchedProducts]);
+    return allCategories
+      .filter((category) => category.isActive && categorySlugs.has(category.slug))
+      .sort((a, b) => a.order - b.order);
+  }, [allCategories, searchMatchedProducts]);
 
   // If the query changes and the selected category no longer appears in the
   // results, treat the filter as "all" without needing an extra render pass.
