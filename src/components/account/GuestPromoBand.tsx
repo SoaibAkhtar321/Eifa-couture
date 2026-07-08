@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 
 export default function GuestPromoBand() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, isLoading: loading } = useAuth();
 
   if (loading || isAuthenticated) return null;
 

@@ -44,7 +44,7 @@ export default function Header() {
   const cartItemCount = useCartStore((state) => state.getItemCount());
   const wishlistCount = useWishlistStore((state) => state.items.length);
 
-  const { isAuthenticated, user, loading } = useAuth();
+  const { isAuthenticated, user, isLoading: loading } = useAuth();
   const initial = getUserInitial(user);
 
   const visibleCartItemCount = hasMounted ? cartItemCount : 0;

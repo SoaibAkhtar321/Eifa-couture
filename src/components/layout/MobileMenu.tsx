@@ -3,29 +3,21 @@
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { SOCIAL_LINKS } from '@/lib/constants';
 import { useUIStore } from '@/store/ui-store';
+import { useAuth } from '@/hooks/useAuth';
 
-type MenuLink = {
-  label: string;
-  href: string;
-};
+type MenuLink = { label: string; href: string };
 
 const quickLinks: MenuLink[] = [
   { label: 'Home', href: '/' },
   { label: 'Shop All', href: '/shop' },
   { label: 'New Arrivals', href: '/shop?collection=new-arrivals' },
   { label: 'Best Sellers', href: '/shop?collection=best-sellers' },
-];
-
-const accountLinks: MenuLink[] = [
-  { label: 'My Orders', href: '/account/orders' },
-  { label: 'Track Order', href: '/track-order' },
-  { label: 'Wishlist', href: '/wishlist' },
-  { label: 'Sign In / Register', href: '/login' },
 ];
 
 const supportLinks: MenuLink[] = [
@@ -47,52 +39,56 @@ const panelVariants: Variants = {
 
 const listVariants: Variants = {
   hidden: {},
-  visible: {
-    transition: {
-      staggerChildren: 0.055,
-      delayChildren: 0.14,
-    },
-  },
+  visible: { transition: { staggerChildren: 0.055, delayChildren: 0.14 } },
 };
 
 const itemVariants: Variants = {
   hidden: { opacity: 0, x: 22 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.32, ease: [0.25, 0.46, 0.45, 0.94] },
-  },
+  visible: { opacity: 1, x: 0, transition: { duration: 0.32, ease: [0.25, 0.46, 0.45, 0.94] } },
 };
 
 export default function MobileMenu() {
   const [logoFailed, setLogoFailed] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+  const router = useRouter();
 
   const isMobileMenuOpen = useUIStore((state) => state.isMobileMenuOpen);
   const closeMobileMenu = useUIStore((state) => state.closeMobileMenu);
+  const { isAuthenticated, isLoading, user, signOut } = useAuth();
 
   useBodyScrollLock(isMobileMenuOpen);
 
-  // Close on Escape — no history/popstate involvement, so it can never
-  // desync from Next's router. Closing via the browser/gesture back button
-  // now behaves like normal navigation instead of being intercepted.
   useEffect(() => {
     if (!isMobileMenuOpen) return;
-
     const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        closeMobileMenu();
-      }
+      if (event.key === 'Escape') closeMobileMenu();
     };
-
     document.addEventListener('keydown', handleEscape);
-    return () => {
-      document.removeEventListener('keydown', handleEscape);
-    };
+    return () => document.removeEventListener('keydown', handleEscape);
   }, [isMobileMenuOpen, closeMobileMenu]);
 
-  const handleLinkClick = () => {
+  const handleLinkClick = () => closeMobileMenu();
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    await signOut();
     closeMobileMenu();
+    router.push('/');
+    router.refresh();
   };
+
+  const accountLinks: MenuLink[] = isAuthenticated
+    ? [
+        { label: 'My Account', href: '/account' },
+        { label: 'My Orders', href: '/account/orders' },
+        { label: 'Wishlist', href: '/wishlist' },
+        { label: 'Saved Addresses', href: '/account/addresses' },
+      ]
+    : [
+        { label: 'Sign In / Register', href: '/login' },
+        { label: 'Track Order', href: '/track-order' },
+        { label: 'Wishlist', href: '/wishlist' },
+      ];
 
   return (
     <AnimatePresence>
@@ -161,12 +157,7 @@ export default function MobileMenu() {
             </div>
 
             <div className="flex-1 overflow-y-auto overscroll-y-contain px-5 py-6">
-              <motion.div
-                variants={listVariants}
-                initial="hidden"
-                animate="visible"
-                className="space-y-7"
-              >
+              <motion.div variants={listVariants} initial="hidden" animate="visible" className="space-y-7">
                 <motion.nav
                   variants={itemVariants}
                   aria-label="Mobile quick navigation"
@@ -187,7 +178,7 @@ export default function MobileMenu() {
 
                 <motion.div variants={itemVariants}>
                   <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.34em] text-gold">
-                    My Account
+                    {!isLoading && isAuthenticated ? (user?.user_metadata?.full_name || 'My Account') : 'My Account'}
                   </p>
 
                   <div className="grid gap-1 border border-beige bg-white p-4">
@@ -202,14 +193,23 @@ export default function MobileMenu() {
                         <span className="text-sm text-gold">→</span>
                       </Link>
                     ))}
+
+                    {!isLoading && isAuthenticated && (
+                      <button
+                        type="button"
+                        onClick={handleSignOut}
+                        disabled={isSigningOut}
+                        className="min-h-[44px] flex items-center justify-between py-2.5 font-subheading text-[18px] tracking-wide text-maroon transition-colors duration-300 hover:text-gold disabled:opacity-60"
+                      >
+                        <span>{isSigningOut ? 'Signing Out…' : 'Logout'}</span>
+                        <span className="text-sm text-gold">→</span>
+                      </button>
+                    )}
                   </div>
                 </motion.div>
 
                 <motion.div variants={itemVariants}>
-                  <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.34em] text-gold">
-                    Support
-                  </p>
-
+                  <p className="mb-4 text-[11px] font-medium uppercase tracking-[0.34em] text-gold">Support</p>
                   <div className="grid gap-1 border border-beige bg-white p-4">
                     {supportLinks.map((link) => (
                       <Link

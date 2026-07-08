@@ -3,14 +3,7 @@
 /* ============================================
    EIFA COUTURE — useAuth Hook
    ============================================
-   Single entry point components should use to read auth state or
-   perform auth actions. Keeps the Supabase client and the Zustand
-   store as implementation details — UI code should never import
-   `lib/supabase/*` or `store/auth-store` directly.
-
-   Login, register, forgot-password, and Google OAuth all call into
-   this hook rather than touching Supabase directly — components stay
-   ignorant of the client/session plumbing.
+ 
    ============================================ */
 
 import { useMemo } from 'react';
