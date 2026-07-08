@@ -35,6 +35,13 @@ function getCartProductImage(product: Product) {
   return image;
 }
 
+// Same "size-color" stock key convention used everywhere else
+// (getStockKey in lib/utils, ProductInfo's selectedStock). Kept local
+// since this is the only place in the drawer that needs it.
+function getVariantStock(product: Product, size: string, color: string) {
+  return product.stock[`${size}-${color}`] ?? 0;
+}
+
 const backdropVariants: Variants = {
   hidden: { opacity: 0 },
   visible: { opacity: 1, transition: { duration: 0.3 } },
@@ -235,6 +242,12 @@ export default function CartDrawer() {
                     {items.map((item) => {
                       const itemKey = `${item.product.id}-${item.selectedSize}-${item.selectedColor}`;
                       const productImage = getCartProductImage(item.product);
+                      const variantStock = getVariantStock(
+                        item.product,
+                        item.selectedSize,
+                        item.selectedColor
+                      );
+                      const isAtStockLimit = item.quantity >= variantStock;
 
                       const handleDecreaseQuantity = () => {
                         if (item.quantity <= 1) {
@@ -250,7 +263,20 @@ export default function CartDrawer() {
                           item.product.id,
                           item.selectedSize,
                           item.selectedColor,
-                          item.quantity - 1
+                          item.quantity - 1,
+                          variantStock
+                        );
+                      };
+
+                      const handleIncreaseQuantity = () => {
+                        if (isAtStockLimit) return;
+
+                        updateQuantity(
+                          item.product.id,
+                          item.selectedSize,
+                          item.selectedColor,
+                          item.quantity + 1,
+                          variantStock
                         );
                       };
 
@@ -317,16 +343,14 @@ export default function CartDrawer() {
                                   </span>
 
                                   <button
-                                    onClick={() =>
-                                      updateQuantity(
-                                        item.product.id,
-                                        item.selectedSize,
-                                        item.selectedColor,
-                                        item.quantity + 1
-                                      )
+                                    onClick={handleIncreaseQuantity}
+                                    disabled={isAtStockLimit}
+                                    className="flex h-8 w-8 items-center justify-center text-charcoal/50 transition-colors hover:bg-cream hover:text-charcoal disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+                                    aria-label={
+                                      isAtStockLimit
+                                        ? `Maximum available stock reached for ${item.product.name}`
+                                        : `Increase quantity of ${item.product.name}`
                                     }
-                                    className="flex h-8 w-8 items-center justify-center text-charcoal/50 transition-colors hover:bg-cream hover:text-charcoal"
-                                    aria-label={`Increase quantity of ${item.product.name}`}
                                     type="button"
                                   >
                                     +
@@ -339,6 +363,12 @@ export default function CartDrawer() {
                                   )}
                                 </p>
                               </div>
+
+                              {isAtStockLimit && (
+                                <p className="mt-2 font-body text-[11px] uppercase tracking-wider text-maroon">
+                                  Maximum available stock in bag
+                                </p>
+                              )}
                             </div>
 
                             <button

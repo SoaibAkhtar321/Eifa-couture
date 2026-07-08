@@ -12,32 +12,46 @@ import type { CartItem, Product } from "@/types";
 
 const CART_STORAGE_KEY = "eifa-couture-cart";
 const CART_STORAGE_VERSION = 2;
+
+// Hard outer ceiling regardless of stock — sanity limit, not a business
+// target. Real availability (passed in as `availableStock`) is the
+// binding constraint whenever it's lower than this.
 const MAX_ITEM_QUANTITY = 10;
 
 interface CartState {
   items: CartItem[];
+  /**
+   * `availableStock` is the live stock count for this exact
+   * size/color combination (i.e. `product.stock[`${size}-${color}`]`).
+   * When provided, the resulting cart quantity is clamped to it —
+   * added quantity can never exceed what's actually in stock, even
+   * if the item is already partially in the cart. When omitted, only
+   * the flat MAX_ITEM_QUANTITY ceiling applies (kept optional so
+   * existing callers don't break, but every call site should pass it).
+   */
   addItem: (
     product: Product,
     size: string,
     color: string,
-    quantity?: number
+    quantity?: number,
+    availableStock?: number
   ) => void;
   removeItem: (productId: string, size: string, color: string) => void;
   updateQuantity: (
     productId: string,
     size: string,
     color: string,
-    quantity: number
+    quantity: number,
+    availableStock?: number
   ) => void;
   clearCart: () => void;
   getTotal: () => number;
   getItemCount: () => number;
 }
 
-function normalizeQuantity(quantity: number) {
+function clampQuantity(quantity: number, ceiling: number) {
   if (!Number.isFinite(quantity)) return 1;
-
-  return Math.min(Math.max(Math.floor(quantity), 1), MAX_ITEM_QUANTITY);
+  return Math.min(Math.max(Math.floor(quantity), 1), Math.max(ceiling, 0));
 }
 
 function getCartItemKey(productId: string, size: string, color: string) {
@@ -49,8 +63,14 @@ export const useCartStore = create<CartState>()(
     (set, get) => ({
       items: [],
 
-      addItem: (product, size, color, quantity = 1) => {
-        const safeQuantity = normalizeQuantity(quantity);
+      addItem: (product, size, color, quantity = 1, availableStock) => {
+        // Real stock (when known) always wins over the flat ceiling.
+        const ceiling =
+          typeof availableStock === "number"
+            ? Math.min(availableStock, MAX_ITEM_QUANTITY)
+            : MAX_ITEM_QUANTITY;
+
+        const safeQuantity = clampQuantity(quantity, ceiling);
 
         set((state) => {
           const existingIndex = state.items.findIndex(
@@ -69,10 +89,10 @@ export const useCartStore = create<CartState>()(
             updatedItems[existingIndex] = {
               ...existingItem,
               product,
-              quantity: Math.min(
-                existingItem.quantity + safeQuantity,
-                MAX_ITEM_QUANTITY
-              ),
+              // Combined quantity is clamped against the same ceiling —
+              // adding more of an item already in the cart still can't
+              // exceed real stock for that variant.
+              quantity: Math.min(existingItem.quantity + safeQuantity, ceiling),
             };
 
             return { items: updatedItems };
@@ -105,13 +125,18 @@ export const useCartStore = create<CartState>()(
         }));
       },
 
-      updateQuantity: (productId, size, color, quantity) => {
+      updateQuantity: (productId, size, color, quantity, availableStock) => {
         if (quantity <= 0) {
           get().removeItem(productId, size, color);
           return;
         }
 
-        const safeQuantity = normalizeQuantity(quantity);
+        const ceiling =
+          typeof availableStock === "number"
+            ? Math.min(availableStock, MAX_ITEM_QUANTITY)
+            : MAX_ITEM_QUANTITY;
+
+        const safeQuantity = clampQuantity(quantity, ceiling);
 
         set((state) => ({
           items: state.items.map((item) =>

@@ -18,21 +18,27 @@ interface ProductInfoProps {
 /* ============================================
    Auth-gated shopping actions
    ============================================
-   Guests can browse freely, but Add to Bag / Buy Now require a
-   session. When a guest triggers one of these, we stash what they
-   were trying to do here, send them to /login with a redirect back
-   to this exact product page, and replay the action once they
-   return authenticated — no popup, no modal, no lost intent.
+   Guests can browse freely, but Add to Bag / Buy Now / Wishlist all
+   require a session. When a guest triggers one of these, we stash
+   what they were trying to do here, send them to /login with a
+   redirect back to this exact product page, and replay the action
+   once they return authenticated — no popup, no modal, no lost intent.
 
    Kept local to this file since it's the only consumer today;
-   promote to src/types if a second consumer (wishlist, reviews,
-   orders) shows up later.
+   promote to src/types if a second consumer (reviews, orders) shows
+   up later.
    ============================================ */
 type PendingAuthAction =
   | { type: 'addToBag'; productId: string; size: string; color: string; quantity: number }
-  | { type: 'buyNow'; productId: string; size: string; color: string; quantity: number };
+  | { type: 'buyNow'; productId: string; size: string; color: string; quantity: number }
+  | { type: 'toggleWishlist'; productId: string };
 
 const PENDING_ACTION_KEY = 'eifa-pending-action';
+
+// Show "Only X left" messaging once selected-variant stock drops to
+// this number or below. Adjust freely — purely a display threshold,
+// doesn't affect cart/quantity clamping logic elsewhere.
+const LOW_STOCK_THRESHOLD = 5;
 
 const subscribeToHydration = () => () => {};
 
@@ -41,6 +47,90 @@ function useHasHydrated() {
     subscribeToHydration,
     () => true,
     () => false
+  );
+}
+
+/* ============================================
+   Product details accordion
+   ============================================
+   Description pulls from the product itself (falls back to the
+   short description already used above the size/colour selectors
+   if a longer `description` field isn't present on the type).
+   Shipping & Care are standard boilerplate — swap the copy below if
+   you want it to vary per-product later.
+   ============================================ */
+type AccordionSection = {
+  id: string;
+  title: string;
+  content: string;
+};
+
+function ProductAccordion({ product }: { product: Product }) {
+  const [openId, setOpenId] = useState<string | null>('description');
+
+  // description and care both come straight off the Product type — no
+  // fallback needed, every product record has them.
+  const careCopy = product.care.join(' ');
+
+  const sections: AccordionSection[] = [
+    {
+      id: 'description',
+      title: 'Description',
+      content: product.description,
+    },
+    {
+      id: 'shipping',
+      title: 'Shipping & Returns',
+      content:
+        'Ships within 3–5 business days across India, with express options available at checkout. International shipping is available to select countries. Returns are accepted within 7 days of delivery for unworn, unwashed items with tags intact — please see our full returns policy for details.',
+    },
+    {
+      id: 'care',
+      title: 'Care Instructions',
+      content: careCopy,
+    },
+  ];
+
+  const toggleSection = (id: string) => {
+    setOpenId((current) => (current === id ? null : id));
+  };
+
+  return (
+    <div className="mt-8 border-t border-beige">
+      {sections.map((section) => {
+        const isOpen = openId === section.id;
+        return (
+          <div key={section.id} className="border-b border-beige">
+            <button
+              type="button"
+              onClick={() => toggleSection(section.id)}
+              aria-expanded={isOpen}
+              className="flex w-full items-center justify-between py-5 text-left transition-colors duration-300 hover:text-maroon"
+            >
+              <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-charcoal">
+                {section.title}
+              </span>
+              <span
+                className={`text-lg text-charcoal/60 transition-transform duration-300 ${
+                  isOpen ? 'rotate-45' : 'rotate-0'
+                }`}
+              >
+                +
+              </span>
+            </button>
+            <div
+              className={`grid overflow-hidden transition-all duration-300 ease-in-out ${
+                isOpen ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'
+              }`}
+            >
+              <div className="overflow-hidden">
+                <p className="pb-5 text-sm leading-7 text-charcoal/65">{section.content}</p>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -73,7 +163,15 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   }, [product.stock, selectedColor, selectedSize]);
 
   const hasStock = isInStock(product.stock, selectedSize, selectedColor);
-  const maxQuantity = Math.min(selectedStock, 5);
+  // True only if every size/color combination is at zero — distinct
+  // from `hasStock`, which is scoped to the currently selected variant.
+  const isFullySoldOut = useMemo(
+    () => Object.values(product.stock).every((count) => count <= 0),
+    [product.stock]
+  );
+  // Bound purely by real stock now — the old flat "5" ceiling was
+  // arbitrary and disagreed with the cart store's own 10-unit cap.
+  const maxQuantity = selectedStock;
 
   const handleSizeChange = (size: string) => {
     setSelectedSize(size);
@@ -104,7 +202,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       return;
     }
 
-    addItem(product, selectedSize, selectedColor, quantity);
+    addItem(product, selectedSize, selectedColor, quantity, selectedStock);
     openCart();
   };
 
@@ -125,6 +223,18 @@ export default function ProductInfo({ product }: ProductInfoProps) {
     const buyNowItem = { product, size: selectedSize, color: selectedColor, quantity };
     sessionStorage.setItem('eifa-buy-now', JSON.stringify(buyNowItem));
     router.push('/checkout?mode=buy-now');
+  };
+
+  const handleToggleWishlist = () => {
+    if (!isAuthenticated) {
+      savePendingActionAndRedirect({
+        type: 'toggleWishlist',
+        productId: product.id,
+      });
+      return;
+    }
+
+    toggleWishlist(product.id);
   };
 
   // Replays a pending action after the guest returns authenticated.
@@ -152,7 +262,11 @@ export default function ProductInfo({ product }: ProductInfoProps) {
     if (action.productId !== product.id) return;
 
     if (action.type === 'addToBag') {
-      addItem(product, action.size, action.color, action.quantity);
+      // Use stock for the replayed action's own size/color, not the
+      // component's current selection state — they can differ if the
+      // guest's selection changed before their pending action fires.
+      const actionStock = product.stock[`${action.size}-${action.color}`] ?? 0;
+      addItem(product, action.size, action.color, action.quantity, actionStock);
       openCart();
     } else if (action.type === 'buyNow') {
       const buyNowItem = {
@@ -163,8 +277,10 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       };
       sessionStorage.setItem('eifa-buy-now', JSON.stringify(buyNowItem));
       router.push('/checkout?mode=buy-now');
+    } else if (action.type === 'toggleWishlist') {
+      toggleWishlist(action.productId);
     }
-  }, [isAuthenticated, product, addItem, openCart, router]);
+  }, [isAuthenticated, product, addItem, openCart, router, toggleWishlist]);
 
   return (
     <motion.div
@@ -178,6 +294,12 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       <h1 className="mt-3 font-heading text-4xl leading-tight text-charcoal sm:text-5xl lg:text-6xl">
         {product.name}
       </h1>
+
+      {isFullySoldOut && (
+        <p className="mt-3 inline-block bg-charcoal px-3 py-1.5 text-[10px] font-medium uppercase tracking-[0.22em] text-white">
+          Currently Sold Out — All Sizes &amp; Colours
+        </p>
+      )}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <span className="font-subheading text-3xl text-maroon">{formatPrice(product.price)}</span>
@@ -246,7 +368,14 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         </div>
 
         <div className="mt-7">
-          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.24em] text-charcoal/70">Quantity</p>
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-charcoal/70">Quantity</p>
+            {hasStock && selectedStock <= LOW_STOCK_THRESHOLD && (
+              <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-maroon">
+                Only {selectedStock} left
+              </p>
+            )}
+          </div>
           <div className="flex h-12 w-32 items-center justify-between border border-beige bg-white">
             <button type="button" onClick={() => setQuantity((c) => Math.max(1, c - 1))} disabled={quantity <= 1} className="h-full w-10 text-xl text-charcoal/70 transition-colors duration-300 hover:text-maroon disabled:opacity-30">
               −
@@ -266,7 +395,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
           </button>
           <button
             type="button"
-            onClick={() => toggleWishlist(product.id)}
+            onClick={handleToggleWishlist}
             className="flex h-[52px] w-[52px] shrink-0 items-center justify-center border border-beige bg-white text-charcoal transition-all duration-300 hover:border-maroon hover:text-maroon"
           >
             <svg
@@ -293,8 +422,8 @@ export default function ProductInfo({ product }: ProductInfoProps) {
           Buy It Now
         </button>
       </div>
-      
-      {/* Accordions removed for brevity in snippet; they remain unchanged in your code */}
+
+      <ProductAccordion product={product} />
     </motion.div>
   );
 }
