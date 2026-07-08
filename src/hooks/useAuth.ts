@@ -49,6 +49,16 @@ export function useAuth() {
     return { error };
   };
 
+  const updateProfile = async (data: {
+    full_name?: string;
+    phone?: string;
+    gender?: string;
+    date_of_birth?: string;
+  }) => {
+    const { error } = await supabase.auth.updateUser({ data });
+    return { error };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -72,6 +82,7 @@ export function useAuth() {
     signInWithGoogle,
     resetPasswordForEmail,
     updatePassword,
+    updateProfile,
     signOut,
   };
 }

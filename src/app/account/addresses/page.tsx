@@ -1,8 +1,13 @@
-import Link from 'next/link';
+'use client';
 
-export const metadata = { title: 'Saved Addresses | Eifa Couture' };
+import Link from 'next/link';
+import { useState } from 'react';
+
+import AddressList from '@/components/account/AddressList';
 
 export default function AddressesPage() {
+  const [isAdding, setIsAdding] = useState(false);
+
   return (
     <main className="bg-ivory">
       <section className="luxury-container py-10 sm:py-14 lg:py-20">
@@ -14,11 +19,13 @@ export default function AddressesPage() {
 
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="font-heading text-4xl text-charcoal sm:text-5xl">Saved Addresses</h1>
-          <button type="button" className="btn-luxury btn-luxury-primary">+ Add Address</button>
+          <button type="button" onClick={() => setIsAdding(true)} className="btn-luxury btn-luxury-primary">
+            + Add Address
+          </button>
         </div>
 
-        <div className="mt-8 border border-beige bg-white p-8 text-center">
-          <p className="text-sm text-charcoal/55">No saved addresses yet.</p>
+        <div className="mt-8">
+          <AddressList />
         </div>
       </section>
     </main>

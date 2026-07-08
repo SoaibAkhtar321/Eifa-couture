@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import EditProfileForm from '@/components/account/EditProfileForm';
+
 export const metadata = { title: 'Account Settings | Eifa Couture' };
 
 const settingsSections = [
@@ -19,6 +21,10 @@ export default function SettingsPage() {
         </nav>
 
         <h1 className="font-heading text-4xl text-charcoal sm:text-5xl">Account Settings</h1>
+
+        <div className="mt-8">
+          <EditProfileForm />
+        </div>
 
         <div className="mt-8 space-y-4">
           {settingsSections.map((s) => (
