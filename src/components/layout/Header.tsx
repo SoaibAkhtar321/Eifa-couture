@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
 import { useWishlistStore } from '@/store/wishlist-store';
+import { useAuth } from '@/hooks/useAuth';
+import { getUserInitial } from '@/lib/user-display';
 
 import AnnouncementBar from './AnnouncementBar';
 import MobileMenu from './MobileMenu';
@@ -42,8 +44,14 @@ export default function Header() {
   const cartItemCount = useCartStore((state) => state.getItemCount());
   const wishlistCount = useWishlistStore((state) => state.items.length);
 
+  const { isAuthenticated, user, loading } = useAuth();
+  const initial = getUserInitial(user);
+
   const visibleCartItemCount = hasMounted ? cartItemCount : 0;
   const visibleWishlistCount = hasMounted ? wishlistCount : 0;
+  // While auth state is resolving, default to the guest icon so there's
+  // no flash of "My Account" before session is confirmed.
+  const showAccountIcon = hasMounted && !loading && isAuthenticated;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -121,31 +129,46 @@ export default function Header() {
             <div className="flex shrink-0 items-center gap-1 sm:gap-2">
               <HeaderSearch />
 
-              {/* Login / Register (Desktop Only) */}
-              <Link
-                href="/login"
-                className="hidden items-center gap-2 text-charcoal/55 transition-colors duration-300 hover:text-maroon lg:flex px-2 pointer-events-auto"
-                aria-label="Sign In or Register"
-              >
-                <svg
-                  className="pointer-events-none"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.55"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  aria-hidden="true"
+              {/* Account (Desktop Only) — auth-aware */}
+              {showAccountIcon ? (
+                <Link
+                  href="/account"
+                  className="hidden items-center gap-2 px-2 text-charcoal/55 transition-colors duration-300 hover:text-maroon lg:flex pointer-events-auto"
+                  aria-label="My Account"
                 >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                <span className="font-body text-[10px] uppercase tracking-[0.15em] hidden xl:block">
-                  Sign In
-                </span>
-              </Link>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-maroon font-body text-[11px] font-medium text-white pointer-events-none">
+                    {initial}
+                  </span>
+                  <span className="font-body text-[10px] uppercase tracking-[0.15em] hidden xl:block">
+                    My Account
+                  </span>
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  className="hidden items-center gap-2 text-charcoal/55 transition-colors duration-300 hover:text-maroon lg:flex px-2 pointer-events-auto"
+                  aria-label="Sign In or Register"
+                >
+                  <svg
+                    className="pointer-events-none"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.55"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                  <span className="font-body text-[10px] uppercase tracking-[0.15em] hidden xl:block">
+                    Sign In
+                  </span>
+                </Link>
+              )}
 
               {/* Wishlist */}
               <Link

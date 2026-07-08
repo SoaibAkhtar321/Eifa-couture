@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Cormorant_Garamond, Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 
@@ -93,6 +93,16 @@ export const metadata: Metadata = {
     icon: '/favicon.ico',
     apple: '/apple-touch-icon.png',
   },
+};
+
+// Required for `env(safe-area-inset-*)` to resolve to a real value on
+// notched/home-indicator iOS devices — without `viewport-fit: cover`,
+// Safari never expands the viewport under the safe areas, so any CSS
+// using env(safe-area-inset-bottom) (e.g. MobileStickyActionBar) would
+// silently receive 0 and the bottom padding it's meant to add would
+// have no effect.
+export const viewport: Viewport = {
+  viewportFit: 'cover',
 };
 
 export default function RootLayout({

@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 
+import MobileStickyActionBar from '@/components/product/MobileStickyActionBar';
 import { useAuth } from '@/hooks/useAuth';
+import { useMediaQuery, usePrefersReducedMotion } from '@/hooks/useMediaQuery';
 import { formatPrice, getDiscountPercentage, isInStock } from '@/lib/utils';
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
@@ -153,6 +155,35 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   // even if isAuthenticated flips more than once during hydration.
   const hasReplayedRef = useRef(false);
 
+  /* ============================================
+     Mobile sticky CTA visibility
+     ============================================
+     Watches the primary Add to Bag / Buy Now block via
+     IntersectionObserver. The sticky bar appears only once that block
+     has scrolled out of view, and only on mobile/tablet — it reuses
+     handleAddToCart / handleBuyNow / handleToggleWishlist below rather
+     than any logic of its own.
+     ============================================ */
+  const primaryCtaRef = useRef<HTMLDivElement>(null);
+  const [isPrimaryCTAVisible, setIsPrimaryCTAVisible] = useState(true);
+  const isMobileOrTablet = useMediaQuery('(max-width: 1023px)');
+  const prefersReducedMotion = usePrefersReducedMotion();
+
+  useEffect(() => {
+    const node = primaryCtaRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsPrimaryCTAVisible(entry.isIntersecting),
+      { rootMargin: '0px' }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  const showStickyBar = hasHydrated && isMobileOrTablet && !isPrimaryCTAVisible;
+
   const discount = product.compareAtPrice
     ? getDiscountPercentage(product.compareAtPrice, product.price)
     : 0;
@@ -266,9 +297,19 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       // component's current selection state — they can differ if the
       // guest's selection changed before their pending action fires.
       const actionStock = product.stock[`${action.size}-${action.color}`] ?? 0;
+      // Re-check stock at replay time: if this variant sold out between
+      // the guest's original click and them completing login, silently
+      // drop the action instead of adding a 0-quantity line to the cart
+      // (clampQuantity would otherwise floor it to 0, same as the
+      // interactive handler's own `if (!hasStock) return` guard).
+      if (actionStock <= 0) return;
       addItem(product, action.size, action.color, action.quantity, actionStock);
       openCart();
     } else if (action.type === 'buyNow') {
+      const actionStock = product.stock[`${action.size}-${action.color}`] ?? 0;
+      // Same guard as addToBag above — don't send an out-of-stock item
+      // straight to checkout; the checkout page doesn't re-validate stock.
+      if (actionStock <= 0) return;
       const buyNowItem = {
         product,
         size: action.size,
@@ -388,7 +429,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col gap-3">
+      <div ref={primaryCtaRef} className="mt-8 flex flex-col gap-3">
         <div className="flex w-full items-center gap-3">
           <button type="button" onClick={handleAddToCart} disabled={!hasStock} className="btn-luxury btn-luxury-primary flex-1 min-h-[52px] text-[11px] disabled:opacity-50">
             {hasStock ? 'Add to Bag' : 'Out of Stock'}
@@ -424,6 +465,31 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       </div>
 
       <ProductAccordion product={product} />
+
+      <AnimatePresence>
+        {showStickyBar && (
+          <motion.div
+            className="fixed inset-x-0 bottom-0 z-(--z-sticky-cta) lg:hidden"
+            initial={{ y: '100%', opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
+            transition={
+              prefersReducedMotion
+                ? { duration: 0 }
+                : { duration: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }
+            }
+          >
+            <MobileStickyActionBar
+              imageUrl={product.images?.[0]}
+              productName={product.name}
+              priceLabel={formatPrice(product.price)}
+              hasStock={hasStock}
+              onAddToBag={handleAddToCart}
+              onBuyNow={handleBuyNow}
+            />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }
