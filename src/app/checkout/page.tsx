@@ -35,6 +35,11 @@ type BuyNowSessionItem = {
   size: string;
   color: string;
   quantity: number;
+  /** Resolved variant price (`price_override ?? product.price`) snapshotted
+   *  by `handleBuyNow` in ProductInfo.tsx at the moment Buy Now was
+   *  clicked. Authoritative for display — never re-derive from
+   *  `product.price` here, or a variant's `price_override` gets lost. */
+  unitPrice: number;
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -66,7 +71,8 @@ function parseBuyNowItem(snapshot: string): CartItem | null {
       !parsed.product ||
       !parsed.size ||
       !parsed.color ||
-      typeof parsed.quantity !== 'number'
+      typeof parsed.quantity !== 'number' ||
+      typeof parsed.unitPrice !== 'number'
     ) {
       return null;
     }
@@ -76,6 +82,7 @@ function parseBuyNowItem(snapshot: string): CartItem | null {
       selectedSize: parsed.size,
       selectedColor: parsed.color,
       quantity: parsed.quantity,
+      unitPrice: parsed.unitPrice,
     };
   } catch {
     console.error('Failed to parse buy now item');
@@ -135,7 +142,7 @@ export default function CheckoutPage() {
   // Determine which items and subtotal to display
   const displayItems = isBuyNowMode && buyNowItem ? [buyNowItem] : cartItems;
   const displaySubtotal = isBuyNowMode && buyNowItem
-    ? buyNowItem.product.price * buyNowItem.quantity
+    ? buyNowItem.unitPrice * buyNowItem.quantity
     : cartSubtotal;
 
   const itemCount = displayItems.reduce((sum, item) => sum + item.quantity, 0);
@@ -551,7 +558,7 @@ export default function CheckoutPage() {
                           </div>
 
                           <p className="shrink-0 text-sm text-charcoal">
-                            {formatPrice(item.product.price * item.quantity)}
+                            {formatPrice(item.unitPrice * item.quantity)}
                           </p>
                         </div>
                       );
