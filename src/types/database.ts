@@ -186,6 +186,13 @@ export interface DbCartItem {
   updated_at: string;
 }
 
+export interface DbWishlistItem {
+  id: string;
+  user_id: string;
+  product_id: string;
+  created_at: string;
+}
+
 export interface DbCoupon {
   id: string;
   code: string;

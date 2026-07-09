@@ -7,6 +7,7 @@ import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/ui/CartDrawer';
 import AuthProvider from '@/providers/AuthProvider';
 import CartSyncProvider from '@/providers/CartSyncProvider';
+import WishlistSyncProvider from '@/providers/WishlistSyncProvider';
 
 const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
@@ -119,6 +120,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-ivory font-body text-charcoal selection:bg-maroon selection:text-white">
        <AuthProvider>
   <CartSyncProvider>
+    <WishlistSyncProvider>
     <div className="relative flex min-h-screen flex-col overflow-x-hidden">
       <Header />
 
@@ -129,6 +131,7 @@ export default function RootLayout({
       <Footer />
       <CartDrawer />
     </div>
+    </WishlistSyncProvider>
   </CartSyncProvider>
 </AuthProvider>
       </body>
