@@ -6,6 +6,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/ui/CartDrawer';
 import AuthProvider from '@/providers/AuthProvider';
+import CartSyncProvider from '@/providers/CartSyncProvider';
 
 const playfairDisplay = Playfair_Display({
   subsets: ['latin'],
@@ -116,18 +117,20 @@ export default function RootLayout({
       className={`${playfairDisplay.variable} ${cormorantGaramond.variable} ${inter.variable} antialiased`}
     >
       <body className="min-h-screen bg-ivory font-body text-charcoal selection:bg-maroon selection:text-white">
-        <AuthProvider>
-          <div className="relative flex min-h-screen flex-col overflow-x-hidden">
-            <Header />
+       <AuthProvider>
+  <CartSyncProvider>
+    <div className="relative flex min-h-screen flex-col overflow-x-hidden">
+      <Header />
 
-            <div className="flex-1 w-full relative z-10">
-              {children}
-            </div>
+      <div className="flex-1 w-full relative z-10">
+        {children}
+      </div>
 
-            <Footer />
-            <CartDrawer />
-          </div>
-        </AuthProvider>
+      <Footer />
+      <CartDrawer />
+    </div>
+  </CartSyncProvider>
+</AuthProvider>
       </body>
     </html>
   );
