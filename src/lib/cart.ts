@@ -85,11 +85,21 @@ export async function fetchServerCart(
     const product = productMap.get(variant.product_id);
     if (!product) continue;
 
+    // Resolve this line's price from the product's own resolved
+    // variants (price_override ?? base price) — never product.price
+    // directly, so a variant-priced item never silently reprices to
+    // the base product price.
+    const matchedVariant = product.variants.find(
+      (v) => v.size === variant.size && v.colorName === variant.color_name
+    );
+    const unitPrice = matchedVariant ? matchedVariant.price : product.minPrice;
+
     items.push({
       product,
       selectedSize: variant.size,
       selectedColor: variant.color_name,
       quantity: row.quantity,
+      unitPrice,
     });
   }
 

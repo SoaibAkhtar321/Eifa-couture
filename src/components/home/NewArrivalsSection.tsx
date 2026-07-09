@@ -67,7 +67,9 @@ export default async function NewArrivalsSection() {
 
                     <div className="mt-2 flex flex-wrap items-center gap-1.5 md:mt-4 md:gap-3">
                       <span className="font-subheading text-base font-semibold text-charcoal md:text-xl">
-                        {formatPrice(product.price)}
+                        {product.hasPriceRange
+                          ? `From ${formatPrice(product.minPrice)}`
+                          : formatPrice(product.minPrice)}
                       </span>
 
                       {product.compareAtPrice && (

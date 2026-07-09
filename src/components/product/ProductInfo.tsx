@@ -7,7 +7,13 @@ import { AnimatePresence, motion } from 'framer-motion';
 import MobileStickyActionBar from '@/components/product/MobileStickyActionBar';
 import { useAuth } from '@/hooks/useAuth';
 import { useMediaQuery, usePrefersReducedMotion } from '@/hooks/useMediaQuery';
-import { formatPrice, getDiscountPercentage, isInStock } from '@/lib/utils';
+import {
+  findVariant,
+  formatPrice,
+  getDiscountPercentage,
+  isInStock,
+  resolveVariantPrice,
+} from '@/lib/utils';
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
 import { useWishlistStore } from '@/store/wishlist-store';
@@ -146,6 +152,13 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const [selectedColor, setSelectedColor] = useState(product.colors[0]?.name ?? '');
   const [quantity, setQuantity] = useState(1);
 
+  // Tracks whether the shopper has actively picked a size or colour
+  // yet. Sizes/colours default to the first available option so the
+  // rest of the component always has a usable selection, but the
+  // *price display* should still read "From ₹X" until the shopper has
+  // made a real choice — this flag is what gates that.
+  const [hasInteracted, setHasInteracted] = useState(false);
+
   const addItem = useCartStore((state) => state.addItem);
   const openCart = useUIStore((state) => state.openCart);
   const toggleWishlist = useWishlistStore((state) => state.toggleItem);
@@ -184,9 +197,42 @@ export default function ProductInfo({ product }: ProductInfoProps) {
 
   const showStickyBar = hasHydrated && isMobileOrTablet && !isPrimaryCTAVisible;
 
-  const discount = product.compareAtPrice
-    ? getDiscountPercentage(product.compareAtPrice, product.price)
-    : 0;
+  /* ============================================
+     Variant-aware pricing
+     ============================================
+     Before the shopper has picked a size/colour, a product whose
+     variants carry different prices shows "From ₹{lowest}". The
+     instant both are selected (or immediately, for single-price
+     products), price/MRP/discount/savings/stock all resolve from the
+     matched `product_variants` row via `price_override` — never from
+     the base `product.price`. The price node itself never changes
+     structure between these two states, only its text, so there's no
+     layout shift.
+     ============================================ */
+  const selectedVariant = useMemo(
+    () => findVariant(product, selectedSize, selectedColor),
+    [product, selectedSize, selectedColor]
+  );
+
+  const showFromPrice = product.hasPriceRange && !hasInteracted;
+
+  const currentPrice = showFromPrice
+    ? product.minPrice
+    : selectedVariant?.price ?? product.minPrice;
+
+  const discount =
+    !showFromPrice && product.compareAtPrice
+      ? getDiscountPercentage(product.compareAtPrice, currentPrice)
+      : 0;
+
+  const savings =
+    !showFromPrice && product.compareAtPrice
+      ? Math.max(product.compareAtPrice - currentPrice, 0)
+      : 0;
+
+  const priceLabel = showFromPrice
+    ? `From ${formatPrice(currentPrice)}`
+    : formatPrice(currentPrice);
 
   const selectedStock = useMemo(() => {
     if (!selectedSize || !selectedColor) return 0;
@@ -207,11 +253,13 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   const handleSizeChange = (size: string) => {
     setSelectedSize(size);
     setQuantity(1);
+    setHasInteracted(true);
   };
 
   const handleColorChange = (color: string) => {
     setSelectedColor(color);
     setQuantity(1);
+    setHasInteracted(true);
   };
 
   const savePendingActionAndRedirect = (action: PendingAuthAction) => {
@@ -233,7 +281,8 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       return;
     }
 
-    addItem(product, selectedSize, selectedColor, quantity, selectedStock);
+    const unitPrice = resolveVariantPrice(product, selectedSize, selectedColor);
+    addItem(product, selectedSize, selectedColor, quantity, selectedStock, unitPrice);
     openCart();
   };
 
@@ -251,7 +300,8 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       return;
     }
 
-    const buyNowItem = { product, size: selectedSize, color: selectedColor, quantity };
+    const unitPrice = resolveVariantPrice(product, selectedSize, selectedColor);
+    const buyNowItem = { product, size: selectedSize, color: selectedColor, quantity, unitPrice };
     sessionStorage.setItem('eifa-buy-now', JSON.stringify(buyNowItem));
     router.push('/checkout?mode=buy-now');
   };
@@ -303,18 +353,21 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       // (clampQuantity would otherwise floor it to 0, same as the
       // interactive handler's own `if (!hasStock) return` guard).
       if (actionStock <= 0) return;
-      addItem(product, action.size, action.color, action.quantity, actionStock);
+      const actionUnitPrice = resolveVariantPrice(product, action.size, action.color);
+      addItem(product, action.size, action.color, action.quantity, actionStock, actionUnitPrice);
       openCart();
     } else if (action.type === 'buyNow') {
       const actionStock = product.stock[`${action.size}-${action.color}`] ?? 0;
       // Same guard as addToBag above — don't send an out-of-stock item
       // straight to checkout; the checkout page doesn't re-validate stock.
       if (actionStock <= 0) return;
+      const actionUnitPrice = resolveVariantPrice(product, action.size, action.color);
       const buyNowItem = {
         product,
         size: action.size,
         color: action.color,
         quantity: action.quantity,
+        unitPrice: actionUnitPrice,
       };
       sessionStorage.setItem('eifa-buy-now', JSON.stringify(buyNowItem));
       router.push('/checkout?mode=buy-now');
@@ -343,16 +396,22 @@ export default function ProductInfo({ product }: ProductInfoProps) {
       )}
 
       <div className="mt-5 flex flex-wrap items-center gap-3">
-        <span className="font-subheading text-3xl text-maroon">{formatPrice(product.price)}</span>
-        {product.compareAtPrice && (
+        <span className="font-subheading text-3xl text-maroon">{priceLabel}</span>
+        {!showFromPrice && product.compareAtPrice && (
           <span className="text-base text-charcoal/40 line-through">{formatPrice(product.compareAtPrice)}</span>
         )}
-        {discount > 0 && (
+        {!showFromPrice && discount > 0 && (
           <span className="bg-maroon px-2 py-1 text-[9px] font-medium uppercase tracking-[0.2em] text-white">
             {discount}% Off
           </span>
         )}
       </div>
+
+      {!showFromPrice && savings > 0 && (
+        <p className="mt-2 text-xs font-medium text-charcoal/55">
+          You save {formatPrice(savings)}
+        </p>
+      )}
 
       <p className="mt-5 text-sm leading-7 text-charcoal/65">{product.shortDescription}</p>
 
@@ -482,7 +541,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
             <MobileStickyActionBar
               imageUrl={product.images?.[0]}
               productName={product.name}
-              priceLabel={formatPrice(product.price)}
+              priceLabel={priceLabel}
               hasStock={hasStock}
               onAddToBag={handleAddToCart}
               onBuyNow={handleBuyNow}

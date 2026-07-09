@@ -37,7 +37,7 @@ export default async function FeaturedCollection() {
         <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
           {products.map((product) => {
             const discount = product.compareAtPrice
-              ? getDiscountPercentage(product.compareAtPrice, product.price)
+              ? getDiscountPercentage(product.compareAtPrice, product.minPrice)
               : 0;
 
             return (
@@ -73,7 +73,9 @@ export default async function FeaturedCollection() {
 
                       <div className="mt-2 flex flex-wrap items-center gap-1.5 md:mt-4 md:gap-3">
                         <span className="font-subheading text-base font-semibold text-charcoal md:text-xl">
-                          {formatPrice(product.price)}
+                          {product.hasPriceRange
+                            ? `From ${formatPrice(product.minPrice)}`
+                            : formatPrice(product.minPrice)}
                         </span>
 
                         {product.compareAtPrice && (

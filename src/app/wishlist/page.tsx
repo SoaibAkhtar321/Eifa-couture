@@ -8,7 +8,7 @@ import Link from 'next/link';
 
 import { createClient } from '@/lib/supabase/client';
 import { fetchProductsByIds } from '@/lib/data/products';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, resolveVariantPrice } from '@/lib/utils';
 
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
@@ -95,7 +95,8 @@ export default function WishlistPage() {
 
     if (!defaultSize || !defaultColor) return;
 
-    addItem(product, defaultSize, defaultColor, 1);
+    const unitPrice = resolveVariantPrice(product, defaultSize, defaultColor);
+    addItem(product, defaultSize, defaultColor, 1, undefined, unitPrice);
     openCart();
   };
 
@@ -250,7 +251,9 @@ export default function WishlistPage() {
 
                           <div className="mt-3 flex items-center gap-3">
                             <span className="text-sm font-medium text-charcoal">
-                              {formatPrice(product.price)}
+                              {product.hasPriceRange
+                                ? `From ${formatPrice(product.minPrice)}`
+                                : formatPrice(product.minPrice)}
                             </span>
 
                             {product.compareAtPrice && (

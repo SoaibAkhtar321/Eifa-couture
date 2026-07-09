@@ -324,7 +324,7 @@ export default function CartDrawer() {
                               </div>
 
                               <p className="mb-3 font-body text-sm tracking-wide text-charcoal">
-                                {formatPrice(item.product.price)}
+                                {formatPrice(item.unitPrice)}
                               </p>
 
                               <div className="flex items-center justify-between gap-3">
@@ -359,7 +359,7 @@ export default function CartDrawer() {
 
                                 <p className="font-body text-sm tracking-wide text-charcoal">
                                   {formatPrice(
-                                    item.product.price * item.quantity
+                                    item.unitPrice * item.quantity
                                   )}
                                 </p>
                               </div>

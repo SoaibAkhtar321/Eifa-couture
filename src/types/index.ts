@@ -17,6 +17,9 @@ export interface Product {
   slug: string;
   description: string;
   shortDescription: string;
+  /** Base product price — used only as the default for variants without
+   *  a `price_override`. Display and cart/checkout code should prefer
+   *  `minPrice`/`maxPrice`/`variants[].price` over this field directly. */
   price: number;
   compareAtPrice: number | null;
   images: string[];
@@ -26,6 +29,18 @@ export interface Product {
   colors: ProductColor[];
   /** Stock mapped by "size-color" key, e.g. "M-White": 12 */
   stock: Record<string, number>;
+  /** One entry per active size/color combination, with its resolved
+   *  price (`price_override ?? price`) and live stock. Source of truth
+   *  for all variant-level pricing. */
+  variants: ProductVariant[];
+  /** Lowest resolved price across all active variants (equals `price`
+   *  when the product has no active variants). */
+  minPrice: number;
+  /** Highest resolved price across all active variants. */
+  maxPrice: number;
+  /** True when variant prices differ — display surfaces should show
+   *  "From {minPrice}" instead of a single price when this is true. */
+  hasPriceRange: boolean;
   fabric: string;
   care: string[];
   tags: string[];
@@ -41,6 +56,17 @@ export interface Product {
 export interface ProductColor {
   name: string;
   hex: string;
+}
+
+// ── Product Variant (resolved, UI-facing) ──
+export interface ProductVariant {
+  id: string;
+  size: string;
+  colorName: string;
+  /** Resolved price for this exact variant: `price_override ?? product.price`. */
+  price: number;
+  /** Live available stock (quantity − reserved) for this variant. */
+  stock: number;
 }
 
 // ── Category ──
@@ -61,6 +87,12 @@ export interface CartItem {
   selectedSize: string;
   selectedColor: string;
   quantity: number;
+  /** Snapshot of the selected variant's resolved price
+   *  (`price_override ?? product.price`) at the moment it was added to
+   *  the cart/buy-now flow. This — not `product.price` — is the
+   *  authoritative price for cart totals, checkout, and orders; it is
+   *  never recomputed from the base product price. */
+  unitPrice: number;
 }
 
 // ── User ──

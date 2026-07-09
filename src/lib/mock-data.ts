@@ -5,6 +5,7 @@
 
 import type {
   Product,
+  ProductVariant,
   Category,
   Banner,
   Review,
@@ -64,7 +65,40 @@ function buildProductImages(categorySlug: string): string[] {
    PRODUCTS
    ============================================ */
 
-export const MOCK_PRODUCTS: Product[] = [
+// This file is dev-only sample data (superseded by the live Supabase
+// data layer in lib/data/products.ts) and predates per-variant pricing,
+// so none of these raw records carry `variants`/`minPrice`/`maxPrice`/
+// `hasPriceRange`. `withVariantPricing` derives them below — one
+// variant per size/color combo, all priced at the flat `price` — so
+// this file still satisfies the current `Product` shape.
+type RawMockProduct = Omit<Product, "variants" | "minPrice" | "maxPrice" | "hasPriceRange">;
+
+function withVariantPricing(product: RawMockProduct): Product {
+  const variants: ProductVariant[] = [];
+
+  for (const size of product.sizes) {
+    for (const color of product.colors) {
+      const key = `${size}-${color.name}`;
+      variants.push({
+        id: `${product.id}-${key}`,
+        size,
+        colorName: color.name,
+        price: product.price,
+        stock: product.stock[key] ?? 0,
+      });
+    }
+  }
+
+  return {
+    ...product,
+    variants,
+    minPrice: product.price,
+    maxPrice: product.price,
+    hasPriceRange: false,
+  };
+}
+
+const RAW_MOCK_PRODUCTS: RawMockProduct[] = [
   {
     id: "prod-001",
     name: "Chanderi Silk Chikankari Kurta",
@@ -771,6 +805,8 @@ export const MOCK_PRODUCTS: Product[] = [
     updatedAt: "2025-06-24T10:00:00Z",
   },
 ];
+
+export const MOCK_PRODUCTS: Product[] = RAW_MOCK_PRODUCTS.map(withVariantPricing);
 
 /* ============================================
    ORDERS

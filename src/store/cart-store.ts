@@ -5,6 +5,12 @@
    Guest carts persist to localStorage; signed-in carts persist to
    Supabase (`cart_items`), with localStorage kept only as an
    optimistic-UI cache so the drawer never flashes empty on reload.
+
+   Pricing: every line item carries its own `unitPrice`, a snapshot of
+   the selected variant's resolved price (`price_override ?? product.
+   price`) taken at add time. Totals always read `item.unitPrice` —
+   never `item.product.price` — so a later change to the base product
+   price can't silently reprice items already sitting in someone's bag.
    ============================================ */
 
 import { create } from "zustand";
@@ -19,10 +25,11 @@ import {
   type GuestCartLine,
 } from "@/lib/cart";
 import { createClient } from "@/lib/supabase/client";
+import { resolveVariantPrice } from "@/lib/utils";
 import type { CartItem, Product } from "@/types";
 
 const CART_STORAGE_KEY = "eifa-couture-cart";
-const CART_STORAGE_VERSION = 3;
+const CART_STORAGE_VERSION = 4;
 
 // Hard outer ceiling regardless of stock — sanity limit, not a business
 // target. Real availability (passed in as `availableStock`) is the
@@ -44,13 +51,18 @@ interface CartState {
    * if the item is already partially in the cart. When omitted, only
    * the flat MAX_ITEM_QUANTITY ceiling applies (kept optional so
    * existing callers don't break, but every call site should pass it).
+   *
+   * `unitPrice` is the resolved variant price to snapshot onto this
+   * line item. When omitted, it's resolved from `product.variants`
+   * for the given size/color (never from `product.price` directly).
    */
   addItem: (
     product: Product,
     size: string,
     color: string,
     quantity?: number,
-    availableStock?: number
+    availableStock?: number,
+    unitPrice?: number
   ) => void;
   removeItem: (productId: string, size: string, color: string) => void;
   updateQuantity: (
@@ -94,7 +106,7 @@ export const useCartStore = create<CartState>()(
       userId: null,
       isSyncing: false,
 
-      addItem: (product, size, color, quantity = 1, availableStock) => {
+      addItem: (product, size, color, quantity = 1, availableStock, unitPrice) => {
         // Real stock (when known) always wins over the flat ceiling.
         const ceiling =
           typeof availableStock === "number"
@@ -103,6 +115,11 @@ export const useCartStore = create<CartState>()(
 
         const safeQuantity = clampQuantity(quantity, ceiling);
         let resultingQuantity = safeQuantity;
+
+        // Snapshot the variant price now — resolved from product.variants,
+        // never from product.price directly.
+        const resolvedUnitPrice =
+          typeof unitPrice === "number" ? unitPrice : resolveVariantPrice(product, size, color);
 
         set((state) => {
           const existingIndex = state.items.findIndex(
@@ -126,6 +143,7 @@ export const useCartStore = create<CartState>()(
               ...existingItem,
               product,
               quantity: resultingQuantity,
+              unitPrice: resolvedUnitPrice,
             };
 
             return { items: updatedItems };
@@ -139,6 +157,7 @@ export const useCartStore = create<CartState>()(
                 selectedSize: size,
                 selectedColor: color,
                 quantity: safeQuantity,
+                unitPrice: resolvedUnitPrice,
               },
             ],
           };
@@ -210,7 +229,7 @@ export const useCartStore = create<CartState>()(
 
       getTotal: () => {
         return get().items.reduce(
-          (total, item) => total + item.product.price * item.quantity,
+          (total, item) => total + item.unitPrice * item.quantity,
           0
         );
       },
@@ -255,8 +274,9 @@ export const useCartStore = create<CartState>()(
       name: CART_STORAGE_KEY,
       version: CART_STORAGE_VERSION,
 
-      // Version 3 resets old persisted cart data once, same reasoning
-      // as the v2 bump: avoid stale shapes surviving a schema change.
+      // Version 4 resets old persisted cart data once — the CartItem
+      // shape gained a required `unitPrice` field, so stale v3 records
+      // (no unitPrice) can't be trusted to rehydrate correctly.
       migrate: () => {
         return { items: [], userId: null, isSyncing: false };
       },

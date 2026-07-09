@@ -10,7 +10,7 @@ import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
 import { useWishlistStore } from '@/store/wishlist-store';
 
-import { formatPrice, getDiscountPercentage } from '@/lib/utils';
+import { formatPrice, getDiscountPercentage, resolveVariantPrice } from '@/lib/utils';
 
 import type { Product } from '@/types';
 
@@ -69,8 +69,9 @@ export default function ShopProductCard({
   const visibleIsInWishlist = hasHydrated ? isInWishlist : false;
   const productImage = getProductImage(product);
 
+  const cardPrice = product.minPrice;
   const discount = product.compareAtPrice
-    ? getDiscountPercentage(product.compareAtPrice, product.price)
+    ? getDiscountPercentage(product.compareAtPrice, cardPrice)
     : 0;
 
   const saveShopScrollPosition = () => {
@@ -86,7 +87,8 @@ export default function ShopProductCard({
 
     if (!defaultSize || !defaultColor) return;
 
-    addItem(product, defaultSize, defaultColor, 1);
+    const unitPrice = resolveVariantPrice(product, defaultSize, defaultColor);
+    addItem(product, defaultSize, defaultColor, 1, undefined, unitPrice);
     openCart();
   };
 
@@ -186,7 +188,7 @@ export default function ShopProductCard({
 
         <div className="mt-3 flex items-center gap-3">
           <span className="text-sm font-medium text-charcoal">
-            {formatPrice(product.price)}
+            {product.hasPriceRange ? `From ${formatPrice(cardPrice)}` : formatPrice(cardPrice)}
           </span>
 
           {product.compareAtPrice && (

@@ -554,7 +554,9 @@ export default function HeaderSearch() {
             {item.product.shortDescription}
           </p>
           <p className="mt-2 text-sm font-medium text-maroon">
-            {formatPrice(item.product.price)}
+            {item.product.hasPriceRange
+              ? `From ${formatPrice(item.product.minPrice)}`
+              : formatPrice(item.product.minPrice)}
           </p>
         </div>
       </button>

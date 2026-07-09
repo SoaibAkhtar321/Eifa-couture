@@ -15,7 +15,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { SIZES } from '@/lib/constants';
-import type { Product, ProductColor } from '@/types';
+import type { Product, ProductColor, ProductVariant } from '@/types';
 import type {
   DbInventory,
   DbProduct,
@@ -69,7 +69,7 @@ const PRODUCT_SELECT = `
   fabrics ( name, care ),
   product_images ( id, url, alt_text, sort_order, is_primary ),
   product_variants (
-    id, size, color_name, color_hex, is_active,
+    id, size, color_name, color_hex, price_override, is_active,
     inventory ( quantity, reserved )
   )
 `;
@@ -88,6 +88,7 @@ function mapProductRow(row: ProductRow): Product {
 
   const colorMap = new Map<string, ProductColor>();
   const stock: Record<string, number> = {};
+  const variants: ProductVariant[] = [];
 
   for (const variant of activeVariants) {
     if (!colorMap.has(variant.color_name)) {
@@ -103,7 +104,25 @@ function mapProductRow(row: ProductRow): Product {
       : 0;
 
     stock[`${variant.size}-${variant.color_name}`] = available;
+
+    // Resolved price: an explicit per-variant override always wins;
+    // variants without one fall back to the product's base price. This
+    // resolved value — never row.price directly — is what every
+    // pricing-aware consumer (cards, product page, cart) should read.
+    const resolvedPrice = variant.price_override ?? row.price;
+
+    variants.push({
+      id: variant.id,
+      size: variant.size,
+      colorName: variant.color_name,
+      price: resolvedPrice,
+      stock: available,
+    });
   }
+
+  const variantPrices = variants.map((v) => v.price);
+  const minPrice = variantPrices.length > 0 ? Math.min(...variantPrices) : row.price;
+  const maxPrice = variantPrices.length > 0 ? Math.max(...variantPrices) : row.price;
 
   return {
     id: row.id,
@@ -119,6 +138,10 @@ function mapProductRow(row: ProductRow): Product {
     sizes: sortSizes(activeVariants.map((v) => v.size)),
     colors: Array.from(colorMap.values()),
     stock,
+    variants,
+    minPrice,
+    maxPrice,
+    hasPriceRange: minPrice !== maxPrice,
     fabric: row.fabrics?.name ?? '',
     care: row.fabrics?.care ?? [],
     tags: row.tags ?? [],

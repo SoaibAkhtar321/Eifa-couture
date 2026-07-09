@@ -644,7 +644,9 @@ export default function SearchPage() {
 
                             <div className="mt-3 flex items-center gap-3">
                               <span className="text-sm font-medium text-charcoal">
-                                {formatPrice(product.price)}
+                                {product.hasPriceRange
+                                  ? `From ${formatPrice(product.minPrice)}`
+                                  : formatPrice(product.minPrice)}
                               </span>
 
                               {product.compareAtPrice && (

@@ -2,6 +2,8 @@
    EIFA COUTURE — Utility Functions
    ============================================ */
 
+import type { Product, ProductVariant } from "@/types";
+
 /**
  * Format a number as INR currency (₹).
  * @example formatPrice(4999) → "₹4,999"
@@ -176,6 +178,47 @@ export function isInStock(
 ): boolean {
   const key = getStockKey(size, color);
   return (stock[key] ?? 0) > 0;
+}
+
+/**
+ * Resolve the exact variant (price + stock) for a given size/color.
+ * Returns null if no active variant matches — callers should treat
+ * that as "unavailable", not fall back to the base product price.
+ */
+export function findVariant(
+  product: Product,
+  size: string,
+  color: string
+): ProductVariant | null {
+  return (
+    product.variants.find((v) => v.size === size && v.colorName === color) ??
+    null
+  );
+}
+
+/**
+ * Resolve the price to charge for a specific size/color selection.
+ * Prefers the matching variant's resolved price (`price_override ??
+ * product.price`); falls back to `product.minPrice` — never the raw
+ * `product.price` — if no variant matches, so callers never silently
+ * charge the base price for a variant that has its own override.
+ */
+export function resolveVariantPrice(
+  product: Product,
+  size: string,
+  color: string
+): number {
+  const variant = findVariant(product, size, color);
+  return variant ? variant.price : product.minPrice;
+}
+
+/**
+ * Price to show on a product card: a single price when every active
+ * variant shares the same price, or the lowest variant price when
+ * they differ (paired with a "From" label at the call site).
+ */
+export function getCardDisplayPrice(product: Product): number {
+  return product.minPrice;
 }
 
 /**
