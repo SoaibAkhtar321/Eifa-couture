@@ -21,6 +21,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'cdn.shopify.com',
       },
+      {
+        // Supabase Storage — product-images bucket (see supabase/storage/STORAGE_PLAN.md)
+        protocol: 'https',
+        hostname: 'uipdsrgzqvwezkghxdih.supabase.co',
+      },
     ],
   },
 };

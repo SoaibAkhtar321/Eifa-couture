@@ -14,7 +14,7 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { label: 'Dashboard', href: '/admin' },
-  { label: 'Products', href: '/admin/products', comingSoon: true },
+  { label: 'Products', href: '/admin/products' },
   { label: 'Categories', href: '/admin/categories', comingSoon: true },
   { label: 'Collections', href: '/admin/collections', comingSoon: true },
   { label: 'Homepage CMS', href: '/admin/homepage', comingSoon: true },
