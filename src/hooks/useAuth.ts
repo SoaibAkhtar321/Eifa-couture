@@ -14,6 +14,7 @@ import { useAuthStore } from '@/store/auth-store';
 export function useAuth() {
   const user = useAuthStore((state) => state.user);
   const session = useAuthStore((state) => state.session);
+  const role = useAuthStore((state) => state.role);
   const isLoading = useAuthStore((state) => state.isLoading);
 
   const supabase = useMemo(() => createClient(), []);
@@ -75,8 +76,10 @@ export function useAuth() {
   return {
     user,
     session,
+    role,
     isLoading,
     isAuthenticated: !!user,
+    isAdmin: role === 'admin' || role === 'superadmin',
     signInWithPassword,
     signUp,
     signInWithGoogle,

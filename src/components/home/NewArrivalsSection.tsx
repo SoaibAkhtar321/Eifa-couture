@@ -1,11 +1,9 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
+import ProductImage from '@/components/ui/ProductImage';
 import { createClient } from '@/lib/supabase/server';
 import { fetchNewArrivals } from '@/lib/data/products';
 import { formatPrice } from '@/lib/utils';
-
-const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
 
 export default async function NewArrivalsSection() {
   const supabase = await createClient();
@@ -41,8 +39,8 @@ export default async function NewArrivalsSection() {
               <Link href={`/product/${product.slug}`} className="block h-full">
                 <div className="flex h-full flex-col overflow-hidden bg-white">
                   <div className="relative aspect-[4/5] overflow-hidden bg-beige">
-                    <Image
-                      src={product.images?.[0] || DEFAULT_PRODUCT_IMAGE}
+                    <ProductImage
+                      src={product.images?.[0]}
                       alt={product.name}
                       fill
                       sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 16vw"

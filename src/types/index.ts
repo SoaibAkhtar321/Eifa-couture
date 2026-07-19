@@ -81,6 +81,25 @@ export interface Category {
   order: number;
 }
 
+// ── Collection ──
+// Editorial/marketing groupings (e.g. "Eid Edit", "Bridal Chikankari")
+// that sit orthogonal to categories — many-to-many with products via
+// `product_collections`. Powers the homepage "Featured Collection"
+// section once `isFeatured` + `isActive` + the optional campaign
+// window (`startsAt`/`endsAt`) all match.
+export interface Collection {
+  id: string;
+  name: string;
+  slug: string;
+  description: string;
+  image: string;
+  isFeatured: boolean;
+  isActive: boolean;
+  order: number;
+  startsAt: string | null;
+  endsAt: string | null;
+}
+
 // ── Cart ──
 export interface CartItem {
   product: Product;

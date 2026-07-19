@@ -1,6 +1,6 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
+import ProductImage from '@/components/ui/ProductImage';
 import { createClient } from '@/lib/supabase/server';
 import { fetchActiveCategories } from '@/lib/data/categories';
 
@@ -50,7 +50,7 @@ export default async function ShopByCategorySection() {
                 className="relative block aspect-[4/5] overflow-hidden bg-charcoal"
                 aria-label={`Explore ${category.name}`}
               >
-                <Image
+                <ProductImage
                   src={category.image}
                   alt={category.name}
                   fill

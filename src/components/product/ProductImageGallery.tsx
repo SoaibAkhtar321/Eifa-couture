@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 
+import ProductImage from '@/components/ui/ProductImage';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import type { Product } from '@/types';
 
@@ -18,6 +18,36 @@ export default function ProductImageGallery({
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   useBodyScrollLock(isZoomOpen);
 
+  const zoomTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const openZoom = () => setIsZoomOpen(true);
+  const closeZoom = () => setIsZoomOpen(false);
+
+  // Move focus into the dialog on open, and back to the element that
+  // opened it on close — standard modal a11y expectation that this
+  // full-screen zoom overlay (role="dialog") was missing entirely.
+  useEffect(() => {
+    if (isZoomOpen) {
+      closeButtonRef.current?.focus();
+    } else {
+      zoomTriggerRef.current?.focus();
+    }
+  }, [isZoomOpen]);
+
+  // Escape closes the zoom overlay — again, a baseline expectation for
+  // any element marked aria-modal="true" that wasn't wired up before.
+  useEffect(() => {
+    if (!isZoomOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') closeZoom();
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isZoomOpen]);
+
   return (
     <div className="w-full min-h-[450px] sm:min-h-[550px]">
       <motion.div
@@ -27,7 +57,7 @@ export default function ProductImageGallery({
         // Added explicit height constraints to prevent DOM collapse on mobile viewports
         className="grid gap-4 lg:grid-cols-[96px_1fr] h-full"
       >
-        <div 
+        <div
           className="order-2 flex gap-3 overflow-x-auto pb-4 lg:order-1 lg:flex-col lg:overflow-visible lg:pb-0 touch-pan-x max-w-full"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
@@ -43,7 +73,7 @@ export default function ProductImageGallery({
               }`}
               aria-label={`View product image ${index + 1}`}
             >
-              <Image
+              <ProductImage
                 src={image}
                 alt={`${product.name} ${index + 1}`}
                 fill
@@ -55,12 +85,13 @@ export default function ProductImageGallery({
         </div>
 
         <button
+          ref={zoomTriggerRef}
           type="button"
-          onClick={() => setIsZoomOpen(true)}
+          onClick={openZoom}
           className="group relative order-1 aspect-[3/4] w-full overflow-hidden bg-cream lg:order-2 cursor-zoom-in min-h-[350px]"
           aria-label={`Zoom ${product.name}`}
         >
-          <Image
+          <ProductImage
             src={selectedImage}
             alt={product.name}
             fill
@@ -78,14 +109,16 @@ export default function ProductImageGallery({
       </motion.div>
 
       {isZoomOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-(--z-fullscreen) flex items-center justify-center bg-charcoal/95 p-4"
           role="dialog"
           aria-modal="true"
+          aria-label={`${product.name} zoomed image`}
         >
           <button
+            ref={closeButtonRef}
             type="button"
-            onClick={() => setIsZoomOpen(false)}
+            onClick={closeZoom}
             className="absolute right-5 top-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/25 text-2xl text-white transition-colors duration-300 hover:bg-white hover:text-charcoal cursor-pointer"
             aria-label="Close image zoom"
           >
@@ -93,7 +126,7 @@ export default function ProductImageGallery({
           </button>
 
           <div className="relative h-[82vh] w-full max-w-4xl flex items-center justify-center">
-            <Image
+            <ProductImage
               src={selectedImage}
               alt={product.name}
               fill

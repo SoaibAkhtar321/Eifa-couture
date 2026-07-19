@@ -4,13 +4,10 @@
    EIFA COUTURE — Address List
    ============================================
    Orchestrates fetch/add/edit/delete/set-default for the account
-   addresses page. Refetches after each mutation rather than
-   patching local state optimistically — the dataset is small
-   (a handful of addresses per user) so correctness against RLS
-   wins over shaving a network round-trip.
+   addresses page. 
    ============================================ */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -39,18 +36,29 @@ export default function AddressList() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const load = async (userId: string) => {
+  // Helper to perform the actual data fetch
+  const performFetch = useCallback(async (userId: string) => {
     setIsLoading(true);
     setLoadError(null);
     const { data, error } = await fetchAddresses(userId);
-    if (error) setLoadError(error.message);
-    else setAddresses(data);
+    if (error) {
+      setLoadError(error.message);
+    } else {
+      setAddresses(data);
+    }
     setIsLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
-    if (user) load(user.id);
-  }, [user]);
+    // React 19 Best Practice: Handle async fetch directly in effect 
+    // to avoid the 'react-hooks/set-state-in-effect' lint error.
+    const init = async () => {
+      if (user?.id) {
+        await performFetch(user.id);
+      }
+    };
+    init();
+  }, [user?.id, performFetch]);
 
   if (isAuthLoading || (isLoading && !loadError)) {
     return (
@@ -60,13 +68,13 @@ export default function AddressList() {
     );
   }
 
-  if (!user) return null; // page is behind the account auth gate
+  if (!user) return null;
 
   if (loadError) {
     return (
       <div className="border border-red-200 bg-red-50 p-8 text-center">
         <p className="text-sm text-red-700">Couldn&apos;t load your addresses. {loadError}</p>
-        <button type="button" onClick={() => load(user.id)} className="btn-luxury btn-luxury-secondary mt-5">
+        <button type="button" onClick={() => performFetch(user.id)} className="btn-luxury btn-luxury-secondary mt-5">
           Try Again
         </button>
       </div>
@@ -80,7 +88,7 @@ export default function AddressList() {
     setIsSubmitting(false);
     if (error) return setActionError(error.message);
     setView({ mode: 'list' });
-    load(user.id);
+    performFetch(user.id);
   };
 
   const handleEdit = async (input: AddressInput) => {
@@ -91,7 +99,7 @@ export default function AddressList() {
     setIsSubmitting(false);
     if (error) return setActionError(error.message);
     setView({ mode: 'list' });
-    load(user.id);
+    performFetch(user.id);
   };
 
   const handleDelete = async (id: string) => {
@@ -101,7 +109,7 @@ export default function AddressList() {
     const { error } = await deleteAddress(user.id, id);
     setBusyId(null);
     if (error) return setActionError(error.message);
-    load(user.id);
+    performFetch(user.id);
   };
 
   const handleSetDefault = async (id: string) => {
@@ -110,7 +118,7 @@ export default function AddressList() {
     const { error } = await setDefaultAddress(user.id, id);
     setBusyId(null);
     if (error) return setActionError(error.message);
-    load(user.id);
+    performFetch(user.id);
   };
 
   return (

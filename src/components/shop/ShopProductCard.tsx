@@ -2,10 +2,10 @@
 
 import { useSyncExternalStore } from 'react';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
+import ProductImage from '@/components/ui/ProductImage';
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
 import { useWishlistStore } from '@/store/wishlist-store';
@@ -117,7 +117,7 @@ export default function ShopProductCard({
           className="block"
         >
           <div className="relative aspect-[3/4] overflow-hidden">
-            <Image
+            <ProductImage
               src={productImage}
               alt={product.name}
               fill

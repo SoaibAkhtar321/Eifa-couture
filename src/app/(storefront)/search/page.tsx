@@ -2,12 +2,13 @@
 
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
-import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'framer-motion';
 
+import ProductImage from '@/components/ui/ProductImage';
 
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
+import { ProductCardSkeleton } from '@/components/home/HomeSectionSkeletons';
 import { createClient } from '@/lib/supabase/client';
 import { fetchActiveCategories } from '@/lib/data/categories';
 import { fetchActiveProducts } from '@/lib/data/products';
@@ -157,18 +158,21 @@ export default function SearchPage() {
   const [priceFilter, setPriceFilter] = useState<PriceFilter>('all');
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [allCategories, setAllCategories] = useState<Category[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     let isMounted = true;
     const supabase = createClient();
 
-    Promise.all([fetchActiveProducts(supabase), fetchActiveCategories(supabase)]).then(
-      ([products, categories]) => {
+    Promise.all([fetchActiveProducts(supabase), fetchActiveCategories(supabase)])
+      .then(([products, categories]) => {
         if (!isMounted) return;
         setAllProducts(products);
         setAllCategories(categories);
-      }
-    );
+      })
+      .finally(() => {
+        if (isMounted) setIsLoading(false);
+      });
 
     return () => {
       isMounted = false;
@@ -404,6 +408,12 @@ export default function SearchPage() {
                   </p>
                 </div>
               </div>
+            ) : isLoading ? (
+              <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+                {Array.from({ length: 8 }).map((_, index) => (
+                  <ProductCardSkeleton key={index} />
+                ))}
+              </div>
             ) : searchMatchedProducts.length === 0 ? (
               <div className="mx-auto max-w-xl border border-beige bg-white px-6 py-12 text-center">
                 <h2 className="font-heading text-3xl text-charcoal">
@@ -619,7 +629,7 @@ export default function SearchPage() {
                           aria-label={`View ${product.name}`}
                         >
                           <div className="relative aspect-[3/4] overflow-hidden bg-cream">
-                            <Image
+                            <ProductImage
                               src={getProductImage(product)}
                               alt={product.name}
                               fill

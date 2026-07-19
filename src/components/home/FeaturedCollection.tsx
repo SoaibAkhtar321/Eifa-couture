@@ -1,16 +1,20 @@
-import Image from 'next/image';
 import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
-import { fetchFeaturedProducts } from '@/lib/data/products';
-import { formatPrice, getDiscountPercentage } from '@/lib/utils';
 
-const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
+import ProductImage from '@/components/ui/ProductImage';
+import { createClient } from '@/lib/supabase/server';
+import { fetchFeaturedCollection } from '@/lib/data/collections';
+import { formatPrice, getDiscountPercentage } from '@/lib/utils';
 
 export default async function FeaturedCollection() {
   const supabase = await createClient();
-  const products = await fetchFeaturedProducts(supabase, 4);
+  const result = await fetchFeaturedCollection(supabase, 4);
 
-  if (products.length === 0) return null;
+  // Empty state: no active/featured/in-window collection right now, or
+  // it has no member products yet — hide the section rather than show
+  // a half-empty grid on the homepage.
+  if (!result || result.products.length === 0) return null;
+
+  const { collection, products } = result;
 
   return (
     <section className="bg-ivory py-10 md:py-16 lg:py-24" aria-labelledby="featured-heading">
@@ -24,13 +28,13 @@ export default async function FeaturedCollection() {
             id="featured-heading"
             className="font-heading text-2xl text-charcoal md:text-5xl lg:text-6xl"
           >
-            Featured Collection
+            {collection.name}
           </h2>
 
           <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
 
           <p className="mx-auto mt-4 max-w-xl font-subheading text-base italic text-charcoal/60 md:text-xl">
-            Handpicked masterpieces that define the art of Lucknowi Chikankari
+            {collection.description || 'Handpicked masterpieces that define the art of Lucknowi Chikankari'}
           </p>
         </div>
 
@@ -45,8 +49,8 @@ export default async function FeaturedCollection() {
                 <Link href={`/product/${product.slug}`} className="block h-full">
                   <div className="flex h-full flex-col overflow-hidden bg-white">
                     <div className="relative aspect-[4/5] overflow-hidden bg-beige">
-                      <Image
-                        src={product.images?.[0] || DEFAULT_PRODUCT_IMAGE}
+                      <ProductImage
+                        src={product.images?.[0]}
                         alt={product.name}
                         fill
                         sizes="(max-width: 1024px) 50vw, 25vw"

@@ -1,11 +1,9 @@
-import Image from 'next/image';
 import Link from 'next/link';
 
+import ProductImage from '@/components/ui/ProductImage';
 import { createClient } from '@/lib/supabase/server';
 import { fetchBestSellers } from '@/lib/data/products';
 import { formatPrice, getDiscountPercentage } from '@/lib/utils';
-
-const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
 
 export default async function BestSellersSection() {
   const supabase = await createClient();
@@ -46,8 +44,8 @@ export default async function BestSellersSection() {
                 <Link href={`/product/${product.slug}`} className="block h-full">
                   <div className="flex h-full flex-col overflow-hidden bg-white">
                     <div className="relative aspect-[4/5] overflow-hidden bg-beige">
-                      <Image
-                        src={product.images?.[0] || DEFAULT_PRODUCT_IMAGE}
+                      <ProductImage
+                        src={product.images?.[0]}
                         alt={product.name}
                         fill
                         sizes="(max-width: 1024px) 50vw, 25vw"

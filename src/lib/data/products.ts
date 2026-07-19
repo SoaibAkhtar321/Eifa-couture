@@ -53,7 +53,7 @@ function sortSizes(sizes: string[]): string[] {
 }
 
 /** Row shape returned by the shared product select below. */
-type ProductRow = DbProduct & {
+export type ProductRow = DbProduct & {
   categories: { slug: string } | null;
   fabrics: { name: string; care: string[] } | null;
   product_images: DbProductImage[];
@@ -63,7 +63,7 @@ type ProductRow = DbProduct & {
 // Every product fetch pulls the same joined shape — kept as one
 // constant so the catalog list, detail page, and related-products
 // query can never drift out of sync with each other.
-const PRODUCT_SELECT = `
+export const PRODUCT_SELECT = `
   *,
   categories ( slug ),
   fabrics ( name, care ),
@@ -74,7 +74,7 @@ const PRODUCT_SELECT = `
   )
 `;
 
-function mapProductRow(row: ProductRow): Product {
+export function mapProductRow(row: ProductRow): Product {
   const images = (row.product_images ?? [])
     .slice()
     .sort((a, b) => {
@@ -256,9 +256,11 @@ export async function fetchNewArrivals(
 }
 
 /**
- * Related products for a product detail page: same category first,
- * falling back to any other active products if the category has too
- * few, mirroring the previous mock-data behaviour.
+ * Related products for a product detail page: other active products in
+ * the same category first (queried directly by `category_id`, not by
+ * scanning the whole catalog), falling back to any other active
+ * products if the category has none. Two small, indexed queries at
+ * most — never pulls the full product catalog just to find 4 items.
  */
 export async function fetchRelatedProducts(
   supabase: SupabaseClient,
@@ -266,13 +268,39 @@ export async function fetchRelatedProducts(
   categorySlug: string,
   limit = 4
 ): Promise<Product[]> {
-  const all = await fetchActiveProducts(supabase);
-  const others = all.filter((product) => product.id !== productId);
+  const { data: categoryRow } = await supabase
+    .from('categories')
+    .select('id')
+    .eq('slug', categorySlug)
+    .maybeSingle();
 
-  const sameCategory = others
-    .filter((product) => product.category === categorySlug)
-    .slice(0, limit);
+  if (categoryRow?.id) {
+    const { data, error } = await supabase
+      .from('products')
+      .select(PRODUCT_SELECT)
+      .eq('is_active', true)
+      .eq('category_id', categoryRow.id)
+      .is('deleted_at', null)
+      .neq('id', productId)
+      .order('created_at', { ascending: false })
+      .limit(limit);
 
-  if (sameCategory.length > 0) return sameCategory;
-  return others.slice(0, limit);
+    if (!error && data && data.length > 0) {
+      return (data as unknown as ProductRow[]).map(mapProductRow);
+    }
+  }
+
+  // Fallback: the category lookup failed or had no other active
+  // products — show any other active products instead of nothing.
+  const { data: fallbackData, error: fallbackError } = await supabase
+    .from('products')
+    .select(PRODUCT_SELECT)
+    .eq('is_active', true)
+    .is('deleted_at', null)
+    .neq('id', productId)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (fallbackError || !fallbackData) return [];
+  return (fallbackData as unknown as ProductRow[]).map(mapProductRow);
 }
