@@ -96,13 +96,43 @@ export async function updateCategory(
 }
 
 /**
+ * Returns the names of any non-deleted categories that have `id` set as
+ * their parent_id. The `parent_id` foreign key is ON DELETE SET NULL,
+ * but that only fires on a hard delete — since categories are always
+ * soft-deleted (deleted_at), removing a parent would otherwise silently
+ * orphan its children (they'd keep pointing at a parent_id that no
+ * longer resolves to anything in the admin/storefront category lists).
+ */
+export async function getChildCategoryNames(id: string): Promise<string[]> {
+  const supabase = createBrowserClient();
+  const { data } = await supabase
+    .from('categories')
+    .select('name')
+    .eq('parent_id', id)
+    .is('deleted_at', null);
+
+  return (data ?? []).map((row) => (row as { name: string }).name);
+}
+
+/**
  * Soft-deletes a category. Products that reference it via category_id
  * keep the reference (the column is ON DELETE SET NULL only for a hard
  * delete, which we deliberately never do here) — the storefront/admin
  * category filters just stop listing it once deleted_at is set.
+ *
+ * Blocked if the category still has active subcategories, since those
+ * would otherwise be silently orphaned (see getChildCategoryNames).
  */
 export async function softDeleteCategory(id: string): Promise<{ error: string | null }> {
   const supabase = createBrowserClient();
+
+  const childNames = await getChildCategoryNames(id);
+  if (childNames.length > 0) {
+    return {
+      error: `Cannot delete — ${childNames.length} subcategor${childNames.length === 1 ? 'y' : 'ies'} (${childNames.join(', ')}) still point to this category. Reassign or delete them first.`,
+    };
+  }
+
   const { error } = await supabase
     .from('categories')
     .update({ deleted_at: new Date().toISOString() })
