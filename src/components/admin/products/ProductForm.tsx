@@ -5,12 +5,12 @@ import { useState } from 'react';
 
 import { TextField, TextareaField, SelectField, NumberField, ToggleField } from '@/components/admin/FormField';
 import { productFormSchema, type ProductFormValues } from '@/lib/admin/validation';
-import { createProduct, updateProduct, generateUniqueSlug, type ProductInput } from '@/lib/admin/products';
+import { createProduct, updateProduct, generateUniqueSlug, type ProductInput } from '@/lib/admin/products-write';
 import { generateSlug } from '@/lib/utils';
 import VariantTable from './VariantTable';
 import ImageManager from './ImageManager';
 import type { DbCategory, DbFabric, DbInventory, DbProductImage, DbProductVariant } from '@/types/database';
-import type { ProductWithRelations } from '@/lib/admin/products';
+import type { ProductWithRelations } from '@/lib/admin/products-read';
 
 interface ProductFormProps {
   product?: ProductWithRelations;

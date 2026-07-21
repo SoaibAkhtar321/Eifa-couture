@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
-import { getProduct } from '@/lib/admin/products';
+import { getProduct } from '@/lib/admin/products-read';
 import ProductForm from '@/components/admin/products/ProductForm';
 import type { DbCategory, DbFabric } from '@/types/database';
 

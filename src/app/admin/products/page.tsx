@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 import { createClient } from '@/lib/supabase/server';
-import { listProducts } from '@/lib/admin/products';
+import { listProducts } from '@/lib/admin/products-read';
 import ProductTable from '@/components/admin/products/ProductTable';
 import type { DbCategory } from '@/types/database';
 

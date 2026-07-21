@@ -20,7 +20,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Homepage CMS', href: '/admin/homepage', comingSoon: true },
   { label: 'Banners', href: '/admin/banners', comingSoon: true },
   { label: 'Inventory', href: '/admin/inventory', comingSoon: true },
-  { label: 'Orders', href: '/admin/orders', comingSoon: true },
+  { label: 'Orders', href: '/admin/orders' },
   { label: 'Customers', href: '/admin/customers', comingSoon: true },
   { label: 'Coupons', href: '/admin/coupons', comingSoon: true },
   { label: 'Notifications', href: '/admin/notifications', comingSoon: true },
@@ -29,13 +29,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Settings', href: '/admin/settings', comingSoon: true },
 ];
 
-export default function AdminSidebar({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
+export default function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const pathname = usePathname();
 
   return (
@@ -58,9 +52,7 @@ export default function AdminSidebar({
         <div className="h-20 flex items-center px-6 border-b border-cream/10">
           <Link href="/admin" className="font-heading text-xl tracking-wide text-cream">
             Eifa Couture
-            <span className="block text-xs font-body tracking-[0.2em] text-gold uppercase mt-0.5">
-              Admin
-            </span>
+            <span className="block text-xs font-body tracking-[0.2em] text-gold uppercase mt-0.5">Admin</span>
           </Link>
         </div>
 
@@ -90,9 +82,7 @@ export default function AdminSidebar({
                 onClick={onClose}
                 className={cn(
                   'block px-3 py-2.5 rounded-md text-sm transition-colors',
-                  isActive
-                    ? 'bg-gold text-maroon-dark font-medium'
-                    : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
+                  isActive ? 'bg-gold text-maroon-dark font-medium' : 'text-cream/80 hover:bg-cream/10 hover:text-cream'
                 )}
               >
                 {item.label}

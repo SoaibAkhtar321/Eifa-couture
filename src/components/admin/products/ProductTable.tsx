@@ -8,7 +8,7 @@ import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { TextField, SelectField } from '@/components/admin/FormField';
 import { formatPrice } from '@/lib/utils';
 import type { DbCategory } from '@/types/database';
-import type { ProductListRow } from '@/lib/admin/products';
+import type { ProductListRow } from '@/lib/admin/products-read';
 
 interface ProductTableProps {
   rows: ProductListRow[];

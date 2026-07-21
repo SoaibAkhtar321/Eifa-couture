@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { formatPrice } from '@/lib/utils';
-import { deleteVariant, updateInventoryQuantity } from '@/lib/admin/products';
+import { deleteVariant, updateInventoryQuantity } from '@/lib/admin/products-write';
 import { findDuplicateVariantCombos } from '@/lib/admin/validation';
 import VariantForm from './VariantForm';
 import type { DbInventory, DbProductVariant } from '@/types/database';

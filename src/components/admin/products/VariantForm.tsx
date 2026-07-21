@@ -4,7 +4,7 @@ import { useState } from 'react';
 
 import { TextField, NumberField, ToggleField } from '@/components/admin/FormField';
 import { variantFormSchema, type VariantFormValues } from '@/lib/admin/validation';
-import { createVariant, updateVariant, type VariantInput } from '@/lib/admin/products';
+import { createVariant, updateVariant, type VariantInput } from '@/lib/admin/products-write';
 import type { DbInventory, DbProductVariant } from '@/types/database';
 
 interface VariantFormProps {
