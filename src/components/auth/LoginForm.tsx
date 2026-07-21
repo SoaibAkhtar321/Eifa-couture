@@ -30,7 +30,7 @@ export default function LoginForm() {
   // Raw param (may be null) — used to decide whether to forward it to
   // Register. `redirectTo` below is the resolved destination used for
   // this form's own post-login navigation.
-  const redirectParam = searchParams.get('redirect');
+ const redirectParam = searchParams.get('next') || searchParams.get('redirect');
   const redirectTo = redirectParam || '/account';
 
   const registerHref = redirectParam

@@ -36,13 +36,13 @@ export default function RegisterForm() {
   // Raw param (may be null) — forwarded to Login so the redirect
   // survives a Login <-> Register detour. `redirectTo` is the
   // resolved destination used for this form's own post-signup nav.
-  const redirectParam = searchParams.get('redirect');
+ const redirectParam = searchParams.get('next') || searchParams.get('redirect');
   const redirectTo = redirectParam || '/account';
 
   const loginHref = redirectParam
     ? `/login?redirect=${encodeURIComponent(redirectParam)}`
     : '/login';
-
+    
   const resetFields = () => {
     setFullName('');
     setEmail('');

@@ -64,6 +64,29 @@ export const variantFormSchema = z.object({
 
 export type VariantFormValues = z.infer<typeof variantFormSchema>;
 
+export const categoryFormSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(100, 'Name is too long'),
+  slug: z
+    .string()
+    .trim()
+    .min(1, 'Slug is required')
+    .max(100, 'Slug is too long')
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase letters, numbers, and hyphens only'),
+  description: z.string().trim().max(500, 'Keep it under 500 characters').default(''),
+  image_url: z
+    .string()
+    .trim()
+    .url('Enter a valid URL')
+    .nullable()
+    .or(z.literal('').transform(() => null))
+    .default(null),
+  parent_id: z.string().uuid().nullable().default(null),
+  sort_order: z.coerce.number().int('Must be a whole number').default(0),
+  is_active: z.boolean().default(true),
+});
+
+export type CategoryFormValues = z.infer<typeof categoryFormSchema>;
+
 /**
  * Checks a set of variants (as edited in the form, before save) for
  * duplicate size/color combinations. Returns the 0-based indices of
