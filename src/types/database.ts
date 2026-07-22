@@ -313,3 +313,18 @@ export interface DbNotification {
   is_read: boolean;
   created_at: string;
 }
+
+export type HomepageSectionKey = 'featured_collection' | 'new_arrivals' | 'best_sellers' | 'shop_by_category';
+
+export interface DbHomepageSection {
+  id: string;
+  section_key: HomepageSectionKey;
+  title: string | null;
+  subtitle: string | null;
+  is_active: boolean;
+  sort_order: number;
+  item_limit: number;
+  source_collection_id: string | null;
+  created_at: string;
+  updated_at: string;
+}

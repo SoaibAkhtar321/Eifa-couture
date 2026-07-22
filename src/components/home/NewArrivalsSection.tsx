@@ -5,9 +5,19 @@ import { createClient } from '@/lib/supabase/server';
 import { fetchNewArrivals } from '@/lib/data/products';
 import { formatPrice } from '@/lib/utils';
 
-export default async function NewArrivalsSection() {
+interface NewArrivalsSectionProps {
+  limit?: number;
+  title?: string | null;
+  subtitle?: string | null;
+}
+
+export default async function NewArrivalsSection({
+  limit = 6,
+  title,
+  subtitle,
+}: NewArrivalsSectionProps = {}) {
   const supabase = await createClient();
-  const products = await fetchNewArrivals(supabase, 6);
+  const products = await fetchNewArrivals(supabase, limit);
 
   if (products.length === 0) return null;
 
@@ -23,13 +33,13 @@ export default async function NewArrivalsSection() {
             id="new-arrivals-heading"
             className="font-heading text-2xl text-charcoal md:text-5xl lg:text-6xl"
           >
-            New Arrivals
+            {title || 'New Arrivals'}
           </h2>
 
           <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
 
           <p className="mx-auto mt-4 max-w-xl font-subheading text-base italic text-charcoal/60 md:text-xl">
-            Fresh silhouettes inspired by Mughal gardens and Lucknowi heritage.
+            {subtitle || 'Fresh silhouettes inspired by Mughal gardens and Lucknowi heritage.'}
           </p>
         </div>
 

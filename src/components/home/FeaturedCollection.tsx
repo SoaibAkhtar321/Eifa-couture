@@ -5,9 +5,23 @@ import { createClient } from '@/lib/supabase/server';
 import { fetchFeaturedCollection } from '@/lib/data/collections';
 import { formatPrice, getDiscountPercentage } from '@/lib/utils';
 
-export default async function FeaturedCollection() {
+interface FeaturedCollectionProps {
+  limit?: number;
+  collectionId?: string | null;
+  /** Overrides the section heading; falls back to the collection's own name when omitted. */
+  title?: string | null;
+  /** Overrides the section subtitle; falls back to the collection's own description when omitted. */
+  subtitle?: string | null;
+}
+
+export default async function FeaturedCollection({
+  limit = 4,
+  collectionId = null,
+  title,
+  subtitle,
+}: FeaturedCollectionProps = {}) {
   const supabase = await createClient();
-  const result = await fetchFeaturedCollection(supabase, 4);
+  const result = await fetchFeaturedCollection(supabase, limit, collectionId);
 
   // Empty state: no active/featured/in-window collection right now, or
   // it has no member products yet — hide the section rather than show
@@ -28,13 +42,13 @@ export default async function FeaturedCollection() {
             id="featured-heading"
             className="font-heading text-2xl text-charcoal md:text-5xl lg:text-6xl"
           >
-            {collection.name}
+            {title || collection.name}
           </h2>
 
           <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
 
           <p className="mx-auto mt-4 max-w-xl font-subheading text-base italic text-charcoal/60 md:text-xl">
-            {collection.description || 'Handpicked masterpieces that define the art of Lucknowi Chikankari'}
+            {subtitle || collection.description || 'Handpicked masterpieces that define the art of Lucknowi Chikankari'}
           </p>
         </div>
 

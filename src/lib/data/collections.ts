@@ -49,32 +49,49 @@ export type FeaturedCollectionResult = {
 };
 
 /**
- * The single active, featured collection that should power the
- * homepage "Featured Collection" section, plus its member products
- * (ordered by `product_collections.sort_order`). Returns null when no
- * collection currently qualifies (inactive, not featured, or outside
- * its campaign window) — callers should treat that as an empty state.
+ * The homepage "Featured Collection" section's collection, plus its
+ * member products (ordered by `product_collections.sort_order`).
+ *
+ * If `collectionId` is given (set by an admin via Homepage CMS), that
+ * exact collection is used, provided it's still active. Otherwise
+ * falls back to the original behavior: the single active, featured
+ * collection currently within its campaign window. Returns null when
+ * nothing qualifies — callers should treat that as an empty state.
  */
 export async function fetchFeaturedCollection(
   supabase: SupabaseClient,
-  limit = 4
+  limit = 4,
+  collectionId?: string | null
 ): Promise<FeaturedCollectionResult | null> {
-  const { data: collectionRows, error: collectionError } = await supabase
-    .from('collections')
-    .select('*')
-    .eq('is_active', true)
-    .eq('is_featured', true)
-    .is('deleted_at', null)
-    .order('sort_order', { ascending: true });
+  let activeCollection: DbCollection | undefined;
 
-  if (collectionError || !collectionRows || collectionRows.length === 0) {
-    return null;
+  if (collectionId) {
+    const { data: row, error } = await supabase
+      .from('collections')
+      .select('*')
+      .eq('id', collectionId)
+      .eq('is_active', true)
+      .is('deleted_at', null)
+      .single();
+
+    if (error || !row) return null;
+    activeCollection = row as DbCollection;
+  } else {
+    const { data: collectionRows, error: collectionError } = await supabase
+      .from('collections')
+      .select('*')
+      .eq('is_active', true)
+      .eq('is_featured', true)
+      .is('deleted_at', null)
+      .order('sort_order', { ascending: true });
+
+    if (collectionError || !collectionRows || collectionRows.length === 0) {
+      return null;
+    }
+
+    const now = new Date();
+    activeCollection = (collectionRows as DbCollection[]).find((row) => isWithinCampaignWindow(row, now));
   }
-
-  const now = new Date();
-  const activeCollection = (collectionRows as DbCollection[]).find((row) =>
-    isWithinCampaignWindow(row, now)
-  );
 
   if (!activeCollection) return null;
 

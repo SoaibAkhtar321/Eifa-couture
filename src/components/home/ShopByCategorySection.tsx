@@ -8,9 +8,20 @@ function getCategoryHref(slug: string) {
   return `/shop?category=${slug}`;
 }
 
-export default async function ShopByCategorySection() {
+interface ShopByCategorySectionProps {
+  limit?: number;
+  title?: string | null;
+  subtitle?: string | null;
+}
+
+export default async function ShopByCategorySection({
+  limit,
+  title,
+  subtitle,
+}: ShopByCategorySectionProps = {}) {
   const supabase = await createClient();
-  const categories = await fetchActiveCategories(supabase);
+  const allCategories = await fetchActiveCategories(supabase);
+  const categories = limit ? allCategories.slice(0, limit) : allCategories;
 
   if (categories.length === 0) return null;
 
@@ -30,15 +41,15 @@ export default async function ShopByCategorySection() {
               id="categories-heading"
               className="font-heading text-3xl leading-tight text-charcoal md:text-5xl lg:text-6xl"
             >
-              Shop by Category
+              {title || 'Shop by Category'}
             </h2>
 
             <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
           </div>
 
           <p className="mx-auto max-w-xl text-sm leading-7 text-charcoal/55 md:text-base md:leading-8">
-            Move directly into the collection you are looking for — from
-            handcrafted Chikankari classics to festive accessories.
+            {subtitle ||
+              'Move directly into the collection you are looking for — from handcrafted Chikankari classics to festive accessories.'}
           </p>
         </div>
 

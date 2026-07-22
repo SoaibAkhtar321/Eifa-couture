@@ -145,3 +145,35 @@ export function findDuplicateVariantCombos(
 
   return duplicateIndices;
 }
+
+export const homepageSectionFormSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .max(100, 'Keep it under 100 characters')
+    .nullable()
+    .or(z.literal('').transform(() => null))
+    .default(null),
+  subtitle: z
+    .string()
+    .trim()
+    .max(300, 'Keep it under 300 characters')
+    .nullable()
+    .or(z.literal('').transform(() => null))
+    .default(null),
+  is_active: z.boolean().default(true),
+  sort_order: z.coerce.number().int('Must be a whole number').default(0),
+  item_limit: z.coerce
+    .number()
+    .int('Must be a whole number')
+    .min(1, 'Must show at least 1 item')
+    .max(24, 'Keep it to 24 or fewer'),
+  source_collection_id: z
+    .string()
+    .uuid()
+    .nullable()
+    .or(z.literal('').transform(() => null))
+    .default(null),
+});
+
+export type HomepageSectionFormValues = z.infer<typeof homepageSectionFormSchema>;

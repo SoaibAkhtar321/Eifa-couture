@@ -5,9 +5,19 @@ import { createClient } from '@/lib/supabase/server';
 import { fetchBestSellers } from '@/lib/data/products';
 import { formatPrice, getDiscountPercentage } from '@/lib/utils';
 
-export default async function BestSellersSection() {
+interface BestSellersSectionProps {
+  limit?: number;
+  title?: string | null;
+  subtitle?: string | null;
+}
+
+export default async function BestSellersSection({
+  limit = 4,
+  title,
+  subtitle,
+}: BestSellersSectionProps = {}) {
   const supabase = await createClient();
-  const products = await fetchBestSellers(supabase, 4);
+  const products = await fetchBestSellers(supabase, limit);
 
   if (products.length === 0) return null;
 
@@ -23,13 +33,13 @@ export default async function BestSellersSection() {
             id="bestsellers-heading"
             className="font-heading text-2xl text-charcoal md:text-5xl lg:text-6xl"
           >
-            Best Sellers
+            {title || 'Best Sellers'}
           </h2>
 
           <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
 
           <p className="mx-auto mt-4 max-w-xl font-subheading text-base italic text-charcoal/60 md:text-xl">
-            The most cherished handcrafted pieces from our collection.
+            {subtitle || 'The most cherished handcrafted pieces from our collection.'}
           </p>
         </div>
 
