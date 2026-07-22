@@ -177,3 +177,54 @@ export const homepageSectionFormSchema = z.object({
 });
 
 export type HomepageSectionFormValues = z.infer<typeof homepageSectionFormSchema>;
+
+export const bannerFormSchema = z
+  .object({
+    title: z.string().trim().min(1, 'Title is required').max(200, 'Title is too long'),
+    subtitle: z.string().trim().max(300, 'Keep it under 300 characters').default(''),
+    image_url: z.string().trim().min(1, 'Upload a desktop image').url('Upload a desktop image'),
+    mobile_image_url: z
+      .string()
+      .trim()
+      .url('Enter a valid URL')
+      .nullable()
+      .or(z.literal('').transform(() => null))
+      .default(null),
+    link_url: z
+      .string()
+      .trim()
+      .url('Enter a valid URL')
+      .nullable()
+      .or(z.literal('').transform(() => null))
+      .default(null),
+    cta_label: z
+      .string()
+      .trim()
+      .max(40, 'Keep it under 40 characters')
+      .nullable()
+      .or(z.literal('').transform(() => null))
+      .default(null),
+    sort_order: z.coerce.number().int('Must be a whole number').default(0),
+    is_active: z.boolean().default(true),
+    starts_at: z.string().trim().default(''),
+    ends_at: z.string().trim().default(''),
+  })
+  .superRefine((data, ctx) => {
+    if (data.starts_at && Number.isNaN(Date.parse(data.starts_at))) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid start date', path: ['starts_at'] });
+    }
+    if (data.ends_at && Number.isNaN(Date.parse(data.ends_at))) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid end date', path: ['ends_at'] });
+    }
+    if (
+      data.starts_at &&
+      data.ends_at &&
+      !Number.isNaN(Date.parse(data.starts_at)) &&
+      !Number.isNaN(Date.parse(data.ends_at)) &&
+      new Date(data.starts_at) > new Date(data.ends_at)
+    ) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'End date must be after the start date', path: ['ends_at'] });
+    }
+  });
+
+export type BannerFormValues = z.infer<typeof bannerFormSchema>;

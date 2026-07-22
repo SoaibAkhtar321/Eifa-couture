@@ -18,7 +18,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Categories', href: '/admin/categories' },
   { label: 'Collections', href: '/admin/collections' },
   { label: 'Homepage CMS', href: '/admin/homepage' },
-  { label: 'Banners', href: '/admin/banners', comingSoon: true },
+  { label: 'Banners', href: '/admin/banners' },
   { label: 'Inventory', href: '/admin/inventory', comingSoon: true },
   { label: 'Orders', href: '/admin/orders' },
   { label: 'Customers', href: '/admin/customers', comingSoon: true },
