@@ -22,7 +22,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Inventory', href: '/admin/inventory' },
   { label: 'Orders', href: '/admin/orders' },
   { label: 'Customers', href: '/admin/customers' },
-  { label: 'Coupons', href: '/admin/coupons', comingSoon: true },
+  { label: 'Coupons', href: '/admin/coupons' },
   { label: 'Notifications', href: '/admin/notifications', comingSoon: true },
   { label: 'Media Library', href: '/admin/media', comingSoon: true },
   { label: 'Analytics', href: '/admin/analytics', comingSoon: true },

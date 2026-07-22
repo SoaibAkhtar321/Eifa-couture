@@ -228,3 +228,44 @@ export const bannerFormSchema = z
   });
 
 export type BannerFormValues = z.infer<typeof bannerFormSchema>;
+
+export const couponFormSchema = z
+  .object({
+    code: z
+      .string()
+      .trim()
+      .min(1, 'Code is required')
+      .max(40, 'Keep it under 40 characters')
+      .regex(/^[A-Z0-9]+(?:-[A-Z0-9]+)*$/, 'Uppercase letters, numbers, and hyphens only'),
+    type: z.enum(['percentage', 'fixed'], { message: 'Select a discount type' }),
+    value: z.coerce.number({ message: 'Value is required' }).positive('Value must be greater than 0'),
+    min_order: z.coerce.number().min(0, 'Cannot be negative').nullable().default(null),
+    max_discount: z.coerce.number().positive('Max discount must be greater than 0').nullable().default(null),
+    usage_limit: z.coerce.number().int('Must be a whole number').positive('Must be greater than 0').nullable().default(null),
+    per_user_limit: z.coerce.number().int('Must be a whole number').min(1, 'Must be at least 1').default(1),
+    is_active: z.boolean().default(true),
+    starts_at: z.string().trim().default(''),
+    expires_at: z.string().trim().default(''),
+  })
+  .superRefine((data, ctx) => {
+    if (data.type === 'percentage' && data.value > 100) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Percentage cannot exceed 100', path: ['value'] });
+    }
+    if (data.starts_at && Number.isNaN(Date.parse(data.starts_at))) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid start date', path: ['starts_at'] });
+    }
+    if (data.expires_at && Number.isNaN(Date.parse(data.expires_at))) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid expiry date', path: ['expires_at'] });
+    }
+    if (
+      data.starts_at &&
+      data.expires_at &&
+      !Number.isNaN(Date.parse(data.starts_at)) &&
+      !Number.isNaN(Date.parse(data.expires_at)) &&
+      new Date(data.starts_at) > new Date(data.expires_at)
+    ) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Expiry must be after the start date', path: ['expires_at'] });
+    }
+  });
+
+export type CouponFormValues = z.infer<typeof couponFormSchema>;
