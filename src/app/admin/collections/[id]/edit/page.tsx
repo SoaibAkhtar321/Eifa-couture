@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
 import CollectionForm from '@/components/admin/collections/CollectionForm';
+import CollectionProductsManager from '@/components/admin/collections/CollectionProductsManager';
 import type { DbCollection } from '@/types/database';
 
 export const metadata = { title: 'Edit Collection' };
@@ -33,6 +34,8 @@ export default async function EditCollectionPage({ params }: EditCollectionPageP
       </div>
 
       <CollectionForm collection={collection as DbCollection} />
+
+      <CollectionProductsManager collectionId={id} />
     </div>
   );
 }
