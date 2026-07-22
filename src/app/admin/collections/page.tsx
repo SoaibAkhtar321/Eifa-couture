@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { listCollections } from '@/lib/admin/collections-read';
 import CollectionTable from '@/components/admin/collections/CollectionTable';
 
@@ -24,11 +26,19 @@ export default async function AdminCollectionsPage({ searchParams }: Collections
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="font-heading text-3xl text-maroon">Collections</h1>
-        <p className="text-charcoal/60 mt-1">
-          {result ? `${result.totalCount.toLocaleString('en-IN')} collection${result.totalCount === 1 ? '' : 's'}` : ''}
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="font-heading text-3xl text-maroon">Collections</h1>
+          <p className="text-charcoal/60 mt-1">
+            {result ? `${result.totalCount.toLocaleString('en-IN')} collection${result.totalCount === 1 ? '' : 's'}` : ''}
+          </p>
+        </div>
+        <Link
+          href="/admin/collections/new"
+          className="rounded-lg bg-maroon px-5 py-2.5 text-sm font-medium text-ivory transition hover:bg-maroon/90"
+        >
+          Add collection
+        </Link>
       </div>
 
       <CollectionTable

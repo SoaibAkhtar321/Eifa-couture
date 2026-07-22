@@ -66,30 +66,6 @@ index 0000000..a6e01a6
 +    </div>
 +  );
 +}
-diff --git a/src/app/admin/collections/error.tsx b/src/app/admin/collections/error.tsx
-new file mode 100644
-index 0000000..ed698c8
---- /dev/null
-+++ b/src/app/admin/collections/error.tsx
-@@ -0,0 +1,7 @@
-+'use client';
-+
-+import ErrorState from '@/components/admin/ErrorState';
-+
-+export default function Error({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
-+  return <ErrorState message="Couldn't load collections. Please try again." onRetry={reset} />;
-+}
-diff --git a/src/app/admin/collections/loading.tsx b/src/app/admin/collections/loading.tsx
-new file mode 100644
-index 0000000..8df6d12
---- /dev/null
-+++ b/src/app/admin/collections/loading.tsx
-@@ -0,0 +1,5 @@
-+import LoadingState from '@/components/admin/LoadingState';
-+
-+export default function Loading() {
-+  return <LoadingState message="Loading collections…" />;
-+}
 diff --git a/src/app/admin/collections/new/error.tsx b/src/app/admin/collections/new/error.tsx
 new file mode 100644
 index 0000000..246a517
@@ -139,39 +115,24 @@ index 0000000..f8873b6
 +  );
 +}
 diff --git a/src/app/admin/collections/page.tsx b/src/app/admin/collections/page.tsx
-new file mode 100644
-index 0000000..6253d6c
---- /dev/null
+index adfe0bb..6253d6c 100644
+--- a/src/app/admin/collections/page.tsx
 +++ b/src/app/admin/collections/page.tsx
-@@ -0,0 +1,54 @@
+@@ -1,3 +1,5 @@
 +import Link from 'next/link';
 +
-+import { listCollections } from '@/lib/admin/collections-read';
-+import CollectionTable from '@/components/admin/collections/CollectionTable';
-+
-+export const metadata = { title: 'Collections' };
-+
-+interface CollectionsPageProps {
-+  searchParams: Promise<{
-+    q?: string;
-+    status?: 'active' | 'inactive';
-+    page?: string;
-+  }>;
-+}
-+
-+export default async function AdminCollectionsPage({ searchParams }: CollectionsPageProps) {
-+  const params = await searchParams;
-+  const page = Number(params.page ?? '1') || 1;
-+
-+  const { data: result, error } = await listCollections({
-+    search: params.q,
-+    isActive: params.status === 'active' ? true : params.status === 'inactive' ? false : undefined,
-+    page,
-+    pageSize: 20,
-+  });
-+
-+  return (
-+    <div className="space-y-8">
+ import { listCollections } from '@/lib/admin/collections-read';
+ import CollectionTable from '@/components/admin/collections/CollectionTable';
+ 
+@@ -24,11 +26,19 @@ export default async function AdminCollectionsPage({ searchParams }: Collections
+ 
+   return (
+     <div className="space-y-8">
+-      <div>
+-        <h1 className="font-heading text-3xl text-maroon">Collections</h1>
+-        <p className="text-charcoal/60 mt-1">
+-          {result ? `${result.totalCount.toLocaleString('en-IN')} collection${result.totalCount === 1 ? '' : 's'}` : ''}
+-        </p>
 +      <div className="flex items-center justify-between">
 +        <div>
 +          <h1 className="font-heading text-3xl text-maroon">Collections</h1>
@@ -185,32 +146,9 @@ index 0000000..6253d6c
 +        >
 +          Add collection
 +        </Link>
-+      </div>
-+
-+      <CollectionTable
-+        rows={result?.rows ?? []}
-+        totalCount={result?.totalCount ?? 0}
-+        page={result?.page ?? page}
-+        pageSize={result?.pageSize ?? 20}
-+        currentParams={params}
-+        error={error}
-+      />
-+    </div>
-+  );
-+}
-diff --git a/src/components/admin/AdminSidebar.tsx b/src/components/admin/AdminSidebar.tsx
-index 4380142..c6f94c3 100644
---- a/src/components/admin/AdminSidebar.tsx
-+++ b/src/components/admin/AdminSidebar.tsx
-@@ -16,7 +16,7 @@ const NAV_ITEMS: NavItem[] = [
-   { label: 'Dashboard', href: '/admin' },
-   { label: 'Products', href: '/admin/products' },
-   { label: 'Categories', href: '/admin/categories' },
--  { label: 'Collections', href: '/admin/collections', comingSoon: true },
-+  { label: 'Collections', href: '/admin/collections' },
-   { label: 'Homepage CMS', href: '/admin/homepage', comingSoon: true },
-   { label: 'Banners', href: '/admin/banners', comingSoon: true },
-   { label: 'Inventory', href: '/admin/inventory', comingSoon: true },
+       </div>
+ 
+       <CollectionTable
 diff --git a/src/components/admin/FormField.tsx b/src/components/admin/FormField.tsx
 index 5575c96..d4700d1 100644
 --- a/src/components/admin/FormField.tsx
@@ -251,10 +189,10 @@ index 5575c96..d4700d1 100644
    checked: boolean;
 diff --git a/src/components/admin/collections/CollectionForm.tsx b/src/components/admin/collections/CollectionForm.tsx
 new file mode 100644
-index 0000000..8c2a0d0
+index 0000000..b460a64
 --- /dev/null
 +++ b/src/components/admin/collections/CollectionForm.tsx
-@@ -0,0 +1,240 @@
+@@ -0,0 +1,238 @@
 +'use client';
 +
 +import { useRouter } from 'next/navigation';
@@ -288,9 +226,7 @@ index 0000000..8c2a0d0
 +
 +/**
 + * ISO (as stored) → `datetime-local` input value, rendered in the
-+ * browser's local time zone. Mirrors `isWithinCampaignWindow` in
-+ * `lib/data/collections.ts` in treating a null/unparseable value as
-+ * "no bound".
++ * browser's local time zone.
 + */
 +function isoToDatetimeLocal(iso: string | null): string {
 +  if (!iso) return '';
@@ -495,298 +431,6 @@ index 0000000..8c2a0d0
 +    </form>
 +  );
 +}
-diff --git a/src/components/admin/collections/CollectionTable.tsx b/src/components/admin/collections/CollectionTable.tsx
-new file mode 100644
-index 0000000..63af7e3
---- /dev/null
-+++ b/src/components/admin/collections/CollectionTable.tsx
-@@ -0,0 +1,183 @@
-+'use client';
-+
-+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-+import { useState, useTransition } from 'react';
-+import Image from 'next/image';
-+
-+import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
-+import { TextField, SelectField } from '@/components/admin/FormField';
-+import { formatDate } from '@/lib/utils';
-+import type { CollectionListRow } from '@/lib/admin/collections-read';
-+
-+interface CollectionTableProps {
-+  rows: CollectionListRow[];
-+  totalCount: number;
-+  page: number;
-+  pageSize: number;
-+  currentParams: Record<string, string | undefined>;
-+  error: string | null;
-+}
-+
-+const STATUS_OPTIONS = [
-+  { value: '', label: 'All statuses' },
-+  { value: 'active', label: 'Active' },
-+  { value: 'inactive', label: 'Inactive' },
-+];
-+
-+export default function CollectionTable({
-+  rows,
-+  totalCount,
-+  page,
-+  pageSize,
-+  currentParams,
-+  error,
-+}: CollectionTableProps) {
-+  const router = useRouter();
-+  const pathname = usePathname();
-+  const searchParams = useSearchParams();
-+  const [isPending, startTransition] = useTransition();
-+  const [searchInput, setSearchInput] = useState(currentParams.q ?? '');
-+
-+  function updateParams(updates: Record<string, string | null>) {
-+    const next = new URLSearchParams(searchParams.toString());
-+    Object.entries(updates).forEach(([key, value]) => {
-+      if (value === null || value === '') {
-+        next.delete(key);
-+      } else {
-+        next.set(key, value);
-+      }
-+    });
-+    // any filter change resets pagination
-+    if (!('page' in updates)) next.delete('page');
-+
-+    startTransition(() => {
-+      router.push(`${pathname}?${next.toString()}`);
-+    });
-+  }
-+
-+  function handleSearchSubmit(e: React.FormEvent) {
-+    e.preventDefault();
-+    updateParams({ q: searchInput.trim() || null });
-+  }
-+
-+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
-+
-+  const columns: DataTableColumn<CollectionListRow>[] = [
-+    {
-+      key: 'thumbnail',
-+      header: '',
-+      className: 'w-16',
-+      render: (row) => (
-+        <div className="h-12 w-12 overflow-hidden rounded-md bg-beige/60">
-+          {row.image_url ? (
-+            <Image
-+              src={row.image_url}
-+              alt={row.name}
-+              width={48}
-+              height={48}
-+              className="h-full w-full object-cover"
-+            />
-+          ) : null}
-+        </div>
-+      ),
-+    },
-+    {
-+      key: 'name',
-+      header: 'Name',
-+      render: (row) => (
-+        <div>
-+          <p className="font-medium text-charcoal">{row.name}</p>
-+          <p className="text-xs text-charcoal/50">{row.slug}</p>
-+        </div>
-+      ),
-+    },
-+    {
-+      key: 'products',
-+      header: 'Products',
-+      render: (row) => row.product_count,
-+    },
-+    {
-+      key: 'featured',
-+      header: 'Featured',
-+      render: (row) => (row.is_featured ? '★' : <span className="text-charcoal/30">—</span>),
-+    },
-+    {
-+      key: 'active',
-+      header: 'Status',
-+      render: (row) => (
-+        <span
-+          className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-+            row.is_active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-charcoal/50'
-+          }`}
-+        >
-+          {row.is_active ? 'Active' : 'Inactive'}
-+        </span>
-+      ),
-+    },
-+    {
-+      key: 'updated',
-+      header: 'Updated',
-+      render: (row) => formatDate(row.updated_at),
-+    },
-+  ];
-+
-+  return (
-+    <div className="space-y-4">
-+      <div className="flex flex-wrap items-end gap-3 rounded-lg border border-charcoal/10 bg-ivory p-4">
-+        <form onSubmit={handleSearchSubmit} className="min-w-[220px] flex-1">
-+          <TextField
-+            label="Search"
-+            placeholder="Name or slug…"
-+            value={searchInput}
-+            onChange={(e) => setSearchInput(e.target.value)}
-+          />
-+        </form>
-+
-+        <div className="w-40">
-+          <SelectField
-+            label="Status"
-+            value={currentParams.status ?? ''}
-+            onChange={(e) => updateParams({ status: e.target.value || null })}
-+            options={STATUS_OPTIONS}
-+          />
-+        </div>
-+      </div>
-+
-+      <DataTable
-+        columns={columns}
-+        rows={rows}
-+        getRowKey={(row) => row.id}
-+        isLoading={isPending}
-+        error={error}
-+        emptyMessage="No collections match these filters."
-+        onRowClick={(row) => router.push(`/admin/collections/${row.id}/edit`)}
-+      />
-+
-+      {totalPages > 1 && (
-+        <div className="flex items-center justify-between text-sm text-charcoal/60">
-+          <p>
-+            Page {page} of {totalPages}
-+          </p>
-+          <div className="flex gap-2">
-+            <button
-+              type="button"
-+              disabled={page <= 1}
-+              onClick={() => updateParams({ page: String(page - 1) })}
-+              className="rounded-md border border-charcoal/20 px-3 py-1.5 disabled:opacity-40"
-+            >
-+              Previous
-+            </button>
-+            <button
-+              type="button"
-+              disabled={page >= totalPages}
-+              onClick={() => updateParams({ page: String(page + 1) })}
-+              className="rounded-md border border-charcoal/20 px-3 py-1.5 disabled:opacity-40"
-+            >
-+              Next
-+            </button>
-+          </div>
-+        </div>
-+      )}
-+    </div>
-+  );
-+}
-diff --git a/src/lib/admin/collections-read.ts b/src/lib/admin/collections-read.ts
-new file mode 100644
-index 0000000..b52f883
---- /dev/null
-+++ b/src/lib/admin/collections-read.ts
-@@ -0,0 +1,97 @@
-+/* ============================================
-+   EIFA COUTURE — Admin Collection Data Access (server reads)
-+   ============================================
-+   Sibling to `lib/admin/products-read.ts`, same conventions: server
-+   Supabase client, raw DB rows (including inactive ones), paginated
-+   list read for the admin table. Product count is resolved via a
-+   nested count select on `product_collections` rather than a
-+   separate round-trip per row.
-+
-+   Server-only (imports `lib/supabase/server.ts`, which pulls in
-+   `next/headers`) — only import from Server Components, or via
-+   `import type` from Client Components.
-+   ============================================ */
-+
-+import { createClient as createServerClient } from '@/lib/supabase/server';
-+import type { DbCollection } from '@/types/database';
-+
-+/* ---------- List (Server Component read) ---------- */
-+
-+export interface CollectionListFilters {
-+  search?: string;
-+  isActive?: boolean;
-+  page?: number;
-+  pageSize?: number;
-+}
-+
-+export interface CollectionListRow extends DbCollection {
-+  product_count: number;
-+}
-+
-+export interface CollectionListResult {
-+  rows: CollectionListRow[];
-+  totalCount: number;
-+  page: number;
-+  pageSize: number;
-+}
-+
-+/**
-+ * Paginated/filtered collection list for the admin table. Product
-+ * count is resolved via a nested `product_collections(count)` select
-+ * rather than a per-row query.
-+ */
-+export async function listCollections(filters: CollectionListFilters = {}): Promise<{
-+  data: CollectionListResult | null;
-+  error: string | null;
-+}> {
-+  const supabase = await createServerClient();
-+
-+  const page = filters.page ?? 1;
-+  const pageSize = filters.pageSize ?? 20;
-+  const from = (page - 1) * pageSize;
-+  const to = from + pageSize - 1;
-+
-+  let query = supabase
-+    .from('collections')
-+    .select(
-+      `
-+      *,
-+      product_collections(count)
-+    `,
-+      { count: 'exact' }
-+    )
-+    .is('deleted_at', null);
-+
-+  if (filters.search) {
-+    const term = filters.search.trim();
-+    query = query.or(`name.ilike.%${term}%,slug.ilike.%${term}%`);
-+  }
-+  if (filters.isActive !== undefined) {
-+    query = query.eq('is_active', filters.isActive);
-+  }
-+
-+  query = query.order('sort_order', { ascending: true }).range(from, to);
-+
-+  const { data, error, count } = await query;
-+
-+  if (error) {
-+    return { data: null, error: error.message };
-+  }
-+
-+  type RawRow = DbCollection & {
-+    product_collections: { count: number }[];
-+  };
-+
-+  const rows: CollectionListRow[] = ((data ?? []) as unknown as RawRow[]).map((row) => {
-+    const { product_collections, ...collection } = row;
-+    return {
-+      ...collection,
-+      product_count: product_collections[0]?.count ?? 0,
-+    };
-+  });
-+
-+  return {
-+    data: { rows, totalCount: count ?? 0, page, pageSize },
-+    error: null,
-+  };
-+}
 diff --git a/src/lib/admin/collections-write.ts b/src/lib/admin/collections-write.ts
 new file mode 100644
 index 0000000..6958825
@@ -892,10 +536,10 @@ index 0000000..6958825
 +  return { data: data as DbCollection, error: null };
 +}
 diff --git a/src/lib/admin/validation.ts b/src/lib/admin/validation.ts
-index 7e50eed..db15283 100644
+index 7e50eed..478d0de 100644
 --- a/src/lib/admin/validation.ts
 +++ b/src/lib/admin/validation.ts
-@@ -87,6 +87,45 @@ export const categoryFormSchema = z.object({
+@@ -87,6 +87,42 @@ export const categoryFormSchema = z.object({
  
  export type CategoryFormValues = z.infer<typeof categoryFormSchema>;
  
@@ -912,9 +556,6 @@ index 7e50eed..db15283 100644
 +    is_featured: z.boolean().default(false),
 +    is_active: z.boolean().default(true),
 +    sort_order: z.coerce.number().int('Must be a whole number').default(0),
-+    // Raw `datetime-local` input strings, not ISO — the form converts
-+    // to ISO (or null) at the write boundary. Empty string means "no
-+    // bound on that side", same convention as the DB's null.
 +    starts_at: z.string().trim().default(''),
 +    ends_at: z.string().trim().default(''),
 +  })

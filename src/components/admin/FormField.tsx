@@ -104,6 +104,33 @@ export function NumberField({ label, error, hint, required, id, className, ...pr
   );
 }
 
+interface DateTimeFieldProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
+  label: string;
+  error?: string;
+  hint?: string;
+}
+
+/**
+ * Local datetime picker for scheduling windows (e.g. collection
+ * `starts_at`/`ends_at`). Renders a plain `<input type="datetime-local">`
+ * — callers convert to/from ISO strings at the form boundary, same
+ * division of labor as `NumberField`.
+ */
+export function DateTimeField({ label, error, hint, required, id, className, ...props }: DateTimeFieldProps) {
+  const fieldId = id ?? props.name ?? label.toLowerCase().replace(/\s+/g, '-');
+  return (
+    <FieldWrapper label={label} htmlFor={fieldId} error={error} hint={hint} required={required}>
+      <input
+        id={fieldId}
+        type="datetime-local"
+        required={required}
+        className={`${baseFieldClass} ${error ? 'border-red-400' : ''} ${className ?? ''}`}
+        {...props}
+      />
+    </FieldWrapper>
+  );
+}
+
 interface ToggleFieldProps {
   label: string;
   checked: boolean;

@@ -87,6 +87,42 @@ export const categoryFormSchema = z.object({
 
 export type CategoryFormValues = z.infer<typeof categoryFormSchema>;
 
+export const collectionFormSchema = z
+  .object({
+    name: z.string().trim().min(1, 'Name is required').max(100, 'Name is too long'),
+    slug: z
+      .string()
+      .trim()
+      .min(1, 'Slug is required')
+      .max(100, 'Slug is too long')
+      .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase letters, numbers, and hyphens only'),
+    description: z.string().trim().max(500, 'Keep it under 500 characters').default(''),
+    is_featured: z.boolean().default(false),
+    is_active: z.boolean().default(true),
+    sort_order: z.coerce.number().int('Must be a whole number').default(0),
+    starts_at: z.string().trim().default(''),
+    ends_at: z.string().trim().default(''),
+  })
+  .superRefine((data, ctx) => {
+    if (data.starts_at && Number.isNaN(Date.parse(data.starts_at))) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid start date', path: ['starts_at'] });
+    }
+    if (data.ends_at && Number.isNaN(Date.parse(data.ends_at))) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Enter a valid end date', path: ['ends_at'] });
+    }
+    if (
+      data.starts_at &&
+      data.ends_at &&
+      !Number.isNaN(Date.parse(data.starts_at)) &&
+      !Number.isNaN(Date.parse(data.ends_at)) &&
+      new Date(data.starts_at) > new Date(data.ends_at)
+    ) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'End date must be after the start date', path: ['ends_at'] });
+    }
+  });
+
+export type CollectionFormValues = z.infer<typeof collectionFormSchema>;
+
 /**
  * Checks a set of variants (as edited in the form, before save) for
  * duplicate size/color combinations. Returns the 0-based indices of
