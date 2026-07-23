@@ -57,7 +57,7 @@ export type ProductRow = DbProduct & {
   categories: { slug: string } | null;
   fabrics: { name: string; care: string[] } | null;
   product_images: DbProductImage[];
-  product_variants: (DbProductVariant & { inventory: DbInventory[] | null })[];
+  product_variants: (DbProductVariant & { inventory: DbInventory | null })[];
 };
 
 // Every product fetch pulls the same joined shape — kept as one
@@ -98,7 +98,7 @@ export function mapProductRow(row: ProductRow): Product {
       });
     }
 
-    const inventoryRow = variant.inventory?.[0];
+    const inventoryRow = variant.inventory;
     const available = inventoryRow
       ? Math.max(inventoryRow.quantity - inventoryRow.reserved, 0)
       : 0;
