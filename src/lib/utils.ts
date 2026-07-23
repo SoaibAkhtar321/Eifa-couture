@@ -261,3 +261,24 @@ export function highlightSegments(text: string, query: string): TextSegment[] {
 
   return segments;
 }
+
+/**
+ * Guards against open-redirect vulnerabilities when a redirect target
+ * comes from a query param (`?next=`/`?redirect=`) — e.g. the
+ * post-login `next` param round-tripped through Login/Register/OAuth
+ * and consumed by `app/(storefront)/auth/callback/route.ts`. Only a
+ * same-origin, absolute path is considered safe: anything starting
+ * with `//` (protocol-relative) or containing a scheme (`http:`,
+ * `javascript:`, etc.) is rejected in favor of `fallback`.
+ * @example isSafeRedirectPath('/account') → true
+ * @example isSafeRedirectPath('//evil.com') → false
+ * @example isSafeRedirectPath('https://evil.com') → false
+ */
+export function isSafeRedirectPath(path: string | null | undefined): path is string {
+  if (!path) return false;
+  return path.startsWith('/') && !path.startsWith('//') && !path.includes('\\');
+}
+
+export function sanitizeRedirectPath(path: string | null | undefined, fallback = '/account'): string {
+  return isSafeRedirectPath(path) ? path : fallback;
+}

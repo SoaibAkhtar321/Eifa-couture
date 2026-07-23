@@ -13,7 +13,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useAuth } from '@/hooks/useAuth';
-import { isValidEmail } from '@/lib/utils';
+import { isValidEmail, sanitizeRedirectPath } from '@/lib/utils';
 import GoogleAuthButton from './GoogleAuthButton';
 
 export default function LoginForm() {
@@ -31,7 +31,7 @@ export default function LoginForm() {
   // Register. `redirectTo` below is the resolved destination used for
   // this form's own post-login navigation.
  const redirectParam = searchParams.get('next') || searchParams.get('redirect');
-  const redirectTo = redirectParam || '/account';
+  const redirectTo = sanitizeRedirectPath(redirectParam, '/account');
 
   const registerHref = redirectParam
     ? `/register?redirect=${encodeURIComponent(redirectParam)}`
