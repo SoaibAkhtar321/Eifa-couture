@@ -25,7 +25,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Coupons', href: '/admin/coupons' },
   { label: 'Notifications', href: '/admin/notifications', comingSoon: true },
   { label: 'Media Library', href: '/admin/media', comingSoon: true },
-  { label: 'Analytics', href: '/admin/analytics', comingSoon: true },
+  { label: 'Analytics', href: '/admin/analytics' },
   { label: 'Settings', href: '/admin/settings', comingSoon: true },
 ];
 
