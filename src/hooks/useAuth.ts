@@ -19,30 +19,66 @@ export function useAuth() {
 
   const supabase = useMemo(() => createClient(), []);
 
+  // Login, signup, and password-reset requests are proxied through
+  // our own rate-limited Route Handlers (src/app/api/auth/*) instead
+  // of calling supabase.auth.* directly from the browser — Supabase
+  // Auth itself isn't behind anything we can rate-limit, so brute
+  // force / abuse protection has to happen on our server first. On
+  // success, the tokens returned are handed to `supabase.auth.setSession`
+  // so the browser client and auth store hydrate exactly as before.
   const signInWithPassword = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     });
-    return { error };
+    const json = await res.json().catch(() => ({ error: { message: 'Something went wrong. Please try again.' } }));
+
+    if (json.error) {
+      return { error: json.error };
+    }
+
+    if (json.session) {
+      await supabase.auth.setSession({
+        access_token: json.session.access_token,
+        refresh_token: json.session.refresh_token,
+      });
+    }
+
+    return { error: null };
   };
 
   const signUp = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback`,
-      },
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     });
-    return { error };
+    const json = await res.json().catch(() => ({ error: { message: 'Something went wrong. Please try again.' } }));
+
+    if (json.error) {
+      return { error: json.error };
+    }
+
+    if (json.session) {
+      await supabase.auth.setSession({
+        access_token: json.session.access_token,
+        refresh_token: json.session.refresh_token,
+      });
+    }
+
+    return { error: null };
   };
 
   const resetPasswordForEmail = async (email: string) => {
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+    const res = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
     });
-    return { error };
+    const json = await res.json().catch(() => ({ error: { message: 'Something went wrong. Please try again.' } }));
+
+    return { error: json.error ?? null };
   };
 
   const updatePassword = async (password: string) => {
