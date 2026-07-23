@@ -22,6 +22,8 @@
 import { useState } from 'react';
 import Image, { type ImageProps } from 'next/image';
 
+import { isSupabaseImageUrl } from '@/lib/utils';
+
 const DEFAULT_FALLBACK_IMAGE = '/images/categories/kurtas.png';
 
 interface ProductImageProps extends Omit<ImageProps, 'src' | 'onError'> {
@@ -49,6 +51,7 @@ export default function ProductImage({
       key={resolvedSrc}
       src={currentSrc}
       alt={alt}
+      unoptimized={isSupabaseImageUrl(currentSrc)}
       onError={() => setErroredSrc(resolvedSrc)}
     />
   );

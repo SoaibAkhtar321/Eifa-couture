@@ -6,7 +6,7 @@ import { AnimatePresence, motion, type Variants } from 'framer-motion';
 
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import { SHIPPING_INFO } from '@/lib/constants';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, isSupabaseImageUrl } from '@/lib/utils';
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
 
@@ -301,6 +301,7 @@ export default function CartDrawer() {
                                 src={productImage}
                                 alt={item.product.name}
                                 fill
+                                unoptimized={isSupabaseImageUrl(productImage)}
                                 className="object-cover"
                                 sizes="84px"
                               />

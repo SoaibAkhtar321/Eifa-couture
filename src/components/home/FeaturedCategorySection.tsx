@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { isSupabaseImageUrl } from '@/lib/utils';
+
 export type FeaturedCategorySectionData = {
   id: string;
   eyebrow: string;
@@ -80,6 +82,7 @@ export default function FeaturedCategorySection({
               alt={section.imageAlt}
               fill
               sizes="(max-width: 1024px) 100vw, 50vw"
+              unoptimized={isSupabaseImageUrl(section.imageUrl)}
               className="object-cover object-center transition-transform duration-700 hover:scale-105"
             />
 

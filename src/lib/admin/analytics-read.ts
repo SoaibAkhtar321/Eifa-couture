@@ -16,13 +16,10 @@
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import type { OrderStatus } from '@/types/database';
 
-export type AnalyticsRange = 7 | 30 | 90;
+export type { AnalyticsRange } from '@/lib/admin/analytics-range';
+export { ANALYTICS_RANGE_OPTIONS } from '@/lib/admin/analytics-range';
 
-export const ANALYTICS_RANGE_OPTIONS: { value: AnalyticsRange; label: string }[] = [
-  { value: 7, label: 'Last 7 days' },
-  { value: 30, label: 'Last 30 days' },
-  { value: 90, label: 'Last 90 days' },
-];
+import type { AnalyticsRange } from '@/lib/admin/analytics-range';
 
 export interface RevenuePoint {
   date: string; // YYYY-MM-DD

@@ -8,7 +8,7 @@ import Link from 'next/link';
 
 import { createClient } from '@/lib/supabase/client';
 import { fetchProductsByIds } from '@/lib/data/products';
-import { formatPrice, resolveVariantPrice } from '@/lib/utils';
+import { formatPrice, isSupabaseImageUrl, resolveVariantPrice } from '@/lib/utils';
 
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
@@ -210,6 +210,7 @@ export default function WishlistPage() {
                                 alt={product.name}
                                 fill
                                 priority={index < 2}
+                                unoptimized={isSupabaseImageUrl(productImage)}
                                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
                                 className="object-cover transition-transform duration-700 group-hover:scale-105"
                               />

@@ -17,6 +17,8 @@
 
 import Image from 'next/image';
 
+import { isSupabaseImageUrl } from '@/lib/utils';
+
 interface MobileStickyActionBarProps {
   imageUrl?: string;
   productName: string;
@@ -49,6 +51,7 @@ export default function MobileStickyActionBar({
               alt=""
               width={44}
               height={44}
+              unoptimized={isSupabaseImageUrl(imageUrl)}
               className="h-full w-full object-cover"
             />
           </div>

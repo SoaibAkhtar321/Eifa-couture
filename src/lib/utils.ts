@@ -19,6 +19,22 @@ export function formatPrice(amount: number): string {
 }
 
 /**
+ * Detect a Supabase Storage image URL so callers can render it with
+ * `unoptimized` on next/image. Next's built-in image optimizer proxy
+ * performs its own upstream fetch/DNS check before serving the resized
+ * image; in some hosting/network setups that check rejects the Supabase
+ * Storage host (surfacing as "resolved to private ip" and, from the
+ * component's point of view, an `onError` -> placeholder swap). Supabase
+ * Storage already serves images off its own CDN, so skipping Next's
+ * re-optimization for just this host is safe and has no visual cost.
+ * @example isSupabaseImageUrl("https://xyz.supabase.co/storage/v1/object/public/product-images/a.jpg") → true
+ */
+export function isSupabaseImageUrl(src: string | null | undefined): boolean {
+  if (!src) return false;
+  return src.includes(".supabase.co/storage/");
+}
+
+/**
  * Merge class names — filters falsy values and joins.
  * Simple alternative to clsx without external dependencies.
  * @example cn("btn", isActive && "btn-active", undefined, "ml-2") → "btn btn-active ml-2"

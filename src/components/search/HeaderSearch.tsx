@@ -30,7 +30,7 @@ import {
   getRecentSearches,
   removeRecentSearch,
 } from '@/lib/search-history';
-import { formatPrice, highlightSegments } from '@/lib/utils';
+import { formatPrice, highlightSegments, isSupabaseImageUrl } from '@/lib/utils';
 import { useUIStore } from '@/store/ui-store';
 
 import type { Category, Product } from '@/types';
@@ -539,6 +539,7 @@ export default function HeaderSearch() {
             alt={item.product.name}
             fill
             sizes="64px"
+            unoptimized={isSupabaseImageUrl(getProductImage(item.product))}
             className="object-cover"
           />
         </div>

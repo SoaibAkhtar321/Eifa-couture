@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
-import { ANALYTICS_RANGE_OPTIONS, type AnalyticsRange } from '@/lib/admin/analytics-read';
+import { ANALYTICS_RANGE_OPTIONS, type AnalyticsRange } from '@/lib/admin/analytics-range';
 
 interface AnalyticsRangeSwitchProps {
   active: AnalyticsRange;
