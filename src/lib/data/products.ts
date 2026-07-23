@@ -67,7 +67,7 @@ export const PRODUCT_SELECT = `
   *,
   categories ( slug ),
   fabrics ( name, care ),
-  product_images ( id, url, alt_text, sort_order, is_primary ),
+  product_images ( id, url, alt_text, sort_order, is_primary, variant_id ),
   product_variants (
     id, size, color_name, color_hex, price_override, is_active,
     inventory ( quantity, reserved )
@@ -75,7 +75,13 @@ export const PRODUCT_SELECT = `
 `;
 
 export function mapProductRow(row: ProductRow): Product {
+  // Product-level gallery only (variant_id is null). Variant-specific
+  // images also come back on row.product_images from Phase 2A onward,
+  // but the storefront doesn't switch galleries by color yet — that's
+  // Phase 2C. Filtering here keeps today's single gallery correct
+  // instead of mixing every variant's photos into one list.
   const images = (row.product_images ?? [])
+    .filter((image) => !image.variant_id)
     .slice()
     .sort((a, b) => {
       if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;

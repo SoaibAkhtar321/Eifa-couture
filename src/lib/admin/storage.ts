@@ -52,7 +52,8 @@ export async function uploadProductImage(
   productId: string,
   file: File,
   sortOrder: number,
-  isPrimary: boolean
+  isPrimary: boolean,
+  variantId: string | null = null
 ): Promise<{ data: DbProductImage | null; error: string | null }> {
   const validationError = validateFile(file);
   if (validationError) {
@@ -60,7 +61,10 @@ export async function uploadProductImage(
   }
 
   const supabase = createClient();
-  const path = `${productId}/${sanitizeFileName(file.name)}`;
+  // Matches supabase/storage/STORAGE_PLAN.md: product-images/{product_id}/{variant_id?}/{filename}
+  const path = variantId
+    ? `${productId}/${variantId}/${sanitizeFileName(file.name)}`
+    : `${productId}/${sanitizeFileName(file.name)}`;
 
   const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file, {
     cacheControl: '31536000', // 1 year — filenames are unique/immutable
@@ -77,6 +81,7 @@ export async function uploadProductImage(
     .from('product_images')
     .insert({
       product_id: productId,
+      variant_id: variantId,
       url: publicUrlData.publicUrl,
       alt_text: '',
       sort_order: sortOrder,
@@ -103,7 +108,8 @@ export async function uploadProductImages(
   productId: string,
   files: File[],
   startingSortOrder: number,
-  hasExistingPrimary: boolean
+  hasExistingPrimary: boolean,
+  variantId: string | null = null
 ): Promise<{ data: DbProductImage[]; errors: ImageUploadError[] }> {
   const data: DbProductImage[] = [];
   const errors: ImageUploadError[] = [];
@@ -111,7 +117,7 @@ export async function uploadProductImages(
   for (let i = 0; i < files.length; i += 1) {
     const file = files[i];
     const isPrimary = !hasExistingPrimary && i === 0 && data.length === 0;
-    const result = await uploadProductImage(productId, file, startingSortOrder + i, isPrimary);
+    const result = await uploadProductImage(productId, file, startingSortOrder + i, isPrimary, variantId);
 
     if (result.error || !result.data) {
       errors.push({ fileName: file.name, message: result.error ?? 'Upload failed.' });
@@ -149,15 +155,23 @@ export async function deleteProductImage(image: Pick<DbProductImage, 'id' | 'url
 
 export async function setPrimaryImage(
   productId: string,
-  imageId: string
+  imageId: string,
+  variantId: string | null = null
 ): Promise<{ error: string | null }> {
   const supabase = createClient();
 
-  const { error: clearError } = await supabase
+  // Scoped to the same gallery only: product-level (variant_id is null)
+  // and each variant's gallery each have their own primary now, so
+  // clearing must not cross that boundary — see migration 0012.
+  let clearQuery = supabase
     .from('product_images')
     .update({ is_primary: false })
     .eq('product_id', productId)
     .neq('id', imageId);
+
+  clearQuery = variantId ? clearQuery.eq('variant_id', variantId) : clearQuery.is('variant_id', null);
+
+  const { error: clearError } = await clearQuery;
 
   if (clearError) {
     return { error: clearError.message };

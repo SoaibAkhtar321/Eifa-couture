@@ -84,7 +84,7 @@ export async function listProducts(filters: ProductListFilters = {}): Promise<{
       `
       *,
       category:categories(name),
-      product_images(url, is_primary),
+      product_images(url, is_primary, variant_id),
       product_variants(id, is_active, inventory(quantity))
     `,
       { count: 'exact' }
@@ -115,12 +115,16 @@ export async function listProducts(filters: ProductListFilters = {}): Promise<{
 
   type RawRow = DbProduct & {
     category: { name: string } | null;
-    product_images: { url: string; is_primary: boolean }[];
+    product_images: { url: string; is_primary: boolean; variant_id: string | null }[];
     product_variants: { id: string; is_active: boolean; inventory: { quantity: number } | null }[];
   };
 
   let rows: ProductListRow[] = ((data ?? []) as unknown as RawRow[]).map((row) => {
-    const primaryImage = row.product_images.find((img) => img.is_primary) ?? row.product_images[0];
+    // Only the product-level gallery (variant_id is null) counts for the
+    // list thumbnail — a variant's own primary image shouldn't stand in
+    // for the product's, and both can be `is_primary = true` at once now.
+    const productImages = row.product_images.filter((img) => !img.variant_id);
+    const primaryImage = productImages.find((img) => img.is_primary) ?? productImages[0];
     const totalStock = row.product_variants.reduce((sum, v) => sum + (v.inventory?.quantity ?? 0), 0);
 
     return {

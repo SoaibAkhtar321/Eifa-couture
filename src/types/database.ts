@@ -141,6 +141,7 @@ export interface DbProduct {
 export interface DbProductImage {
   id: string;
   product_id: string;
+  variant_id: string | null;
   url: string;
   alt_text: string;
   sort_order: number;
