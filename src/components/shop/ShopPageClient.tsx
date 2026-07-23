@@ -105,10 +105,10 @@ function getPageDescription(
 }
 
 function chipClass(isActive: boolean) {
-  return `shrink-0 border px-4 py-3 text-[11px] font-medium uppercase tracking-[0.16em] transition-colors duration-300 ${
+  return `tap-feedback shrink-0 border px-4 py-2.5 text-[11px] font-medium uppercase tracking-[0.16em] min-h-[40px] ${
     isActive
       ? 'border-maroon bg-maroon text-white'
-      : 'border-charcoal/15 bg-white text-charcoal hover:border-gold hover:text-maroon'
+      : 'border-charcoal/15 bg-white text-charcoal hover:border-gold hover:text-maroon focus-visible:border-gold focus-visible:text-maroon'
   }`;
 }
 
@@ -135,13 +135,15 @@ function FilterInputs({
         value={searchQuery}
         onChange={(event) => onSearchQueryChange(event.target.value)}
         placeholder="Search products..."
-        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none transition-colors placeholder:text-charcoal/35 focus:border-gold sm:col-span-2 lg:col-span-1 xl:col-span-2"
+        aria-label="Search products"
+        className="input-luxury sm:col-span-2 lg:col-span-1 xl:col-span-2"
       />
 
       <select
         value={sortBy}
         onChange={(event) => onSortByChange(event.target.value as SortOption)}
-        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+        aria-label="Sort products"
+        className="input-luxury"
       >
         {sortOptions.map((option) => (
           <option key={option.value} value={option.value}>
@@ -153,7 +155,8 @@ function FilterInputs({
       <select
         value={selectedSize}
         onChange={(event) => onSelectedSizeChange(event.target.value)}
-        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+        aria-label="Filter by size"
+        className="input-luxury"
       >
         <option value="all">All Sizes</option>
         {availableSizes.map((size) => (
@@ -166,7 +169,8 @@ function FilterInputs({
       <select
         value={selectedFabric}
         onChange={(event) => onSelectedFabricChange(event.target.value)}
-        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+        aria-label="Filter by fabric"
+        className="input-luxury"
       >
         <option value="all">All Fabrics</option>
         {availableFabrics.map((fabric) => (
@@ -181,7 +185,8 @@ function FilterInputs({
         onChange={(event) =>
           onSelectedPriceChange(event.target.value as PriceFilter)
         }
-        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+        aria-label="Filter by price"
+        className="input-luxury"
       >
         {priceFilterOptions.map((option) => (
           <option key={option.value} value={option.value}>
@@ -195,7 +200,8 @@ function FilterInputs({
         onChange={(event) =>
           onAvailabilityChange(event.target.value as AvailabilityFilter)
         }
-        className="h-12 border border-charcoal/15 bg-ivory px-4 text-sm text-charcoal outline-none focus:border-gold"
+        aria-label="Filter by availability"
+        className="input-luxury"
       >
         <option value="all">All Availability</option>
         <option value="in-stock">In Stock Only</option>
@@ -466,10 +472,10 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
       <section className="luxury-container py-8 sm:py-10 lg:py-14">
         <div className="mb-7 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.3em] text-gold">
+            <p className="text-[11px] font-medium uppercase tracking-[0.3em] text-gold sm:text-xs">
               Products
             </p>
-            <h2 className="mt-2 font-heading text-3xl text-charcoal sm:text-4xl">
+            <h2 className="mt-1 font-heading text-2xl text-charcoal sm:mt-2 sm:text-3xl lg:text-4xl">
               {filteredProducts.length}{' '}
               {filteredProducts.length === 1 ? 'piece' : 'handcrafted pieces'}
             </h2>
@@ -479,7 +485,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
             <button
               type="button"
               onClick={resetFilters}
-              className="w-fit text-xs font-medium uppercase tracking-[0.22em] text-maroon transition-colors hover:text-gold"
+              className="tap-feedback w-fit text-xs font-medium uppercase tracking-[0.22em] text-maroon hover:text-gold focus-visible:text-gold"
             >
               Clear All Filters
             </button>
@@ -487,7 +493,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
         </div>
 
         {/* Filters & Sorting container */}
-        <div className="mb-8 border border-beige bg-white p-4 shadow-sm sm:p-5 lg:p-6">
+        <div className="mb-6 border border-beige bg-white p-3.5 shadow-sm sm:mb-8 sm:p-5 lg:p-6">
           <div className="mb-5 flex items-center justify-between">
             <div>
               <p className="font-body text-[10px] uppercase tracking-[0.28em] text-gold">
@@ -499,8 +505,9 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
             </div>
             {/* Mobile Bottom-Sheet Trigger Button */}
             <button
+              type="button"
               onClick={() => setIsMobileFiltersOpen(true)}
-              className="lg:hidden border border-beige bg-cream px-4 py-2 text-[10px] font-medium uppercase tracking-[0.2em] text-charcoal flex items-center gap-2"
+              className="tap-feedback flex min-h-[40px] items-center gap-2 border border-beige bg-cream px-4 py-2 text-[10px] font-medium uppercase tracking-[0.2em] text-charcoal hover:border-gold lg:hidden"
             >
               <svg stroke="currentColor" fill="none" strokeWidth="1.5" viewBox="0 0 24 24" width="14" height="14" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75" />
@@ -574,7 +581,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
         {/* Products Display Grid */}
         {visibleProducts.length > 0 ? (
           <>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 md:grid-cols-3 lg:gap-x-6 xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:gap-x-6 xl:grid-cols-4">
               {visibleProducts.map((product, index) => (
                 <ShopProductCard
                   key={product.id}
@@ -605,11 +612,26 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
             )}
           </>
         ) : (
-          <div className="border border-beige bg-white px-6 py-16 text-center">
+          <div className="border border-beige bg-white px-5 py-12 text-center sm:px-6 sm:py-16">
+            <svg
+              width="40"
+              height="40"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="mx-auto mb-4 text-beige"
+              aria-hidden="true"
+            >
+              <circle cx="11" cy="11" r="7" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
             <p className="text-xs font-medium uppercase tracking-[0.3em] text-gold">
               No pieces found
             </p>
-            <h3 className="mt-3 font-heading text-4xl text-charcoal">
+            <h3 className="mt-3 font-heading text-2xl text-charcoal sm:text-4xl">
               Try a different search
             </h3>
             <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-charcoal/60">
@@ -619,7 +641,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
             <button
               type="button"
               onClick={resetFilters}
-              className="btn-luxury btn-luxury-primary mt-8"
+              className="btn-luxury btn-luxury-primary tap-feedback mt-8"
             >
               Reset Filters
             </button>
@@ -648,9 +670,11 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
             >
               <div className="flex items-center justify-between mb-5 border-b border-beige pb-4">
                 <h4 className="font-heading text-xl text-charcoal">Refine & Sort</h4>
-                <button 
+                <button
+                  type="button"
                   onClick={() => setIsMobileFiltersOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center text-charcoal/50 hover:text-maroon rounded-full border border-beige"
+                  aria-label="Close filters"
+                  className="tap-feedback flex h-9 w-9 items-center justify-center rounded-full border border-beige text-charcoal/50 hover:border-gold hover:text-maroon focus-visible:border-gold focus-visible:text-maroon"
                 >
                   ✕
                 </button>
@@ -673,9 +697,10 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
                   onAvailabilityChange={setAvailability}
                 />
               </div>
-              <button 
+              <button
+                type="button"
                 onClick={() => setIsMobileFiltersOpen(false)}
-                className="w-full py-4 bg-maroon text-white font-medium tracking-[0.16em] uppercase text-xs hover:bg-gold transition-colors"
+                className="tap-feedback w-full py-4 bg-maroon text-white font-medium tracking-[0.16em] uppercase text-xs hover:bg-gold"
               >
                 Apply Filters
               </button>

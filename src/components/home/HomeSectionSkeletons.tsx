@@ -70,7 +70,7 @@ export function FeaturedCollectionSkeleton() {
           subtitle="Handpicked masterpieces that define the art of Lucknowi Chikankari"
         />
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+        <div className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:gap-x-5 sm:gap-y-8 lg:grid-cols-4 lg:gap-6">
           {Array.from({ length: 4 }).map((_, index) => (
             <ProductCardSkeleton key={index} />
           ))}
@@ -91,7 +91,7 @@ export function NewArrivalsSkeleton() {
           subtitle="Fresh silhouettes inspired by Mughal gardens and Lucknowi heritage."
         />
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-6 lg:gap-6">
+        <div className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-6 lg:gap-6">
           {Array.from({ length: 6 }).map((_, index) => (
             <ProductCardSkeleton key={index} />
           ))}
@@ -112,7 +112,7 @@ export function BestSellersSkeleton() {
           subtitle="The most cherished handcrafted pieces from our collection."
         />
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
+        <div className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:gap-x-5 sm:gap-y-8 lg:grid-cols-4 lg:gap-6">
           {Array.from({ length: 4 }).map((_, index) => (
             <ProductCardSkeleton key={index} />
           ))}
@@ -145,7 +145,7 @@ export function ShopByCategorySkeleton() {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+        <div className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
           {Array.from({ length: 4 }).map((_, index) => (
             <div key={index} className="shimmer aspect-[4/5] w-full" />
           ))}

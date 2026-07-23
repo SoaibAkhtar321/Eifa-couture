@@ -146,7 +146,7 @@ export default function CartDrawer() {
 
               <button
                 onClick={closeCart}
-                className="-mr-2 flex h-10 w-10 items-center justify-center text-charcoal/50 transition-colors hover:text-charcoal"
+                className="tap-feedback -mr-2 flex h-10 w-10 items-center justify-center text-charcoal/50 hover:text-charcoal"
                 aria-label="Close shopping bag"
                 type="button"
               >
@@ -331,21 +331,21 @@ export default function CartDrawer() {
                                 <div className="flex items-center border border-beige">
                                   <button
                                     onClick={handleDecreaseQuantity}
-                                    className="flex h-8 w-8 items-center justify-center text-charcoal/50 transition-colors hover:bg-cream hover:text-charcoal"
+                                    className="tap-feedback flex h-9 w-9 items-center justify-center text-charcoal/50 hover:bg-cream hover:text-charcoal"
                                     aria-label={`Decrease quantity of ${item.product.name}`}
                                     type="button"
                                   >
                                     −
                                   </button>
 
-                                  <span className="flex h-8 w-10 items-center justify-center border-x border-beige font-body text-xs text-charcoal">
+                                  <span className="flex h-9 w-10 items-center justify-center border-x border-beige font-body text-xs text-charcoal">
                                     {item.quantity}
                                   </span>
 
                                   <button
                                     onClick={handleIncreaseQuantity}
                                     disabled={isAtStockLimit}
-                                    className="flex h-8 w-8 items-center justify-center text-charcoal/50 transition-colors hover:bg-cream hover:text-charcoal disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+                                    className="tap-feedback flex h-9 w-9 items-center justify-center text-charcoal/50 hover:bg-cream hover:text-charcoal disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
                                     aria-label={
                                       isAtStockLimit
                                         ? `Maximum available stock reached for ${item.product.name}`
@@ -379,7 +379,7 @@ export default function CartDrawer() {
                                   item.selectedColor
                                 )
                               }
-                              className="self-start p-1 text-2xl leading-none text-charcoal/30 transition-colors hover:text-maroon"
+                              className="tap-feedback self-start p-2 -m-1 text-2xl leading-none text-charcoal/30 hover:text-maroon"
                               aria-label={`Remove ${item.product.name} from bag`}
                               type="button"
                             >

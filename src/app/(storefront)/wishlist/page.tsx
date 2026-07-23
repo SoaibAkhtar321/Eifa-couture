@@ -192,7 +192,7 @@ export default function WishlistPage() {
                   </Link>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+                <div className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:gap-x-5 sm:gap-y-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
                   {wishlistProducts.map((product, index) => {
                     const productImage = getProductImage(product);
 
@@ -219,7 +219,7 @@ export default function WishlistPage() {
                           <button
                             type="button"
                             onClick={() => removeWishlistItem(product.id)}
-                            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-ivory/95 text-sm text-maroon shadow-sm transition-all duration-300 hover:bg-maroon hover:text-white"
+                            className="tap-feedback absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-ivory/95 text-sm text-maroon shadow-sm hover:bg-maroon hover:text-white sm:right-3 sm:top-3 sm:h-9 sm:w-9"
                             aria-label={`Remove ${product.name} from wishlist`}
                           >
                             ♥
@@ -228,36 +228,36 @@ export default function WishlistPage() {
                           <button
                             type="button"
                             onClick={() => handleAddToCart(product)}
-                            className="absolute inset-x-3 bottom-3 bg-charcoal px-4 py-3 text-[10px] font-medium uppercase tracking-[0.2em] text-white transition-all duration-300 hover:bg-maroon sm:inset-x-4 sm:bottom-4 sm:text-[11px]"
+                            className="tap-feedback absolute inset-x-2 bottom-2 bg-charcoal px-3 py-2.5 text-[9px] font-medium uppercase tracking-[0.16em] text-white hover:bg-maroon sm:inset-x-4 sm:bottom-4 sm:px-4 sm:py-3 sm:text-[11px] sm:tracking-[0.2em]"
                           >
                             Add To Bag
                           </button>
                         </div>
 
-                        <div className="pt-4">
-                          <p className="mb-1 text-[10px] font-medium uppercase tracking-[0.24em] text-gold-dark">
+                        <div className="pt-2 sm:pt-4">
+                          <p className="mb-0.5 text-[9px] font-medium uppercase tracking-[0.18em] text-gold-dark sm:mb-1 sm:text-[10px] sm:tracking-[0.24em]">
                             {product.fabric}
                           </p>
 
                           <Link href={`/product/${product.slug}`}>
-                            <h3 className="font-heading text-lg leading-snug text-charcoal transition-colors duration-300 hover:text-maroon sm:text-xl">
+                            <h3 className="product-card-title line-clamp-2 font-heading text-charcoal transition-colors duration-300 hover:text-maroon">
                               {product.name}
                             </h3>
                           </Link>
 
-                          <p className="mt-2 line-clamp-2 text-sm leading-6 text-charcoal/60">
+                          <p className="mt-1 line-clamp-2 hidden text-sm leading-6 text-charcoal/60 sm:mt-2 sm:block">
                             {product.shortDescription}
                           </p>
 
-                          <div className="mt-3 flex items-center gap-3">
-                            <span className="text-sm font-medium text-charcoal">
+                          <div className="mt-1.5 flex flex-wrap items-center gap-2 sm:mt-3 sm:gap-3">
+                            <span className="text-xs font-medium text-charcoal sm:text-sm">
                               {product.hasPriceRange
                                 ? `From ${formatPrice(product.minPrice)}`
                                 : formatPrice(product.minPrice)}
                             </span>
 
                             {product.compareAtPrice && (
-                              <span className="text-xs text-charcoal/40 line-through">
+                              <span className="text-[11px] text-charcoal/40 line-through sm:text-xs">
                                 {formatPrice(product.compareAtPrice)}
                               </span>
                             )}

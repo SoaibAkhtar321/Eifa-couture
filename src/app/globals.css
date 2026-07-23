@@ -243,6 +243,34 @@ p {
   outline-offset: 2px;
 }
 
+/* Form controls (inputs/selects/textareas) get their own focus treatment
+   (border colour + soft ring, applied via .input-luxury / .select-luxury
+   below, or component-level focus: classes). Layering the generic
+   outline on top of those was producing a visible "double outline"
+   around the header search bar and the shop filter fields. */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
+}
+
+/* Native browser chrome on type="search" inputs (extra cancel-button /
+   decoration + its own focus ring) was compounding the double-outline
+   effect on the header search bar. Normalize it so our own styling is
+   the only visible affordance. */
+input[type='search'] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type='search']::-webkit-search-decoration,
+input[type='search']::-webkit-search-cancel-button,
+input[type='search']::-webkit-search-results-button,
+input[type='search']::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* ============================================
    LUXURY UTILITY CLASSES
    ============================================ */
@@ -335,6 +363,7 @@ p {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  min-height: 44px;
   padding: 0.875rem 2.5rem;
   font-family: var(--font-body);
   font-size: 0.8125rem;
@@ -346,6 +375,20 @@ p {
   cursor: pointer;
   position: relative;
   overflow: hidden;
+}
+
+.btn-luxury:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Compact button for tight, high-density mobile contexts (product-card
+   quick actions) where the full btn-luxury padding would overwhelm the
+   card. Keeps the same type treatment at a smaller footprint. */
+.btn-luxury-compact {
+  padding: 0.625rem 1rem;
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  min-height: 36px;
 }
 
 .btn-luxury-primary {
@@ -385,6 +428,76 @@ p {
   border-color: var(--color-gold-dark);
   transform: translateY(-1px);
   box-shadow: 0 4px 16px rgba(200, 165, 72, 0.3);
+}
+
+/* ── Luxury Form Field ──
+   Shared base for text inputs / selects across the storefront so focus,
+   spacing and borders stay consistent (search bar, shop filters,
+   account forms, checkout). */
+.input-luxury {
+  display: block;
+  width: 100%;
+  height: 3rem;
+  padding: 0 1rem;
+  background-color: var(--color-ivory);
+  border: 1px solid rgba(43, 43, 43, 0.15);
+  color: var(--color-charcoal);
+  font-size: 0.875rem;
+  outline: none;
+  transition:
+    border-color 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.input-luxury::placeholder {
+  color: rgba(43, 43, 43, 0.35);
+}
+
+.input-luxury:hover {
+  border-color: rgba(43, 43, 43, 0.28);
+}
+
+.input-luxury:focus,
+.input-luxury:focus-within {
+  border-color: var(--color-gold);
+  box-shadow: 0 0 0 3px rgba(200, 165, 72, 0.18);
+}
+
+.input-luxury:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ── Mobile Product Grid Density ──
+   Tighter card typography/spacing at phone widths so more products fit
+   per screen (Flipkart/Amazon-style density), scaling back up to the
+   full luxury spacing from the sm breakpoint up. */
+.product-card-title {
+  font-size: 0.875rem;
+  line-height: 1.3;
+}
+
+@media (min-width: 640px) {
+  .product-card-title {
+    font-size: 1.125rem;
+    line-height: 1.375;
+  }
+}
+
+/* ── Pressed / active feedback for tap targets ──
+   Gives touch users the same "pressed" affordance mouse users get from
+   hover, without altering the luxury visual language. */
+.tap-feedback {
+  transition:
+    transform 0.15s ease,
+    opacity 0.15s ease,
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.tap-feedback:active {
+  transform: scale(0.96);
 }
 
 /* ── Luxury Card ── */

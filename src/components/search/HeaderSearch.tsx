@@ -479,7 +479,7 @@ export default function HeaderSearch() {
         aria-selected={highlightedIndex === index}
         onClick={() => selectItem(item)}
         onMouseEnter={() => setHighlightedIndex(index)}
-        className={`group flex min-h-12 w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors cursor-pointer ${
+        className={`group flex min-h-12 w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors cursor-pointer focus-visible:bg-cream/70 ${
           highlightedIndex === index ? 'bg-cream/70' : 'hover:bg-cream/60'
         }`}
       >
@@ -529,7 +529,7 @@ export default function HeaderSearch() {
         aria-selected={highlightedIndex === index}
         onClick={() => selectItem(item)}
         onMouseEnter={() => setHighlightedIndex(index)}
-        className={`flex w-full gap-4 p-4 text-left transition-colors cursor-pointer ${
+        className={`flex w-full gap-4 p-4 text-left transition-colors cursor-pointer focus-visible:bg-cream/70 ${
           highlightedIndex === index ? 'bg-cream/70' : 'hover:bg-cream/60'
         }`}
       >
@@ -576,7 +576,7 @@ export default function HeaderSearch() {
             window.requestAnimationFrame(() => inputRef.current?.focus());
           }
         }}
-        className="flex h-10 w-10 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon sm:h-11 sm:w-11"
+        className="tap-feedback flex h-10 w-10 items-center justify-center text-charcoal/55 hover:text-maroon sm:h-11 sm:w-11"
         aria-label="Toggle search"
         aria-expanded={isOpen}
       >
@@ -601,14 +601,14 @@ export default function HeaderSearch() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
-          className="fixed inset-0 z-(--z-fullscreen) flex flex-col bg-ivory sm:inset-x-auto sm:inset-y-auto sm:left-auto sm:right-6 sm:top-[98px] sm:z-(--z-dropdown) sm:h-auto sm:w-[460px] sm:border sm:border-beige sm:bg-white sm:shadow-[0_18px_55px_rgba(0,0,0,0.16)] lg:right-10 lg:top-[104px]"
+          className="fixed inset-0 z-(--z-fullscreen) flex flex-col bg-ivory sm:inset-x-auto sm:inset-y-auto sm:left-auto sm:right-6 sm:top-[98px] sm:z-(--z-dropdown) sm:h-auto sm:w-[520px] sm:rounded-sm sm:border sm:border-beige sm:bg-white sm:shadow-[0_18px_55px_rgba(0,0,0,0.16)] lg:right-10 lg:top-[104px] lg:w-[560px]"
           role="dialog"
           aria-modal="true"
           aria-label="Search"
         >
-          <div className="border-b border-beige p-4">
-            <div className="flex items-center gap-3">
-              <div className="flex flex-1 items-center gap-3 border border-beige bg-ivory px-4 py-3 sm:bg-ivory">
+          <div className="border-b border-beige p-3 sm:p-4">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="flex min-h-12 flex-1 items-center gap-3 border border-beige bg-ivory px-3.5 transition-colors focus-within:border-gold focus-within:shadow-[0_0_0_3px_rgba(200,165,72,0.18)] sm:px-4">
                 <svg
                   width="19"
                   height="19"
@@ -639,7 +639,7 @@ export default function HeaderSearch() {
                   }}
                   onKeyDown={handleKeyDown}
                   placeholder="Search kurtas, sarees, bags..."
-                  className="w-full bg-transparent text-sm text-charcoal outline-none placeholder:text-charcoal/35"
+                  className="w-full min-w-0 bg-transparent text-sm text-charcoal outline-none placeholder:text-charcoal/35"
                   autoFocus
                   role="combobox"
                   aria-expanded={activeItems.length > 0}
@@ -658,7 +658,7 @@ export default function HeaderSearch() {
                       setQuery('');
                       setHighlightedIndex(-1);
                     }}
-                    className="text-xl leading-none text-charcoal/35 hover:text-maroon cursor-pointer"
+                    className="tap-feedback flex h-6 w-6 shrink-0 items-center justify-center text-lg leading-none text-charcoal/35 hover:text-maroon"
                     aria-label="Clear search"
                   >
                     x
@@ -669,7 +669,7 @@ export default function HeaderSearch() {
               <button
                 type="button"
                 onClick={closeSearch}
-                className="shrink-0 font-body text-[11px] uppercase tracking-[0.16em] text-charcoal/55 hover:text-maroon"
+                className="tap-feedback shrink-0 px-1 font-body text-[11px] uppercase tracking-[0.16em] text-charcoal/55 hover:text-maroon min-h-[44px]"
               >
                 Cancel
               </button>

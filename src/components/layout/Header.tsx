@@ -173,7 +173,7 @@ export default function Header() {
               {/* Wishlist */}
               <Link
                 href="/wishlist"
-                className="relative hidden h-11 w-11 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon sm:flex min-h-[44px] min-w-[44px] pointer-events-auto"
+                className="tap-feedback relative hidden h-11 w-11 items-center justify-center text-charcoal/55 hover:text-maroon sm:flex min-h-[44px] min-w-[44px] pointer-events-auto"
                 aria-label={`Wishlist${
                   visibleWishlistCount > 0 ? ` (${visibleWishlistCount} items)` : ''
                 }`}
@@ -203,7 +203,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={openCart}
-                className="relative flex h-11 w-11 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon min-h-[44px] min-w-[44px] pointer-events-auto cursor-pointer"
+                className="tap-feedback relative flex h-11 w-11 items-center justify-center text-charcoal/55 hover:text-maroon min-h-[44px] min-w-[44px] pointer-events-auto cursor-pointer"
                 aria-label={`Shopping bag${
                   visibleCartItemCount > 0 ? ` (${visibleCartItemCount} items)` : ''
                 }`}
@@ -235,7 +235,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={openMobileMenu}
-                className="flex h-11 w-11 items-center justify-center text-charcoal/55 transition-colors duration-300 hover:text-maroon lg:hidden min-h-[44px] min-w-[44px] pointer-events-auto cursor-pointer"
+                className="tap-feedback flex h-11 w-11 items-center justify-center text-charcoal/55 hover:text-maroon lg:hidden min-h-[44px] min-w-[44px] pointer-events-auto cursor-pointer"
                 aria-label="Open menu"
               >
                 <svg
