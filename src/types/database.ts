@@ -328,3 +328,36 @@ export interface DbHomepageSection {
   created_at: string;
   updated_at: string;
 }
+
+export interface DbStoreSettings {
+  singleton: true;
+  store_name: string;
+  store_email: string | null;
+  store_phone: string | null;
+  address_line1: string | null;
+  address_line2: string | null;
+  address_city: string | null;
+  address_state: string | null;
+  address_pincode: string | null;
+  address_country: string;
+  business_legal_name: string | null;
+  business_registration_no: string | null;
+  gstin: string | null;
+  logo_url: string | null;
+  favicon_url: string | null;
+  social_instagram_url: string | null;
+  social_facebook_url: string | null;
+  social_pinterest_url: string | null;
+  social_youtube_url: string | null;
+  social_twitter_url: string | null;
+  seo_default_title: string | null;
+  seo_default_description: string | null;
+  currency_code: string;
+  currency_symbol: string;
+  shipping_flat_rate: number;
+  shipping_free_threshold: number | null;
+  shipping_processing_days: number;
+  tax_gst_percent: number;
+  tax_prices_inclusive: boolean;
+  updated_at: string;
+}

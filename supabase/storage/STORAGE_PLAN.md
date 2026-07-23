@@ -14,6 +14,7 @@ script, either way it's a few clicks/one script run, not a schema change.
 | `review-images`      | Yes    | `review_images.url`                            | Customer-uploaded, moderated via `reviews.is_published` |
 | `avatars`            | Yes    | `profiles.avatar_url`                          | User-uploaded profile photos |
 | `invoices`           | No     | Generated order invoice PDFs                    | Private — signed URLs only, referenced by `orders.invoice_url` |
+| `store-assets`       | Yes    | `store_settings.logo_url` / `favicon_url`      | Singleton — one logo + one favicon, no owning row id prefix |
 
 ## Path conventions
 
@@ -25,6 +26,8 @@ banners/{banner_id}/mobile.{ext}
 review-images/{review_id}/{filename}
 avatars/{user_id}/{filename}
 invoices/{order_id}/invoice.pdf
+store-assets/logo.{ext}
+store-assets/favicon.{ext}
 ```
 
 Using the owning row's UUID as the folder prefix means storage RLS
@@ -34,9 +37,9 @@ makes cleanup on row delete a simple prefix-delete.
 ## Storage RLS policies (applied when the bucket is created)
 
 - **Public buckets** (`product-images`, `fabric-swatches`, `banners`,
-  `review-images`, `avatars`): `select` allowed for everyone; `insert` /
-  `update` / `delete` restricted to `is_admin()` — **except**
-  `avatars/{user_id}/*` (owner can manage their own) and
+  `review-images`, `avatars`, `store-assets`): `select` allowed for
+  everyone; `insert` / `update` / `delete` restricted to `is_admin()`
+  — **except** `avatars/{user_id}/*` (owner can manage their own) and
   `review-images/{review_id}/*` (owner of the parent review can upload,
   matching the `review_images_write_own_or_admin` table policy).
 - **`invoices`** (private): no public `select`. Row access is only ever

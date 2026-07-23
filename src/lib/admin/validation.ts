@@ -269,3 +269,70 @@ export const couponFormSchema = z
   });
 
 export type CouponFormValues = z.infer<typeof couponFormSchema>;
+
+const optionalTrimmedString = (max: number, message: string) =>
+  z
+    .string()
+    .trim()
+    .max(max, message)
+    .nullable()
+    .or(z.literal('').transform(() => null))
+    .default(null);
+
+const optionalUrlString = (message: string) =>
+  z
+    .string()
+    .trim()
+    .url(message)
+    .nullable()
+    .or(z.literal('').transform(() => null))
+    .default(null);
+
+export const storeSettingsFormSchema = z.object({
+  store_name: z.string().trim().min(1, 'Store name is required').max(120, 'Keep it under 120 characters'),
+  store_email: z
+    .string()
+    .trim()
+    .email('Enter a valid email address')
+    .nullable()
+    .or(z.literal('').transform(() => null))
+    .default(null),
+  store_phone: optionalTrimmedString(20, 'Keep it under 20 characters'),
+  address_line1: optionalTrimmedString(200, 'Keep it under 200 characters'),
+  address_line2: optionalTrimmedString(200, 'Keep it under 200 characters'),
+  address_city: optionalTrimmedString(100, 'Keep it under 100 characters'),
+  address_state: optionalTrimmedString(100, 'Keep it under 100 characters'),
+  address_pincode: optionalTrimmedString(12, 'Keep it under 12 characters'),
+  address_country: z.string().trim().min(1, 'Country is required').max(100, 'Keep it under 100 characters'),
+
+  business_legal_name: optionalTrimmedString(200, 'Keep it under 200 characters'),
+  business_registration_no: optionalTrimmedString(50, 'Keep it under 50 characters'),
+  gstin: optionalTrimmedString(15, 'GSTIN is at most 15 characters'),
+
+  logo_url: optionalTrimmedString(500, 'URL is too long'),
+  favicon_url: optionalTrimmedString(500, 'URL is too long'),
+
+  social_instagram_url: optionalUrlString('Enter a valid URL'),
+  social_facebook_url: optionalUrlString('Enter a valid URL'),
+  social_pinterest_url: optionalUrlString('Enter a valid URL'),
+  social_youtube_url: optionalUrlString('Enter a valid URL'),
+  social_twitter_url: optionalUrlString('Enter a valid URL'),
+
+  seo_default_title: optionalTrimmedString(70, 'Keep it under 70 characters for search results'),
+  seo_default_description: optionalTrimmedString(160, 'Keep it under 160 characters for search results'),
+
+  currency_code: z.string().trim().length(3, 'Use a 3-letter ISO code (e.g. INR)').toUpperCase(),
+  currency_symbol: z.string().trim().min(1, 'Symbol is required').max(5, 'Keep it under 5 characters'),
+
+  shipping_flat_rate: z.coerce.number().min(0, 'Cannot be negative').default(0),
+  shipping_free_threshold: z.preprocess(
+    (val) => (val === '' || val === null || val === undefined ? null : val),
+    z.coerce.number().min(0, 'Cannot be negative').nullable()
+  ).default(null),
+  shipping_processing_days: z.coerce.number().int('Must be a whole number').min(0, 'Cannot be negative').default(2),
+
+  tax_gst_percent: z.coerce.number().min(0, 'Cannot be negative').max(100, 'Cannot exceed 100').default(0),
+  tax_prices_inclusive: z.boolean().default(true),
+});
+
+export type StoreSettingsFormValues = z.infer<typeof storeSettingsFormSchema>;
