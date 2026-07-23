@@ -6,6 +6,12 @@ const supabaseHostname = 'uipdsrgzqvwezkghxdih.supabase.co';
 // today (Supabase + the demo image CDNs already in `images.remotePatterns`
 // below). Extend this list, not `unsafe`-anything, if a new trusted
 // origin is added later (e.g. a payment provider once implemented).
+//
+// `unsafe-eval` in `script-src` is dev-only: Next.js/React's dev-mode
+// bundler (Fast Refresh/HMR) relies on `eval()`, which the production
+// CSP below does not and must not allow.
+const isDev = process.env.NODE_ENV !== 'production';
+
 const contentSecurityPolicy = [
   "default-src 'self'",
   "base-uri 'self'",
@@ -13,7 +19,7 @@ const contentSecurityPolicy = [
   "frame-ancestors 'self'",
   `img-src 'self' data: blob: https://picsum.photos https://images.unsplash.com https://images.pexels.com https://cdn.shopify.com https://${supabaseHostname}`,
   `connect-src 'self' https://${supabaseHostname} wss://${supabaseHostname}`,
-  "script-src 'self' 'unsafe-inline'",
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
   "form-action 'self'",
