@@ -361,3 +361,17 @@ export interface DbStoreSettings {
   tax_prices_inclusive: boolean;
   updated_at: string;
 }
+
+export interface DbAuditLog {
+  id: string;
+  actor_id: string | null;
+  actor_name: string;
+  actor_email: string | null;
+  action: string;
+  entity_type: string;
+  entity_id: string | null;
+  entity_label: string;
+  detail: string | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}

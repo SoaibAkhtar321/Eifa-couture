@@ -26,6 +26,7 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Notifications', href: '/admin/notifications', comingSoon: true },
   { label: 'Media Library', href: '/admin/media', comingSoon: true },
   { label: 'Analytics', href: '/admin/analytics' },
+  { label: 'Audit Log', href: '/admin/audit-log' },
   { label: 'Settings', href: '/admin/settings' },
 ];
 
