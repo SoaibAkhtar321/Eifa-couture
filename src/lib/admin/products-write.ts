@@ -47,6 +47,22 @@ export async function isSkuTaken(sku: string, excludeVariantId?: string): Promis
   return (data?.length ?? 0) > 0;
 }
 
+/** Simple products' SKU lives on `products.sku`, not `product_variants`
+ *  — checked separately since the two SKU pools are otherwise kept
+ *  disjoint (a simple product's default variant SKU is never edited
+ *  directly, see migration 0013's sync trigger). */
+export async function isProductSkuTaken(sku: string, excludeProductId?: string): Promise<boolean> {
+  const supabase = createBrowserClient();
+
+  let query = supabase.from('products').select('id').eq('sku', sku).is('deleted_at', null);
+  if (excludeProductId) {
+    query = query.neq('id', excludeProductId);
+  }
+
+  const { data } = await query.limit(1);
+  return (data?.length ?? 0) > 0;
+}
+
 /**
  * Generates a unique slug from a product name, appending -2, -3, etc.
  * if the base slug is already taken.
@@ -83,6 +99,11 @@ export interface ProductInput {
   seo_title: string | null;
   seo_description: string | null;
   seo_keywords: string[];
+  product_type: 'simple' | 'variant';
+  sku: string | null;
+  stock_quantity: number;
+  track_inventory: boolean;
+  allow_backorders: boolean;
 }
 
 export async function createProduct(input: ProductInput): Promise<{
@@ -93,6 +114,10 @@ export async function createProduct(input: ProductInput): Promise<{
 
   if (await isSlugTaken(input.slug)) {
     return { data: null, error: 'That slug is already in use by another product.' };
+  }
+
+  if (input.product_type === 'simple' && input.sku && (await isProductSkuTaken(input.sku))) {
+    return { data: null, error: 'That SKU is already in use.' };
   }
 
   const { data, error } = await supabase.from('products').insert(input).select().single();
@@ -112,6 +137,10 @@ export async function updateProduct(
 
   if (await isSlugTaken(input.slug, id)) {
     return { data: null, error: 'That slug is already in use by another product.' };
+  }
+
+  if (input.product_type === 'simple' && input.sku && (await isProductSkuTaken(input.sku, id))) {
+    return { data: null, error: 'That SKU is already in use.' };
   }
 
   const { data, error } = await supabase

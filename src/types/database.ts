@@ -113,6 +113,8 @@ export interface DbFabric {
   updated_at: string;
 }
 
+export type ProductType = "simple" | "variant";
+
 export interface DbProduct {
   id: string;
   name: string;
@@ -136,6 +138,14 @@ export interface DbProduct {
   deleted_at: string | null;
   created_at: string;
   updated_at: string;
+  /** Phase 3: 'simple' products own their own sku/stock directly below;
+   *  'variant' products manage inventory exclusively through
+   *  product_variants + inventory (unchanged from Phase 1/2). */
+  product_type: ProductType;
+  sku: string | null;
+  stock_quantity: number;
+  track_inventory: boolean;
+  allow_backorders: boolean;
 }
 
 export interface DbProductImage {
@@ -160,6 +170,10 @@ export interface DbProductVariant {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+  /** True only for the single auto-managed variant that backs a
+   *  'simple' product's inventory (see migration 0013). Never created
+   *  or edited directly from the admin variant UI. */
+  is_default_variant: boolean;
 }
 
 export interface DbInventory {

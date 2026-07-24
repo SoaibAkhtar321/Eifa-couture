@@ -46,6 +46,15 @@ export interface Product {
   /** True when variant prices differ — display surfaces should show
    *  "From {minPrice}" instead of a single price when this is true. */
   hasPriceRange: boolean;
+  /** 'simple' products have exactly one hidden variant and manage
+   *  stock via `stockQuantity`/`trackInventory`/`allowBackorders`
+   *  directly; the storefront hides the size/color selector for
+   *  these. 'variant' products keep the existing selector UI. */
+  productType: 'simple' | 'variant';
+  stockQuantity: number;
+  trackInventory: boolean;
+  allowBackorders: boolean;
+  sku: string | null;
   fabric: string;
   care: string[];
   tags: string[];

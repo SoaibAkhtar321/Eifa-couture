@@ -35,6 +35,11 @@ const emptyValues: ProductFormValues = {
   seo_title: null,
   seo_description: null,
   seo_keywords: [],
+  product_type: 'simple',
+  sku: null,
+  stock_quantity: 0,
+  track_inventory: true,
+  allow_backorders: false,
 };
 
 export default function ProductForm({ product, categories, fabrics }: ProductFormProps) {
@@ -60,6 +65,11 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
           seo_title: product.seo_title,
           seo_description: product.seo_description,
           seo_keywords: product.seo_keywords,
+          product_type: product.product_type,
+          sku: product.sku,
+          stock_quantity: product.stock_quantity,
+          track_inventory: product.track_inventory,
+          allow_backorders: product.allow_backorders,
         }
       : emptyValues
   );
@@ -67,7 +77,7 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
   const [tagsInput, setTagsInput] = useState(values.tags.join(', '));
   const [keywordsInput, setKeywordsInput] = useState(values.seo_keywords.join(', '));
   const [variants, setVariants] = useState<(DbProductVariant & { inventory: DbInventory | null })[]>(
-    product?.product_variants ?? []
+    (product?.product_variants ?? []).filter((v) => !v.is_default_variant)
   );
   const [images, setImages] = useState<DbProductImage[]>(product?.product_images ?? []);
 
@@ -206,7 +216,7 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
             />
           </div>
 
-          {isEditing && product && (
+          {isEditing && product && values.product_type === 'variant' && (
             <div className="rounded-lg border border-charcoal/10 bg-ivory p-6">
               <VariantTable
                 productId={product.id}
@@ -233,6 +243,66 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
         </div>
 
         <div className="space-y-6">
+          <div className="rounded-lg border border-charcoal/10 bg-ivory p-6 space-y-4">
+            <SelectField
+              label="Product type"
+              value={values.product_type}
+              onChange={(e) => {
+                const next = e.target.value as 'simple' | 'variant';
+                if (next === 'simple' && variants.length > 0) {
+                  setFormError('Remove all variants before switching this product back to Simple.');
+                  return;
+                }
+                setFormError(null);
+                setField('product_type', next);
+              }}
+              options={[
+                { value: 'simple', label: 'Simple product' },
+                { value: 'variant', label: 'Variant product (sizes/colors)' },
+              ]}
+              hint={
+                values.product_type === 'simple'
+                  ? 'One SKU, one stock count — no size/color options.'
+                  : 'Stock is managed per size/color combination below.'
+              }
+            />
+
+            {values.product_type === 'simple' ? (
+              <>
+                <TextField
+                  label="SKU"
+                  value={values.sku ?? ''}
+                  onChange={(e) => setField('sku', e.target.value || null)}
+                  error={fieldErrors.sku}
+                  required
+                />
+                <NumberField
+                  label="Stock quantity"
+                  value={values.stock_quantity}
+                  onChange={(e) => setField('stock_quantity', Number(e.target.value))}
+                  error={fieldErrors.stock_quantity}
+                  required
+                />
+                <ToggleField
+                  label="Track inventory"
+                  checked={values.track_inventory}
+                  onChange={(v) => setField('track_inventory', v)}
+                  hint="Turn off for made-to-order items with unlimited stock"
+                />
+                <ToggleField
+                  label="Allow backorders"
+                  checked={values.allow_backorders}
+                  onChange={(v) => setField('allow_backorders', v)}
+                  hint="Let customers order even when stock quantity is 0"
+                />
+              </>
+            ) : (
+              <p className="rounded-md border border-beige bg-beige/30 p-3 text-xs text-charcoal/60">
+                Inventory is managed per variant.
+              </p>
+            )}
+          </div>
+
           <div className="rounded-lg border border-charcoal/10 bg-ivory p-6 space-y-4">
             <NumberField
               label="Price"

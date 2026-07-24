@@ -9,6 +9,8 @@
 
 import { z } from 'zod';
 
+export const productTypeSchema = z.enum(['simple', 'variant']);
+
 export const productFormSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(200, 'Name is too long'),
   slug: z
@@ -35,11 +37,24 @@ export const productFormSchema = z.object({
   seo_title: z.string().trim().max(70, 'Keep it under 70 characters for SEO').nullable().default(null),
   seo_description: z.string().trim().max(160, 'Keep it under 160 characters for SEO').nullable().default(null),
   seo_keywords: z.array(z.string().trim().min(1)).default([]),
+  product_type: productTypeSchema.default('simple'),
+  // Required only for 'simple' products (see refine below) — 'variant'
+  // products never touch these, inventory lives on product_variants.
+  sku: z.string().trim().max(64, 'SKU is too long').nullable().default(null),
+  stock_quantity: z.coerce.number().int('Must be a whole number').min(0, 'Cannot be negative').default(0),
+  track_inventory: z.boolean().default(true),
+  allow_backorders: z.boolean().default(false),
 }).refine(
   (data) => data.compare_at_price == null || data.compare_at_price > data.price,
   {
     message: 'Compare-at price must be higher than the price',
     path: ['compare_at_price'],
+  }
+).refine(
+  (data) => data.product_type !== 'simple' || Boolean(data.sku?.trim()),
+  {
+    message: 'SKU is required for a simple product',
+    path: ['sku'],
   }
 );
 

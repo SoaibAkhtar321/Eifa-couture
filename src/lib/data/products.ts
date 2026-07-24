@@ -69,7 +69,7 @@ export const PRODUCT_SELECT = `
   fabrics ( name, care ),
   product_images ( id, url, alt_text, sort_order, is_primary, variant_id ),
   product_variants (
-    id, size, color_name, color_hex, price_override, is_active,
+    id, size, color_name, color_hex, price_override, is_active, is_default_variant,
     inventory ( quantity, reserved )
   )
 `;
@@ -190,6 +190,11 @@ export function mapProductRow(row: ProductRow): Product {
     },
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    productType: row.product_type,
+    stockQuantity: row.stock_quantity,
+    trackInventory: row.track_inventory,
+    allowBackorders: row.allow_backorders,
+    sku: row.sku,
   };
 }
 

@@ -429,6 +429,7 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
       <p className="mt-5 text-sm leading-7 text-charcoal/65">{product.shortDescription}</p>
 
       <div className="mt-8 border-y border-beige py-7">
+        {product.productType === 'simple' ? null : (
         <div>
           <div className="mb-3 flex items-center justify-between">
             <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-charcoal/70">Select Size</p>
@@ -479,6 +480,8 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
             })}
           </div>
         </div>
+        </div>
+        )}
 
         <div className="mt-7">
           <div className="mb-3 flex items-center justify-between">

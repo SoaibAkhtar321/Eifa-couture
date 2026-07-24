@@ -85,7 +85,7 @@ export async function listProducts(filters: ProductListFilters = {}): Promise<{
       *,
       category:categories(name),
       product_images(url, is_primary, variant_id),
-      product_variants(id, is_active, inventory(quantity))
+      product_variants(id, is_active, is_default_variant, inventory(quantity))
     `,
       { count: 'exact' }
     )
@@ -116,7 +116,7 @@ export async function listProducts(filters: ProductListFilters = {}): Promise<{
   type RawRow = DbProduct & {
     category: { name: string } | null;
     product_images: { url: string; is_primary: boolean; variant_id: string | null }[];
-    product_variants: { id: string; is_active: boolean; inventory: { quantity: number } | null }[];
+    product_variants: { id: string; is_active: boolean; is_default_variant: boolean; inventory: { quantity: number } | null }[];
   };
 
   let rows: ProductListRow[] = ((data ?? []) as unknown as RawRow[]).map((row) => {
@@ -125,14 +125,22 @@ export async function listProducts(filters: ProductListFilters = {}): Promise<{
     // for the product's, and both can be `is_primary = true` at once now.
     const productImages = row.product_images.filter((img) => !img.variant_id);
     const primaryImage = productImages.find((img) => img.is_primary) ?? productImages[0];
-    const totalStock = row.product_variants.reduce((sum, v) => sum + (v.inventory?.quantity ?? 0), 0);
+    // 'simple' products read stock straight off the base product row
+    // (kept in sync with their hidden default variant by migration
+    // 0013's trigger); 'variant' products sum their real variants'
+    // inventory, excluding the hidden default variant if one lingers.
+    const realVariants = row.product_variants.filter((v) => !v.is_default_variant);
+    const totalStock =
+      row.product_type === 'simple'
+        ? row.stock_quantity
+        : realVariants.reduce((sum, v) => sum + (v.inventory?.quantity ?? 0), 0);
 
     return {
       ...row,
       category_name: row.category?.name ?? null,
       primary_image_url: primaryImage?.url ?? null,
       total_stock: totalStock,
-      variant_count: row.product_variants.length,
+      variant_count: realVariants.length,
     };
   });
 
