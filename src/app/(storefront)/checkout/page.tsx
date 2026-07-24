@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+
 import AddressForm from '@/components/account/AddressForm';
 import { useAuth } from '@/hooks/useAuth';
 import { createAddress, fetchAddresses, type AddressInput } from '@/lib/addresses';
@@ -289,7 +290,6 @@ export default function CheckoutPage() {
 
   return (
     <>
-
       <main className="bg-ivory">
         <section className="border-b border-beige bg-gradient-to-b from-cream/70 to-ivory">
           <div className="luxury-container py-5 sm:py-6">
@@ -596,7 +596,6 @@ export default function CheckoutPage() {
           </div>
         </section>
       </main>
-
     </>
   );
 }

@@ -429,58 +429,59 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
       <p className="mt-5 text-sm leading-7 text-charcoal/65">{product.shortDescription}</p>
 
       <div className="mt-8 border-y border-beige py-7">
-        {product.productType === 'simple' ? null : (
-        <div>
-          <div className="mb-3 flex items-center justify-between">
-            <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-charcoal/70">Select Size</p>
-            <button type="button" className="text-[10px] uppercase tracking-wider text-charcoal/50 underline underline-offset-4 transition-colors duration-300 hover:text-maroon">
-              Size Guide
-            </button>
+        {product.productType !== 'simple' && (
+        <>
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-charcoal/70">Select Size</p>
+              <button type="button" className="text-[10px] uppercase tracking-wider text-charcoal/50 underline underline-offset-4 transition-colors duration-300 hover:text-maroon">
+                Size Guide
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {product.sizes.map((size) => {
+                const sizeHasStock = isInStock(product.stock, size, selectedColor || product.colors[0]?.name || '');
+                return (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => handleSizeChange(size)}
+                    disabled={!sizeHasStock}
+                    className={`min-h-[44px] min-w-[52px] border px-4 py-2 text-xs transition-all duration-300 ${
+                      selectedSize === size ? 'border-maroon bg-maroon text-white' : 'border-beige bg-white text-charcoal hover:border-gold'
+                    } ${!sizeHasStock ? 'cursor-not-allowed opacity-40' : ''}`}
+                  >
+                    {size}
+                  </button>
+                );
+              })}
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {product.sizes.map((size) => {
-              const sizeHasStock = isInStock(product.stock, size, selectedColor || product.colors[0]?.name || '');
-              return (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => handleSizeChange(size)}
-                  disabled={!sizeHasStock}
-                  className={`min-h-[44px] min-w-[52px] border px-4 py-2 text-xs transition-all duration-300 ${
-                    selectedSize === size ? 'border-maroon bg-maroon text-white' : 'border-beige bg-white text-charcoal hover:border-gold'
-                  } ${!sizeHasStock ? 'cursor-not-allowed opacity-40' : ''}`}
-                >
-                  {size}
-                </button>
-              );
-            })}
-          </div>
-        </div>
 
-        <div className="mt-7">
-          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.24em] text-charcoal/70">
-            Colour: <span className="text-maroon ml-1">{selectedColor}</span>
-          </p>
-          <div className="flex flex-wrap gap-3">
-            {product.colors.map((color) => {
-              const colorHasStock = isInStock(product.stock, selectedSize, color.name);
-              return (
-                <button
-                  key={color.name}
-                  type="button"
-                  onClick={() => handleColorChange(color.name)}
-                  disabled={!colorHasStock}
-                  className={`flex h-11 w-11 items-center justify-center rounded-full border transition-all duration-300 ${
-                    selectedColor === color.name ? 'border-maroon' : 'border-beige hover:border-gold'
-                  } ${!colorHasStock ? 'cursor-not-allowed opacity-40' : ''}`}
-                >
-                  <span className="h-8 w-8 rounded-full border border-charcoal/10" style={{ backgroundColor: color.hex }} />
-                </button>
-              );
-            })}
+          <div className="mt-7">
+            <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.24em] text-charcoal/70">
+              Colour: <span className="text-maroon ml-1">{selectedColor}</span>
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {product.colors.map((color) => {
+                const colorHasStock = isInStock(product.stock, selectedSize, color.name);
+                return (
+                  <button
+                    key={color.name}
+                    type="button"
+                    onClick={() => handleColorChange(color.name)}
+                    disabled={!colorHasStock}
+                    className={`flex h-11 w-11 items-center justify-center rounded-full border transition-all duration-300 ${
+                      selectedColor === color.name ? 'border-maroon' : 'border-beige hover:border-gold'
+                    } ${!colorHasStock ? 'cursor-not-allowed opacity-40' : ''}`}
+                  >
+                    <span className="h-8 w-8 rounded-full border border-charcoal/10" style={{ backgroundColor: color.hex }} />
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </div>
-        </div>
+        </>
         )}
 
         <div className="mt-7">
