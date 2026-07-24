@@ -10,7 +10,13 @@ import AddressForm from '@/components/account/AddressForm';
 import { useAuth } from '@/hooks/useAuth';
 import { createAddress, fetchAddresses, type AddressInput } from '@/lib/addresses';
 import { SHIPPING_INFO } from '@/lib/constants';
-import { addressToShippingSnapshot, createOrder } from '@/lib/orders';
+import { addressToShippingSnapshot, createOrder, type CreateOrderResult } from '@/lib/orders';
+import {
+  createRazorpayOrderForInternalOrder,
+  loadRazorpayScript,
+  openRazorpayCheckout,
+  verifyRazorpayPayment,
+} from '@/lib/payments';
 import { formatPrice } from '@/lib/utils';
 import { useCartStore } from '@/store/cart-store';
 
@@ -44,6 +50,15 @@ type BuyNowSessionItem = {
 };
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/** Where the customer currently is in the checkout → payment pipeline. */
+type PaymentPhase =
+  | 'form' // editing contact/address, nothing submitted yet
+  | 'creating_order' // internal create_order RPC in flight
+  | 'creating_payment' // Razorpay order creation / Checkout.js load in flight
+  | 'awaiting_payment' // Checkout.js modal is open, waiting on the customer
+  | 'verifying' // Checkout.js succeeded, /verify RPC round-trip in flight
+  | 'payment_dismissed'; // customer closed the modal without paying — can retry
 
 function useHasHydrated() {
   return useSyncExternalStore(
@@ -120,9 +135,16 @@ export default function CheckoutPage() {
   const [isSavingAddress, setIsSavingAddress] = useState(false);
   const [addressFormError, setAddressFormError] = useState<string | null>(null);
 
-  // ── Order submission ──
-  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  // ── Order + payment submission ──
+  // `placedOrder` is set the moment the internal `create_order` RPC
+  // succeeds and is never cleared on retry — re-submitting after a
+  // dismissed/failed payment must reuse this same order (and, in turn,
+  // the same Razorpay order, since the create-order API route is
+  // idempotent) rather than place a second order for one cart.
+  const [placedOrder, setPlacedOrder] = useState<CreateOrderResult | null>(null);
+  const [paymentPhase, setPaymentPhase] = useState<PaymentPhase>('form');
   const [orderError, setOrderError] = useState<string | null>(null);
+  const submissionInFlight = useRef(false);
 
   const buyNowSnapshot = useSyncExternalStore(
     subscribeToHydration,
@@ -157,6 +179,17 @@ export default function CheckoutPage() {
   }, [displayItems.length, displaySubtotal]);
 
   const total = displaySubtotal + shippingCharge;
+
+  const isPlacingOrder =
+    paymentPhase === 'creating_order' ||
+    paymentPhase === 'creating_payment' ||
+    paymentPhase === 'awaiting_payment' ||
+    paymentPhase === 'verifying';
+
+  // Once an internal order exists, contact/address details are locked —
+  // changing them now wouldn't change the order that's already been
+  // created and (possibly) already has a Razorpay order pointed at it.
+  const isFormLocked = placedOrder !== null;
 
   useEffect(() => {
     if (user?.email && !emailPrefilled.current) {
@@ -218,9 +251,110 @@ export default function CheckoutPage() {
     setIsAddingAddress(false);
   };
 
+  const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? null;
+
+  /**
+   * Creates (or, on retry, re-fetches) the Razorpay order for an
+   * already-created internal order, loads Checkout.js, and opens the
+   * payment modal. Never creates a second internal order — callers
+   * always pass an existing `placedOrder`.
+   */
+  const startPayment = async (order: CreateOrderResult, contactEmail: string, contactPhone: string, contactName: string) => {
+    setPaymentPhase('creating_payment');
+    setOrderError(null);
+
+    const scriptLoaded = await loadRazorpayScript();
+    if (!scriptLoaded) {
+      setOrderError('Could not load the payment gateway. Please check your connection and try again.');
+      setPaymentPhase('payment_dismissed');
+      return;
+    }
+
+    const { data: razorpayOrder, error: razorpayError } = await createRazorpayOrderForInternalOrder(order.id);
+
+    if (razorpayError || !razorpayOrder) {
+      setOrderError(razorpayError?.message ?? 'Could not initiate payment. Please try again.');
+      setPaymentPhase('payment_dismissed');
+      return;
+    }
+
+    setPaymentPhase('awaiting_payment');
+
+    const opened = openRazorpayCheckout({
+      razorpayOrderId: razorpayOrder.razorpayOrderId,
+      amount: razorpayOrder.amount,
+      currency: razorpayOrder.currency,
+      orderNumber: razorpayOrder.orderNumber,
+      customerName: contactName,
+      customerEmail: contactEmail,
+      customerPhone: contactPhone,
+      onSuccess: async (response) => {
+        setPaymentPhase('verifying');
+
+        const { data: verified, error: verifyError } = await verifyRazorpayPayment({
+          orderId: order.id,
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+        });
+
+        if (verifyError || !verified) {
+          // Payment may still settle via the webhook even though this
+          // fast-path verification failed — send the customer to the
+          // order confirmation page rather than trapping them here;
+          // that page (Phase 5) surfaces pending/failed state and its
+          // own retry action.
+          if (isBuyNowMode) {
+            sessionStorage.removeItem('eifa-buy-now');
+          } else {
+            clearCart();
+          }
+
+          router.push(`/order-confirmation/${order.id}`);
+          return;
+        }
+
+        if (isBuyNowMode) {
+          sessionStorage.removeItem('eifa-buy-now');
+        } else {
+          clearCart();
+        }
+
+        router.push(`/order-confirmation/${order.id}`);
+      },
+      onDismiss: () => {
+        // Customer closed the modal without paying. The internal order
+        // already exists (payment_status stays 'pending') — keep
+        // `placedOrder` set so "Retry Payment" reuses it instead of
+        // creating a duplicate order.
+        setOrderError('Payment was not completed. You can retry whenever you\'re ready.');
+        setPaymentPhase('payment_dismissed');
+      },
+    });
+
+    if (!opened) {
+      setOrderError('Could not open the payment window. Please try again.');
+      setPaymentPhase('payment_dismissed');
+    }
+  };
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    // Guards against double-submits from rapid double-clicks/taps,
+    // independent of the (slightly async) React state update above.
+    if (submissionInFlight.current) return;
+
     setOrderError(null);
+
+    // Retry path: order already exists, just re-open payment for it.
+    if (placedOrder) {
+      submissionInFlight.current = true;
+      await startPayment(placedOrder, email.trim(), selectedAddress?.phone ?? '', selectedAddress?.full_name ?? '');
+      submissionInFlight.current = false;
+      return;
+    }
+
     setEmailError(null);
 
     if (!user) {
@@ -233,7 +367,6 @@ export default function CheckoutPage() {
       return;
     }
 
-    const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? null;
     if (!selectedAddress) {
       setOrderError('Please select or add a delivery address.');
       return;
@@ -244,7 +377,8 @@ export default function CheckoutPage() {
       return;
     }
 
-    setIsPlacingOrder(true);
+    submissionInFlight.current = true;
+    setPaymentPhase('creating_order');
 
     const shippingAddress = {
       ...addressToShippingSnapshot(selectedAddress),
@@ -259,7 +393,8 @@ export default function CheckoutPage() {
     );
 
     if (error || !data) {
-      setIsPlacingOrder(false);
+      submissionInFlight.current = false;
+      setPaymentPhase('form');
 
       if (error?.type === 'not_authenticated') {
         setOrderError('Your session has expired. Please sign in again to place your order.');
@@ -275,18 +410,33 @@ export default function CheckoutPage() {
       return;
     }
 
-    // Only clear global cart if it was a standard checkout
-    if (isBuyNowMode) {
-      sessionStorage.removeItem('eifa-buy-now');
-    } else {
-      clearCart();
-    }
+    // Internal order now exists — lock the form and never create a
+    // second one on subsequent retries within this session.
+    setPlacedOrder(data);
 
-    router.push(`/order-confirmation/${data.id}`);
+    await startPayment(data, email.trim(), selectedAddress.phone, selectedAddress.full_name);
+    submissionInFlight.current = false;
   };
 
   // Prevent hydration mismatch
   if (!hasHydrated) return null;
+
+  const submitLabel = (() => {
+    switch (paymentPhase) {
+      case 'creating_order':
+        return 'Placing Your Order…';
+      case 'creating_payment':
+        return 'Preparing Secure Payment…';
+      case 'awaiting_payment':
+        return 'Waiting For Payment…';
+      case 'verifying':
+        return 'Confirming Payment…';
+      case 'payment_dismissed':
+        return 'Retry Payment';
+      default:
+        return 'Proceed To Payment';
+    }
+  })();
 
   return (
     <>
@@ -322,8 +472,8 @@ export default function CheckoutPage() {
               </h1>
 
               <p className="mt-4 max-w-xl text-sm leading-7 text-charcoal/55 sm:text-base">
-                Confirm your contact details and delivery address. Payment integration will
-                be connected later — your order is confirmed as Cash on Delivery for now.
+                Confirm your contact details and delivery address, then pay securely via
+                Razorpay — cards, UPI, netbanking, and wallets are all supported.
               </p>
             </div>
           </div>
@@ -394,7 +544,8 @@ export default function CheckoutPage() {
                       placeholder="you@example.com"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full border border-beige bg-ivory px-4 py-3 text-sm text-charcoal outline-none transition-colors focus:border-gold"
+                      disabled={isFormLocked}
+                      className="w-full border border-beige bg-ivory px-4 py-3 text-sm text-charcoal outline-none transition-colors focus:border-gold disabled:cursor-not-allowed disabled:opacity-60"
                     />
                     {emailError && (
                       <span className="mt-1 block text-xs text-red-600">{emailError}</span>
@@ -445,7 +596,9 @@ export default function CheckoutPage() {
                         return (
                           <label
                             key={address.id}
-                            className={`flex cursor-pointer items-start gap-3 border p-4 transition-colors ${
+                            className={`flex items-start gap-3 border p-4 transition-colors ${
+                              isFormLocked ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+                            } ${
                               isSelected ? 'border-gold bg-gold/5' : 'border-beige hover:border-gold/50'
                             }`}
                           >
@@ -454,6 +607,7 @@ export default function CheckoutPage() {
                               name="shippingAddress"
                               className="mt-1 h-4 w-4 accent-maroon"
                               checked={isSelected}
+                              disabled={isFormLocked}
                               onChange={() => setSelectedAddressId(address.id)}
                             />
 
@@ -482,21 +636,23 @@ export default function CheckoutPage() {
                         );
                       })}
 
-                      <button
-                        type="button"
-                        onClick={() => setIsAddingAddress(true)}
-                        className="text-sm text-maroon transition-colors hover:text-gold"
-                      >
-                        + Add A New Address
-                      </button>
+                      {!isFormLocked && (
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingAddress(true)}
+                          className="text-sm text-maroon transition-colors hover:text-gold"
+                        >
+                          + Add A New Address
+                        </button>
+                      )}
                     </div>
                   )}
 
                   <div className="border border-beige bg-cream/55 p-4">
                     <p className="text-sm leading-7 text-charcoal/60">
-                      Payment gateway is not connected yet. Your order will be placed as Cash
-                      on Delivery. Later we can connect Razorpay, Cashfree, Stripe, or
-                      WhatsApp order confirmation.
+                      {placedOrder
+                        ? `Order ${placedOrder.order_number} is reserved. Complete payment securely via Razorpay to confirm it.`
+                        : 'Payment is processed securely by Razorpay — cards, UPI, netbanking, and wallets accepted. You will not be charged until you approve the payment.'}
                     </p>
                   </div>
 
@@ -511,7 +667,7 @@ export default function CheckoutPage() {
                     disabled={isPlacingOrder || isAddingAddress}
                     className="btn-luxury btn-luxury-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
                   >
-                    {isPlacingOrder ? 'Placing Your Order…' : 'Place Order'}
+                    {submitLabel}
                   </button>
                 </form>
 
