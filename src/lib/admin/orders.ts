@@ -36,19 +36,28 @@ export async function listOrders(filters: OrderListFilters = {}): Promise<{
   let query = supabase
     .from('orders')
     .select(
-      'id, order_number, status, payment_status, total, placed_at, shipping_address, order_items ( quantity )',
+      'id, order_number, status, payment_status, payment_provider, total, placed_at, shipping_address, order_items ( quantity )',
       { count: 'exact' }
     );
 
   if (filters.search) {
     const term = filters.search.trim();
-    query = query.or(`order_number.ilike.%${term}%,shipping_address->>full_name.ilike.%${term}%`);
+    query = query.or(
+      `order_number.ilike.%${term}%,shipping_address->>full_name.ilike.%${term}%,shipping_address->>email.ilike.%${term}%,shipping_address->>phone.ilike.%${term}%`
+    );
   }
   if (filters.status) {
     query = query.eq('status', filters.status);
   }
   if (filters.paymentStatus) {
     query = query.eq('payment_status', filters.paymentStatus);
+  }
+  if (filters.dateFrom) {
+    query = query.gte('placed_at', filters.dateFrom);
+  }
+  if (filters.dateTo) {
+    // dateTo is a plain date (YYYY-MM-DD); include the whole day.
+    query = query.lt('placed_at', `${filters.dateTo}T23:59:59.999`);
   }
 
   query = query.order(sort.column, { ascending: sort.ascending }).range(from, to);
@@ -59,21 +68,26 @@ export async function listOrders(filters: OrderListFilters = {}): Promise<{
     return { data: null, error: error.message };
   }
 
-  type RawRow = Pick<DbOrder, 'id' | 'order_number' | 'status' | 'payment_status' | 'total' | 'placed_at' | 'shipping_address'> & {
+  type RawRow = Pick<
+    DbOrder,
+    'id' | 'order_number' | 'status' | 'payment_status' | 'payment_provider' | 'total' | 'placed_at' | 'shipping_address'
+  > & {
     order_items: { quantity: number }[];
   };
 
   const rows: OrderListRow[] = ((data ?? []) as unknown as RawRow[]).map((row) => {
-    const address = row.shipping_address as { full_name?: string; phone?: string } | null;
+    const address = row.shipping_address as { full_name?: string; phone?: string; email?: string } | null;
 
     return {
       id: row.id,
       orderNumber: row.order_number,
       status: row.status,
       paymentStatus: row.payment_status,
+      paymentMethod: row.payment_provider,
       total: Number(row.total),
       placedAt: row.placed_at,
       customerName: address?.full_name ?? '—',
+      customerEmail: address?.email ?? '—',
       customerPhone: address?.phone ?? '—',
       itemCount: row.order_items.reduce((sum, item) => sum + item.quantity, 0),
     };

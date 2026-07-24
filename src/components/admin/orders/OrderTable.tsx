@@ -88,7 +88,7 @@ export default function OrderTable({ rows, totalCount, page, pageSize, currentPa
       render: (row) => (
         <div>
           <p className="text-charcoal">{row.customerName}</p>
-          <p className="text-xs text-charcoal/50">{row.customerPhone}</p>
+          <p className="text-xs text-charcoal/50">{row.customerEmail}</p>
         </div>
       ),
     },
@@ -106,6 +106,11 @@ export default function OrderTable({ rows, totalCount, page, pageSize, currentPa
       key: 'total',
       header: 'Total',
       render: (row) => formatPrice(row.total),
+    },
+    {
+      key: 'payment_method',
+      header: 'Method',
+      render: (row) => <span className="capitalize text-charcoal/70">{row.paymentMethod}</span>,
     },
     {
       key: 'payment_status',
@@ -141,7 +146,7 @@ export default function OrderTable({ rows, totalCount, page, pageSize, currentPa
         <form onSubmit={handleSearchSubmit} className="min-w-[220px] flex-1">
           <TextField
             label="Search"
-            placeholder="Order number or name…"
+            placeholder="Order number, name, or email…"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
           />
@@ -162,6 +167,24 @@ export default function OrderTable({ rows, totalCount, page, pageSize, currentPa
             value={currentParams.payment ?? ''}
             onChange={(e) => updateParams({ payment: e.target.value || null })}
             options={PAYMENT_FILTER_OPTIONS}
+          />
+        </div>
+
+        <div className="w-40">
+          <TextField
+            label="From"
+            type="date"
+            value={currentParams.from ?? ''}
+            onChange={(e) => updateParams({ from: e.target.value || null })}
+          />
+        </div>
+
+        <div className="w-40">
+          <TextField
+            label="To"
+            type="date"
+            value={currentParams.to ?? ''}
+            onChange={(e) => updateParams({ to: e.target.value || null })}
           />
         </div>
 

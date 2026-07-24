@@ -141,7 +141,7 @@ export default function AddressList() {
 
       {view.mode === 'editing' && (
         <AddressForm
-          initialValues={view.address}
+          initialData={view.address}          
           forceDefault={addresses.length === 1}
           isSubmitting={isSubmitting}
           submitLabel="Update Address"

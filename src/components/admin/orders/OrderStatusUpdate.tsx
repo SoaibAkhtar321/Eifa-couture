@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { SelectField } from '@/components/admin/FormField';
-import { ORDER_STATUS_OPTIONS } from '@/lib/admin/orders-types';
+import { ORDER_STATUS_OPTIONS, ORDER_STATUS_TRANSITIONS } from '@/lib/admin/orders-types';
 import { updateOrderStatus } from '@/lib/admin/orders-actions';
 import type { OrderStatus } from '@/types/database';
 
@@ -48,15 +48,23 @@ export default function OrderStatusUpdate({
     router.refresh();
   }
 
+  const allowedNext = ORDER_STATUS_TRANSITIONS[status] ?? [];
+  const selectableOptions = ORDER_STATUS_OPTIONS.filter(
+    (opt) => opt.value === status || allowedNext.includes(opt.value)
+  );
+
   return (
     <div className="w-56">
       <SelectField
         label="Status"
         value={status}
-        disabled={isSaving}
+        disabled={isSaving || allowedNext.length === 0}
         onChange={(e) => handleChange(e.target.value as OrderStatus)}
-        options={ORDER_STATUS_OPTIONS}
+        options={selectableOptions}
       />
+      {allowedNext.length === 0 && !error && (
+        <p className="mt-1 text-xs text-charcoal/50">This is a final status and can&apos;t be changed further.</p>
+      )}
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
     </div>
   );

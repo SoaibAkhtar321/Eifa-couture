@@ -10,6 +10,8 @@ interface OrdersPageProps {
     status?: OrderStatus;
     payment?: PaymentStatus;
     sort?: 'newest' | 'oldest' | 'total_desc' | 'total_asc';
+    from?: string;
+    to?: string;
     page?: string;
   }>;
 }
@@ -22,6 +24,8 @@ export default async function AdminOrdersPage({ searchParams }: OrdersPageProps)
     search: params.q,
     status: params.status,
     paymentStatus: params.payment,
+    dateFrom: params.from,
+    dateTo: params.to,
     sort: params.sort ?? 'newest',
     page,
     pageSize: 20,

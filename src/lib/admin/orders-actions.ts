@@ -8,6 +8,7 @@
 
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
 import type { OrderStatus } from '@/types/database';
+import { isValidOrderStatusTransition } from './orders-types';
 
 const RESTOCK_TRIGGERS: OrderStatus[] = ['cancelled', 'refunded'];
 
@@ -16,6 +17,12 @@ export async function updateOrderStatus(
   status: OrderStatus,
   previousStatus: OrderStatus
 ): Promise<{ error: string | null }> {
+  if (!isValidOrderStatusTransition(previousStatus, status)) {
+    return {
+      error: `Cannot change status from "${previousStatus.replace(/_/g, ' ')}" to "${status.replace(/_/g, ' ')}".`,
+    };
+  }
+
   const supabase = createBrowserClient();
 
   const shouldRestock =
