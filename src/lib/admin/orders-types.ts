@@ -33,8 +33,6 @@ export interface OrderListFilters {
   search?: string;
   status?: OrderStatus;
   paymentStatus?: PaymentStatus;
-  dateFrom?: string;
-  dateTo?: string;
   sort?: 'newest' | 'oldest' | 'total_desc' | 'total_asc';
   page?: number;
   pageSize?: number;
@@ -45,36 +43,11 @@ export interface OrderListRow {
   orderNumber: string;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
-  paymentMethod: PaymentProvider;
   total: number;
   placedAt: string;
   customerName: string;
-  customerEmail: string;
   customerPhone: string;
   itemCount: number;
-}
-
-/**
- * Allowed forward transitions for order.status. Any target not listed for
- * the current status is rejected (e.g. delivered -> processing, cancelled ->
- * shipped). Enforced both in the admin UI (orders-actions.ts) and should be
- * mirrored by DB-side checks if written outside this app.
- */
-export const ORDER_STATUS_TRANSITIONS: Record<OrderStatus, OrderStatus[]> = {
-  pending: ['confirmed', 'cancelled'],
-  confirmed: ['processing', 'cancelled'],
-  processing: ['shipped', 'cancelled'],
-  shipped: ['out_for_delivery', 'delivered'],
-  out_for_delivery: ['delivered'],
-  delivered: ['returned'],
-  cancelled: [],
-  returned: ['refunded'],
-  refunded: [],
-};
-
-export function isValidOrderStatusTransition(from: OrderStatus, to: OrderStatus): boolean {
-  if (from === to) return true;
-  return ORDER_STATUS_TRANSITIONS[from]?.includes(to) ?? false;
 }
 
 export interface OrderListResult {
@@ -137,8 +110,10 @@ export interface OrderHistoryEntry {
 const EVENT_TYPE_LABELS: Record<string, string> = {
   order_created: 'Order placed',
   razorpay_order_created: 'Payment initiated',
+  payment_authorized: 'Payment authorized',
   payment_successful: 'Payment successful',
   payment_failed: 'Payment failed',
+  payment_retried: 'Payment retried',
   payment_refunded: 'Payment refunded',
 };
 

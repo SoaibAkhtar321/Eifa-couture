@@ -24,7 +24,7 @@
 
    Configure in Razorpay dashboard → Settings → Webhooks:
      URL: https://<your-domain>/api/webhooks/razorpay
-     Events: payment.captured, payment.failed
+     Events: payment.authorized, payment.captured, payment.failed
    ============================================ */
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -59,16 +59,12 @@ export async function POST(request: NextRequest) {
   let signatureValid: boolean;
   try {
     signatureValid = verifyWebhookSignature(rawBody, signatureHeader);
-  } catch (err) {
+  } catch {
     // Misconfigured RAZORPAY_WEBHOOK_SECRET — fail closed.
-    console.error('[webhooks/razorpay] Webhook secret not configured', {
-      error: err instanceof Error ? err.message : err,
-    });
     return NextResponse.json({ error: { message: 'Webhook not configured.' } }, { status: 500 });
   }
 
   if (!signatureValid) {
-    console.error('[webhooks/razorpay] Invalid webhook signature — request rejected.');
     return NextResponse.json({ error: { message: 'Invalid signature.' } }, { status: 400 });
   }
 
@@ -76,7 +72,6 @@ export async function POST(request: NextRequest) {
   try {
     event = JSON.parse(rawBody);
   } catch {
-    console.error('[webhooks/razorpay] Payload was not valid JSON despite a valid signature.');
     return NextResponse.json({ error: { message: 'Invalid JSON.' } }, { status: 400 });
   }
 
@@ -106,15 +101,33 @@ export async function POST(request: NextRequest) {
     // Nothing we can match this to. Acknowledge anyway — retrying
     // won't make a matching order appear, and returning non-2xx here
     // just causes Razorpay to hammer us with retries indefinitely.
-    console.error('[webhooks/razorpay] No order matches payment_provider_ref', {
-      event: event.event,
-      razorpayOrderId,
+    return NextResponse.json({ received: true });
+  }
+
+  if (event.event === 'payment.authorized') {
+    // Manual-capture flow: the payment is held/authorized but not yet
+    // captured, so order/payment status don't change here — only
+    // `payment.captured` (via mark_order_paid) settles the order. This
+    // is a pure audit entry so an authorized-but-never-captured payment
+    // still shows up in the timeline. Best-effort: a logging failure
+    // must not turn into a 500, since Razorpay would just redeliver
+    // forever for an event that doesn't require any state change.
+    const { error: historyError } = await serviceClient.from('order_status_history').insert({
+      order_id: order.id,
+      event_type: 'payment_authorized',
+      actor_type: 'webhook',
+      notes: razorpayPaymentId,
     });
+
+    if (historyError) {
+      console.error('Failed to record payment_authorized history:', historyError.message);
+    }
+
     return NextResponse.json({ received: true });
   }
 
   if (event.event === 'payment.captured') {
-    const { data: result, error: rpcError } = await serviceClient.rpc('mark_order_paid', {
+    const { error: rpcError } = await serviceClient.rpc('mark_order_paid', {
       p_order_id: order.id,
       p_razorpay_payment_id: razorpayPaymentId,
       p_razorpay_signature: signatureHeader,
@@ -124,23 +137,7 @@ export async function POST(request: NextRequest) {
     if (rpcError) {
       // Real failure (e.g. DB hiccup) — return 500 so Razorpay
       // retries this delivery later rather than silently losing it.
-      console.error('[webhooks/razorpay] mark_order_paid RPC failed', {
-        orderId: order.id,
-        razorpayPaymentId,
-        error: rpcError.message,
-      });
       return NextResponse.json({ error: { message: 'Failed to settle order.' } }, { status: 500 });
-    }
-
-    if (result?.needs_stock_review) {
-      // See migration 0016 — payment settled after this order's
-      // reservation had already been released and current stock
-      // couldn't fully cover it. Never blocks the webhook ack;
-      // surfaced purely for ops reconciliation.
-      console.warn('[webhooks/razorpay] Order paid but needs stock review', {
-        orderId: order.id,
-        orderNumber: result.order_number,
-      });
     }
 
     return NextResponse.json({ received: true });
@@ -154,10 +151,6 @@ export async function POST(request: NextRequest) {
     });
 
     if (rpcError) {
-      console.error('[webhooks/razorpay] release_order_reservation RPC failed', {
-        orderId: order.id,
-        error: rpcError.message,
-      });
       return NextResponse.json({ error: { message: 'Failed to release order.' } }, { status: 500 });
     }
 
