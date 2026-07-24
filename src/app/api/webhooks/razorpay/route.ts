@@ -118,6 +118,7 @@ export async function POST(request: NextRequest) {
       p_order_id: order.id,
       p_razorpay_payment_id: razorpayPaymentId,
       p_razorpay_signature: signatureHeader,
+      p_actor_type: 'webhook',
     });
 
     if (rpcError) {
@@ -149,6 +150,7 @@ export async function POST(request: NextRequest) {
     const { error: rpcError } = await serviceClient.rpc('release_order_reservation', {
       p_order_id: order.id,
       p_reason: 'payment_failed',
+      p_actor_type: 'webhook',
     });
 
     if (rpcError) {

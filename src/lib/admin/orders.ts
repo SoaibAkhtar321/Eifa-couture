@@ -9,8 +9,8 @@
    ============================================ */
 
 import { createClient as createServerClient } from '@/lib/supabase/server';
-import type { DbOrder, DbOrderItem } from '@/types/database';
-import type { OrderListFilters, OrderListResult, OrderListRow, OrderDetail } from './orders-types';
+import type { DbOrder, DbOrderItem, DbOrderStatusHistory } from '@/types/database';
+import type { OrderListFilters, OrderListResult, OrderListRow, OrderDetail, OrderHistoryEntry } from './orders-types';
 
 export * from './orders-types';
 
@@ -168,4 +168,53 @@ export async function getOrderById(orderId: string): Promise<{
     },
     error: null,
   };
+}
+
+/**
+ * Loads the full event history for one order, oldest first, in a
+ * single query — the `profiles` embed resolves each event's actor
+ * display name without an N+1 per row. Backward compatible with
+ * orders that predate Phase 9: an order with no rows here simply
+ * returns an empty array, and `OrderTimeline` falls back to its
+ * synthesized view when it receives one.
+ */
+export async function getOrderStatusHistory(orderId: string): Promise<{
+  data: OrderHistoryEntry[];
+  error: string | null;
+}> {
+  const supabase = await createServerClient();
+
+  const { data, error } = await supabase
+    .from('order_status_history')
+    .select('id, event_type, previous_status, new_status, actor_type, actor_id, notes, created_at, profiles ( display_name )')
+    .eq('order_id', orderId)
+    .order('created_at', { ascending: true });
+
+  if (error || !data) {
+    return { data: [], error: error?.message ?? null };
+  }
+
+  type Row = Pick<
+    DbOrderStatusHistory,
+    'id' | 'event_type' | 'previous_status' | 'new_status' | 'actor_type' | 'actor_id' | 'notes' | 'created_at'
+  > & {
+    profiles: { display_name: string } | { display_name: string }[] | null;
+  };
+
+  const entries: OrderHistoryEntry[] = (data as unknown as Row[]).map((row) => {
+    const profile = Array.isArray(row.profiles) ? row.profiles[0] : row.profiles;
+
+    return {
+      id: row.id,
+      eventType: row.event_type,
+      previousStatus: row.previous_status,
+      newStatus: row.new_status,
+      actorType: row.actor_type,
+      actorName: profile?.display_name ?? null,
+      notes: row.notes,
+      createdAt: row.created_at,
+    };
+  });
+
+  return { data: entries, error: null };
 }

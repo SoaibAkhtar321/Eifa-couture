@@ -35,6 +35,7 @@ export type ReturnStatus =
   | "received"
   | "refunded"
   | "exchanged";
+export type OrderHistoryActorType = "customer" | "admin" | "system" | "webhook";
 export type ShipmentStatus =
   | "label_created"
   | "picked_up"
@@ -268,6 +269,18 @@ export interface DbOrderItem {
   color_name: string;
   quantity: number;
   unit_price: number;
+  created_at: string;
+}
+
+export interface DbOrderStatusHistory {
+  id: string;
+  order_id: string;
+  event_type: string;
+  previous_status: string | null;
+  new_status: string | null;
+  actor_type: OrderHistoryActorType;
+  actor_id: string | null;
+  notes: string | null;
   created_at: string;
 }
 

@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
-import { getOrderById } from '@/lib/admin/orders';
+import { getOrderById, getOrderStatusHistory } from '@/lib/admin/orders';
 import OrderStatusUpdate from '@/components/admin/orders/OrderStatusUpdate';
 import OrderTimeline from '@/components/admin/orders/OrderTimeline';
 import { formatPrice, formatDate } from '@/lib/utils';
@@ -14,7 +14,12 @@ interface OrderDetailPageProps {
 
 export default async function AdminOrderDetailPage({ params }: OrderDetailPageProps) {
   const { id } = await params;
-  const { data: order, error } = await getOrderById(id);
+  // Run in parallel — the order and its history are independent
+  // queries, so no reason to wait on one before starting the other.
+  const [{ data: order, error }, { data: history }] = await Promise.all([
+    getOrderById(id),
+    getOrderStatusHistory(id),
+  ]);
 
   if (error) {
     return (
@@ -86,7 +91,12 @@ export default async function AdminOrderDetailPage({ params }: OrderDetailPagePr
             </div>
           </section>
 
-          <OrderTimeline status={order.status} placedAt={order.placedAt} updatedAt={order.updatedAt} />
+          <OrderTimeline
+            status={order.status}
+            placedAt={order.placedAt}
+            updatedAt={order.updatedAt}
+            history={history}
+          />
         </div>
 
         <div className="space-y-6">

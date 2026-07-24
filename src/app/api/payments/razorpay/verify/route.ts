@@ -116,6 +116,10 @@ export async function POST(request: NextRequest) {
     p_order_id: orderId,
     p_razorpay_payment_id: razorpay_payment_id,
     p_razorpay_signature: razorpay_signature,
+    // This route only ever runs off the customer's own browser callback
+    // after Razorpay Checkout completes, so the history row attributes
+    // the settlement to them rather than the webhook.
+    p_actor_type: 'customer',
   });
 
   if (rpcError) {

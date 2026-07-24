@@ -8,21 +8,15 @@
 
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
 import type { OrderStatus } from '@/types/database';
-import { isValidOrderStatusTransition } from './orders-types';
 
 const RESTOCK_TRIGGERS: OrderStatus[] = ['cancelled', 'refunded'];
 
 export async function updateOrderStatus(
   orderId: string,
   status: OrderStatus,
-  previousStatus: OrderStatus
+  previousStatus: OrderStatus,
+  notes?: string
 ): Promise<{ error: string | null }> {
-  if (!isValidOrderStatusTransition(previousStatus, status)) {
-    return {
-      error: `Cannot change status from "${previousStatus.replace(/_/g, ' ')}" to "${status.replace(/_/g, ' ')}".`,
-    };
-  }
-
   const supabase = createBrowserClient();
 
   const shouldRestock =
@@ -34,6 +28,31 @@ export async function updateOrderStatus(
 
   if (updateError) {
     return { error: updateError.message };
+  }
+
+  // Best-effort: record who changed the status and why. Gated by the
+  // `order_status_history_admin_insert` RLS policy (is_admin()), same
+  // trust boundary as the `orders` update above — a failure here never
+  // blocks the status change itself, since the write that matters
+  // (the order's actual status) already succeeded.
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const trimmedNotes = notes?.trim();
+
+  const { error: historyError } = await supabase.from('order_status_history').insert({
+    order_id: orderId,
+    event_type: 'status_change',
+    previous_status: previousStatus,
+    new_status: status,
+    actor_type: 'admin',
+    actor_id: user?.id ?? null,
+    notes: trimmedNotes ? trimmedNotes : null,
+  });
+
+  if (historyError) {
+    console.error('Failed to record order status history:', historyError.message);
   }
 
   if (shouldRestock) {

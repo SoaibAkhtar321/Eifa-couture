@@ -8,7 +8,7 @@
    into the client build and it fails.
    ============================================ */
 
-import type { OrderStatus, PaymentStatus, PaymentProvider } from '@/types/database';
+import type { OrderStatus, PaymentStatus, PaymentProvider, OrderHistoryActorType } from '@/types/database';
 
 export const ORDER_STATUS_OPTIONS: { value: OrderStatus; label: string }[] = [
   { value: 'pending', label: 'Pending' },
@@ -119,4 +119,54 @@ export interface OrderDetail {
     quantity: number;
     unitPrice: number;
   }[];
+}
+
+/** One row from `order_status_history`, joined with the actor's display name (if any). */
+export interface OrderHistoryEntry {
+  id: string;
+  eventType: string;
+  previousStatus: string | null;
+  newStatus: string | null;
+  actorType: OrderHistoryActorType;
+  actorName: string | null;
+  notes: string | null;
+  createdAt: string;
+}
+
+/** Labels for events that aren't a plain order-status transition. */
+const EVENT_TYPE_LABELS: Record<string, string> = {
+  order_created: 'Order placed',
+  razorpay_order_created: 'Payment initiated',
+  payment_successful: 'Payment successful',
+  payment_failed: 'Payment failed',
+  payment_refunded: 'Payment refunded',
+};
+
+const ACTOR_TYPE_FALLBACK_LABEL: Record<OrderHistoryActorType, string> = {
+  customer: 'Customer',
+  admin: 'Admin',
+  system: 'System',
+  webhook: 'Payment gateway',
+};
+
+/** Human-readable label for a history row's headline (not including actor/notes). */
+export function getHistoryEventLabel(entry: Pick<OrderHistoryEntry, 'eventType' | 'newStatus'>): string {
+  if (entry.eventType === 'status_change' && entry.newStatus) {
+    return entry.newStatus.replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase());
+  }
+  return EVENT_TYPE_LABELS[entry.eventType] ?? entry.eventType.replace(/_/g, ' ');
+}
+
+/** Human-readable "who did this" label, falling back to the actor type when no name is on file. */
+export function getHistoryActorLabel(entry: Pick<OrderHistoryEntry, 'actorType' | 'actorName'>): string {
+  return entry.actorName ?? ACTOR_TYPE_FALLBACK_LABEL[entry.actorType];
+}
+
+/** Whether this event represents a negative/terminal outcome, for timeline dot coloring. */
+export function isHistoryEventNegative(entry: Pick<OrderHistoryEntry, 'eventType' | 'newStatus'>): boolean {
+  if (entry.eventType === 'payment_failed') return true;
+  if (entry.eventType === 'status_change' && entry.newStatus) {
+    return ['cancelled', 'returned'].includes(entry.newStatus);
+  }
+  return false;
 }

@@ -168,6 +168,21 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  // Best-effort audit row: the Razorpay order is now linked, which is
+  // the "payment initiated" moment. This never blocks checkout — a
+  // logging failure here shouldn't stop the customer from paying.
+  const { error: historyError } = await serviceClient.from('order_status_history').insert({
+    order_id: order.id,
+    event_type: 'razorpay_order_created',
+    actor_type: 'customer',
+    actor_id: user.id,
+    notes: null,
+  });
+
+  if (historyError) {
+    console.error('Failed to record order status history:', historyError.message);
+  }
+
   return NextResponse.json({
     razorpayOrderId: razorpayOrder.razorpayOrderId,
     amount: razorpayOrder.amount,
