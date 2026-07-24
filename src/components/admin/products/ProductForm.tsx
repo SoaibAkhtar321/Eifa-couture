@@ -213,13 +213,21 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
                 basePrice={values.price}
                 variants={variants}
                 onChange={setVariants}
+                images={images}
+                onImagesChange={setImages}
               />
             </div>
           )}
 
           {isEditing && product && (
             <div className="rounded-lg border border-charcoal/10 bg-ivory p-6">
-              <ImageManager productId={product.id} images={images} onChange={setImages} />
+              <ImageManager
+                productId={product.id}
+                images={images.filter((img) => !img.variant_id)}
+                onChange={(updated) => setImages([...images.filter((img) => img.variant_id), ...updated])}
+                title="Main product images"
+                emptyMessage="No main images yet. Used as the fallback gallery for colors without their own photos (and the only gallery for simple products)."
+              />
             </div>
           )}
         </div>

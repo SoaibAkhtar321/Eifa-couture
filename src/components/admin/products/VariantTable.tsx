@@ -7,7 +7,8 @@ import { formatPrice } from '@/lib/utils';
 import { deleteVariant, updateInventoryQuantity } from '@/lib/admin/products-write';
 import { findDuplicateVariantCombos } from '@/lib/admin/validation';
 import VariantForm from './VariantForm';
-import type { DbInventory, DbProductVariant } from '@/types/database';
+import ImageManager from './ImageManager';
+import type { DbInventory, DbProductImage, DbProductVariant } from '@/types/database';
 
 type VariantRow = DbProductVariant & { inventory: DbInventory | null };
 
@@ -16,15 +17,47 @@ interface VariantTableProps {
   basePrice: number;
   variants: VariantRow[];
   onChange: (variants: VariantRow[]) => void;
+  /** Full product_images list (product-level + all variants' images).
+   *  Passed through from ProductForm so each color's ImageManager can
+   *  be scoped to its own slice without a separate fetch. */
+  images: DbProductImage[];
+  onImagesChange: (images: DbProductImage[]) => void;
 }
 
-export default function VariantTable({ productId, basePrice, variants, onChange }: VariantTableProps) {
+export default function VariantTable({
+  productId,
+  basePrice,
+  variants,
+  onChange,
+  images,
+  onImagesChange,
+}: VariantTableProps) {
   const [editingVariant, setEditingVariant] = useState<VariantRow | 'new' | null>(null);
   const [savingStockId, setSavingStockId] = useState<string | null>(null);
 
   const duplicateIndices = new Set(
     findDuplicateVariantCombos(variants.map((v) => ({ size: v.size, color_name: v.color_name })))
   );
+
+  // One image gallery per color, not per size — a color's images are
+  // uploaded once and attached to that color's first variant (in
+  // creation order). Every other size of the same color has no images
+  // of its own; the storefront resolves the whole color's gallery
+  // through that single "owner" variant (see mapProductRow's
+  // imagesByColor). Re-deriving this from `variants` on every render
+  // (instead of storing an owner id) means it never drifts even if
+  // that first variant gets deleted — the next remaining size for the
+  // color simply becomes the new owner, and its (empty) gallery is
+  // what the admin sees, matching what the storefront would show too.
+  const colorOwners = new Map<string, VariantRow>();
+  for (const v of variants) {
+    if (!colorOwners.has(v.color_name)) colorOwners.set(v.color_name, v);
+  }
+
+  function handleColorImagesChange(ownerVariantId: string, updatedColorImages: DbProductImage[]) {
+    const rest = images.filter((img) => img.variant_id !== ownerVariantId);
+    onImagesChange([...rest, ...updatedColorImages]);
+  }
 
   async function handleStockChange(variant: VariantRow, quantity: number) {
     if (Number.isNaN(quantity) || quantity < 0) return;
@@ -167,6 +200,30 @@ export default function VariantTable({ productId, basePrice, variants, onChange 
           onSaved={handleSaved}
           onCancel={() => setEditingVariant(null)}
         />
+      )}
+
+      {colorOwners.size > 0 && (
+        <div className="space-y-6 border-t border-charcoal/10 pt-6">
+          <div>
+            <h3 className="font-heading text-lg text-maroon">Color images</h3>
+            <p className="text-xs text-charcoal/50">
+              Each color has its own gallery, shared across all its sizes. Leave a color's
+              gallery empty to fall back to the product's main images.
+            </p>
+          </div>
+
+          {Array.from(colorOwners.entries()).map(([colorName, owner]) => (
+            <ImageManager
+              key={owner.id}
+              productId={productId}
+              variantId={owner.id}
+              images={images.filter((img) => img.variant_id === owner.id)}
+              onChange={(updated) => handleColorImagesChange(owner.id, updated)}
+              title={`${colorName} images`}
+              emptyMessage={`No images for ${colorName} yet — the product's main images will be shown instead.`}
+            />
+          ))}
+        </div>
       )}
     </div>
   );

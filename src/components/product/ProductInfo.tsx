@@ -21,6 +21,11 @@ import type { Product } from '@/types';
 
 interface ProductInfoProps {
   product: Product;
+  /** Called with the selected color whenever it changes, including
+   *  once on mount with the default selection — lets a sibling (the
+   *  image gallery) switch to that color's photos without lifting all
+   *  of this component's selection state. */
+  onColorChange?: (color: string) => void;
 }
 
 /* ============================================
@@ -142,7 +147,7 @@ function ProductAccordion({ product }: { product: Product }) {
   );
 }
 
-export default function ProductInfo({ product }: ProductInfoProps) {
+export default function ProductInfo({ product, onColorChange }: ProductInfoProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated } = useAuth();
@@ -196,6 +201,13 @@ export default function ProductInfo({ product }: ProductInfoProps) {
   }, []);
 
   const showStickyBar = hasHydrated && isMobileOrTablet && !isPrimaryCTAVisible;
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once
+  // for the initial default color; later changes go through
+  // handleColorChange below instead of re-running this effect.
+  useEffect(() => {
+    if (selectedColor) onColorChange?.(selectedColor);
+  }, []);
 
   /* ============================================
      Variant-aware pricing
@@ -260,6 +272,7 @@ export default function ProductInfo({ product }: ProductInfoProps) {
     setSelectedColor(color);
     setQuantity(1);
     setHasInteracted(true);
+    onColorChange?.(color);
   };
 
   const savePendingActionAndRedirect = (action: PendingAuthAction) => {

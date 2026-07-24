@@ -15,9 +15,24 @@ interface ImageManagerProps {
   productId: string;
   images: DbProductImage[];
   onChange: (images: DbProductImage[]) => void;
+  /** Scopes uploads/primary-selection to one variant's gallery (e.g. a
+   *  color's own images) instead of the product-level gallery. Pass
+   *  the "owner" variant id for that color — `null` (default) keeps
+   *  today's product-level behavior. `images` must already be filtered
+   *  to this scope by the caller; this component doesn't filter. */
+  variantId?: string | null;
+  title?: string;
+  emptyMessage?: string;
 }
 
-export default function ImageManager({ productId, images, onChange }: ImageManagerProps) {
+export default function ImageManager({
+  productId,
+  images,
+  onChange,
+  variantId = null,
+  title = 'Images',
+  emptyMessage = 'No images yet. Upload at least one to publish this product.',
+}: ImageManagerProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [draggedId, setDraggedId] = useState<string | null>(null);
@@ -36,7 +51,8 @@ export default function ImageManager({ productId, images, onChange }: ImageManag
       productId,
       Array.from(fileList),
       images.length,
-      hasExistingPrimary
+      hasExistingPrimary,
+      variantId
     );
 
     if (data.length > 0) {
@@ -62,7 +78,7 @@ export default function ImageManager({ productId, images, onChange }: ImageManag
   }
 
   async function handleSetPrimary(imageId: string) {
-    const { error } = await setPrimaryImage(productId, imageId);
+    const { error } = await setPrimaryImage(productId, imageId, variantId);
     if (error) {
       setErrors([error]);
       return;
@@ -108,7 +124,7 @@ export default function ImageManager({ productId, images, onChange }: ImageManag
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-heading text-lg text-maroon">Images</h3>
+        <h3 className="font-heading text-lg text-maroon">{title}</h3>
         <label className="cursor-pointer rounded-md border border-maroon/30 px-4 py-2 text-sm font-medium text-maroon transition hover:bg-maroon/5">
           {isUploading ? 'Uploading…' : 'Upload images'}
           <input
@@ -133,7 +149,7 @@ export default function ImageManager({ productId, images, onChange }: ImageManag
 
       {sortedImages.length === 0 ? (
         <div className="rounded-lg border border-dashed border-charcoal/20 p-8 text-center text-sm text-charcoal/50">
-          No images yet. Upload at least one to publish this product.
+          {emptyMessage}
         </div>
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">

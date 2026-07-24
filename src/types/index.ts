@@ -23,6 +23,11 @@ export interface Product {
   price: number;
   compareAtPrice: number | null;
   images: string[];
+  /** Variant-uploaded images grouped by `colorName`, ordered like
+   *  `images` (primary first, then sort_order). A color with no
+   *  images of its own is simply absent here — consumers should fall
+   *  back to `images` (the product-level gallery) in that case. */
+  imagesByColor: Record<string, string[]>;
   category: string;
   subcategory: string;
   sizes: string[];

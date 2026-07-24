@@ -1,6 +1,6 @@
 'use client';
 
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import Link from 'next/link';
 
 import ProductImageGallery from '@/components/product/ProductImageGallery';
@@ -25,6 +25,16 @@ export default function ProductDetailsClient({
   useLayoutEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
   }, []);
+
+  // Owned here (not inside ProductInfo) purely so the gallery — a
+  // sibling — can react to it too. ProductInfo still owns size and
+  // every other selection field; this is the one piece both halves
+  // of the page need.
+  const [selectedColor, setSelectedColor] = useState('');
+  const galleryImages =
+    (selectedColor && product.imagesByColor[selectedColor]?.length
+      ? product.imagesByColor[selectedColor]
+      : product.images) ?? product.images;
 
   if (!product) return null;
 
@@ -57,8 +67,10 @@ export default function ProductDetailsClient({
       <section className="pb-12 pt-6 sm:pb-16 sm:pt-8 lg:pb-20 lg:pt-12">
         <div className="luxury-container">
           <div className="grid gap-8 lg:grid-cols-[minmax(0,1.08fr)_minmax(380px,0.92fr)] lg:gap-12 xl:gap-16 items-start">
-            {product.images?.length > 0 && <ProductImageGallery product={product} />}
-            <ProductInfo product={product} />
+            {product.images?.length > 0 && (
+              <ProductImageGallery product={product} images={galleryImages} />
+            )}
+            <ProductInfo product={product} onColorChange={setSelectedColor} />
           </div>
         </div>
       </section>

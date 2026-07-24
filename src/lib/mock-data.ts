@@ -71,7 +71,10 @@ function buildProductImages(categorySlug: string): string[] {
 // `hasPriceRange`. `withVariantPricing` derives them below — one
 // variant per size/color combo, all priced at the flat `price` — so
 // this file still satisfies the current `Product` shape.
-type RawMockProduct = Omit<Product, "variants" | "minPrice" | "maxPrice" | "hasPriceRange">;
+type RawMockProduct = Omit<
+  Product,
+  "variants" | "minPrice" | "maxPrice" | "hasPriceRange" | "imagesByColor"
+>;
 
 function withVariantPricing(product: RawMockProduct): Product {
   const variants: ProductVariant[] = [];
@@ -95,6 +98,10 @@ function withVariantPricing(product: RawMockProduct): Product {
     minPrice: product.price,
     maxPrice: product.price,
     hasPriceRange: false,
+    // Mock data predates per-color image uploads too — every mock
+    // product falls back to its single `images` gallery, same as a
+    // live product whose colors have no images of their own.
+    imagesByColor: {},
   };
 }
 

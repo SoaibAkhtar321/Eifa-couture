@@ -9,14 +9,27 @@ import type { Product } from '@/types';
 
 interface ProductImageGalleryProps {
   product: Product;
+  /** Resolved gallery to display — the selected color's images when it
+   *  has any, otherwise the product-level gallery. Defaults to
+   *  `product.images` so this component still works standalone. */
+  images?: string[];
 }
 
 export default function ProductImageGallery({
   product,
+  images = product.images,
 }: ProductImageGalleryProps) {
-  const [selectedImage, setSelectedImage] = useState(product.images[0]);
+  const [selectedImage, setSelectedImage] = useState(images[0]);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   useBodyScrollLock(isZoomOpen);
+
+  // `images` changes when the shopper switches color (a new array from
+  // the parent, not a mutation of this one) — jump the main viewer back
+  // to that color's first photo instead of leaving it pointed at an
+  // image that may not even be in the new gallery.
+  useEffect(() => {
+    setSelectedImage(images[0]);
+  }, [images]);
 
   const zoomTriggerRef = useRef<HTMLButtonElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -61,7 +74,7 @@ export default function ProductImageGallery({
           className="order-2 flex gap-3 overflow-x-auto pb-4 lg:order-1 lg:flex-col lg:overflow-visible lg:pb-0 touch-pan-x max-w-full"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
-          {product.images.map((image, index) => (
+          {images.map((image, index) => (
             <button
               key={image}
               type="button"

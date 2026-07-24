@@ -4,7 +4,12 @@ import { useState } from 'react';
 
 import { TextField, NumberField, ToggleField } from '@/components/admin/FormField';
 import { variantFormSchema, type VariantFormValues } from '@/lib/admin/validation';
-import { createVariant, updateVariant, type VariantInput } from '@/lib/admin/products-write';
+import {
+  createVariant,
+  updateVariant,
+  updateInventoryQuantity,
+  type VariantInput,
+} from '@/lib/admin/products-write';
 import type { DbInventory, DbProductVariant } from '@/types/database';
 
 interface VariantFormProps {
@@ -80,11 +85,36 @@ export default function VariantForm({ productId, variant, onSaved, onCancel }: V
         setIsSaving(false);
         return;
       }
+
+      // `updateVariant` above only writes the `product_variants` row
+      // (size/color/sku/price_override/is_active). Stock lives in a
+      // separate `inventory` row and was previously only merged into
+      // local state here, never persisted — so the storefront (which
+      // reads `inventory` straight from Supabase) kept showing the old
+      // quantity after a save that looked successful in the admin UI.
+      const { error: inventoryError } = await updateInventoryQuantity(
+        variant.id,
+        result.data.quantity,
+        result.data.low_stock_at
+      );
+      if (inventoryError) {
+        setFormError(inventoryError);
+        setIsSaving(false);
+        return;
+      }
+
       onSaved({
         ...data,
         inventory: variant.inventory
           ? { ...variant.inventory, quantity: result.data.quantity, low_stock_at: result.data.low_stock_at }
-          : null,
+          : {
+              id: '',
+              variant_id: data.id,
+              quantity: result.data.quantity,
+              reserved: 0,
+              low_stock_at: result.data.low_stock_at,
+              updated_at: new Date().toISOString(),
+            },
       });
     } else {
       const { data, error } = await createVariant(

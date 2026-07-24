@@ -75,11 +75,10 @@ export const PRODUCT_SELECT = `
 `;
 
 export function mapProductRow(row: ProductRow): Product {
-  // Product-level gallery only (variant_id is null). Variant-specific
-  // images also come back on row.product_images from Phase 2A onward,
-  // but the storefront doesn't switch galleries by color yet — that's
-  // Phase 2C. Filtering here keeps today's single gallery correct
-  // instead of mixing every variant's photos into one list.
+  // Product-level gallery only (variant_id is null) — the fallback
+  // shown when the selected color has no images of its own, and the
+  // only gallery for simple products. Variant-scoped images are
+  // handled separately below and exposed via `imagesByColor`.
   const images = (row.product_images ?? [])
     .filter((image) => !image.variant_id)
     .slice()
@@ -91,6 +90,34 @@ export function mapProductRow(row: ProductRow): Product {
 
   const categorySlug = row.categories?.slug ?? 'uncategorized';
   const activeVariants = (row.product_variants ?? []).filter((v) => v.is_active);
+  const activeVariantById = new Map(activeVariants.map((v) => [v.id, v]));
+
+  // Variant-scoped images (variant_id set), grouped by that variant's
+  // color — a color's gallery is whatever was uploaded against any one
+  // of its size variants (in practice always the same "owner" variant,
+  // since the admin UI uploads per color, not per size). Images whose
+  // variant_id points at an inactive/missing variant are skipped, same
+  // as the product-level gallery already skips deleted images.
+  const imagesByColorMap = new Map<string, DbProductImage[]>();
+  for (const image of row.product_images ?? []) {
+    if (!image.variant_id) continue;
+    const owningVariant = activeVariantById.get(image.variant_id);
+    if (!owningVariant) continue;
+    const bucket = imagesByColorMap.get(owningVariant.color_name) ?? [];
+    bucket.push(image);
+    imagesByColorMap.set(owningVariant.color_name, bucket);
+  }
+
+  const imagesByColor: Record<string, string[]> = {};
+  for (const [colorName, colorImages] of imagesByColorMap) {
+    imagesByColor[colorName] = colorImages
+      .slice()
+      .sort((a, b) => {
+        if (a.is_primary !== b.is_primary) return a.is_primary ? -1 : 1;
+        return a.sort_order - b.sort_order;
+      })
+      .map((image) => image.url);
+  }
 
   const colorMap = new Map<string, ProductColor>();
   const stock: Record<string, number> = {};
@@ -139,6 +166,7 @@ export function mapProductRow(row: ProductRow): Product {
     price: row.price,
     compareAtPrice: row.compare_at_price,
     images: images.length > 0 ? images : [CATEGORY_PLACEHOLDER_IMAGES[categorySlug] ?? DEFAULT_PLACEHOLDER_IMAGE],
+    imagesByColor,
     category: categorySlug,
     subcategory: '',
     sizes: sortSizes(activeVariants.map((v) => v.size)),
