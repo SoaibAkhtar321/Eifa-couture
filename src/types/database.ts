@@ -233,6 +233,10 @@ export interface DbOrder {
   payment_status: PaymentStatus;
   payment_provider: PaymentProvider;
   payment_provider_ref: string | null;
+  razorpay_payment_id: string | null;
+  razorpay_signature: string | null;
+  payment_verified_at: string | null;
+  stock_settled_at: string | null;
   subtotal: number;
   discount: number;
   shipping_fee: number;

@@ -1,5 +1,22 @@
 'use client';
 
+/* ============================================
+   EIFA COUTURE — Account → Orders (list)
+   ============================================
+   Payment-state derivation mirrors order-confirmation/[orderId]/page.tsx
+   (Phase 5) — see that file's header comment for why 'processing' and
+   'cancelled' aren't literal `payment_status` values. Kept as a small
+   local copy rather than a shared import so this list page and the
+   detail page can each be pasted/verified independently, per the
+   project's usual workflow.
+
+   Both action buttons below route to the SAME destination
+   (/order-confirmation/[orderId]) — that page is also the Order
+   Details view and is where the actual Razorpay retry flow lives
+   (script load, checkout modal, verify, polling). This page only
+   decides *whether* to surface "Retry Payment" alongside "View Order".
+   ============================================ */
+
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
@@ -19,6 +36,65 @@ const STATUS_LABELS: Record<OrderSummary['status'], string> = {
   returned: 'Cancelled',
   refunded: 'Cancelled',
 };
+
+type PaymentUiState = 'pending' | 'successful' | 'failed' | 'cancelled';
+
+function derivePaymentState(order: OrderSummary): PaymentUiState {
+  if (order.paymentStatus === 'paid' || order.paymentStatus === 'refunded') return 'successful';
+  if (order.paymentStatus === 'failed') {
+    return order.status === 'cancelled' ? 'cancelled' : 'failed';
+  }
+  return 'pending';
+}
+
+const PAYMENT_BADGE_STYLES: Record<PaymentUiState, string> = {
+  pending: 'bg-gold/15 text-gold',
+  successful: 'bg-green-100 text-green-700',
+  failed: 'bg-red-100 text-red-600',
+  cancelled: 'bg-charcoal/10 text-charcoal/70',
+};
+
+const PAYMENT_BADGE_LABELS: Record<PaymentUiState, string> = {
+  pending: 'Payment Pending',
+  successful: 'Payment Successful',
+  failed: 'Payment Failed',
+  cancelled: 'Payment Cancelled',
+};
+
+const PAYMENT_METHOD_LABELS: Record<OrderSummary['paymentProvider'], string> = {
+  razorpay: 'Razorpay',
+  stripe: 'Stripe',
+  cod: 'Cash on Delivery',
+  other: 'Other',
+};
+
+function PaymentStateBadge({ state }: { state: PaymentUiState }) {
+  return (
+    <span
+      className={`inline-block rounded-full px-3 py-1 text-[11px] uppercase tracking-[0.15em] ${PAYMENT_BADGE_STYLES[state]}`}
+    >
+      {PAYMENT_BADGE_LABELS[state]}
+    </span>
+  );
+}
+
+function formatDate(dateString: string) {
+  return new Date(dateString).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  });
+}
+
+function formatDateTime(dateString: string) {
+  return new Date(dateString).toLocaleString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+}
 
 export default function OrdersPage() {
   const { user, isLoading: isAuthLoading } = useAuth();
@@ -82,29 +158,83 @@ export default function OrdersPage() {
           </div>
         ) : (
           <div className="mt-8 space-y-4">
-            {orders.map((order) => (
-              <Link
-                key={order.id}
-                href={`/order-confirmation/${order.id}`}
-                className="flex items-center justify-between border border-beige bg-white p-5 transition-colors hover:border-gold"
-              >
-                <div>
-                  <p className="font-heading text-lg text-charcoal">Order #{order.orderNumber}</p>
-                  <p className="text-sm text-charcoal/55">
-                    {new Date(order.placedAt).toLocaleDateString('en-IN', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}{' '}
-                    · {order.itemCount} {order.itemCount === 1 ? 'item' : 'items'}
-                  </p>
+            {orders.map((order) => {
+              const paymentState = derivePaymentState(order);
+              const needsRetry =
+                order.paymentProvider === 'razorpay' &&
+                (paymentState === 'pending' || paymentState === 'failed' || paymentState === 'cancelled');
+
+              return (
+                <div
+                  key={order.id}
+                  className="border border-beige bg-white p-5 transition-colors hover:border-gold/60"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div>
+                      <p className="font-heading text-lg text-charcoal">Order #{order.orderNumber}</p>
+                      <p className="text-sm text-charcoal/55">
+                        {formatDate(order.placedAt)} · {order.itemCount} {order.itemCount === 1 ? 'item' : 'items'}
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2">
+                      <OrderStatusBadge status={STATUS_LABELS[order.status] as 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled'} />
+                      <PaymentStateBadge state={paymentState} />
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid gap-x-6 gap-y-1 text-xs text-charcoal/55 sm:grid-cols-2 lg:grid-cols-4">
+                    <p>
+                      <span className="text-charcoal/40">Payment Method: </span>
+                      {PAYMENT_METHOD_LABELS[order.paymentProvider]}
+                    </p>
+
+                    {order.paymentVerifiedAt && (
+                      <p>
+                        <span className="text-charcoal/40">Paid On: </span>
+                        {formatDateTime(order.paymentVerifiedAt)}
+                      </p>
+                    )}
+
+                    {order.razorpayOrderId && (
+                      <p className="truncate" title={order.razorpayOrderId}>
+                        <span className="text-charcoal/40">Razorpay Order ID: </span>
+                        {order.razorpayOrderId}
+                      </p>
+                    )}
+
+                    {order.razorpayPaymentId && (
+                      <p className="truncate" title={order.razorpayPaymentId}>
+                        <span className="text-charcoal/40">Razorpay Payment ID: </span>
+                        {order.razorpayPaymentId}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+                    <span className="text-sm text-charcoal/70">{formatPrice(order.total)}</span>
+
+                    <div className="flex flex-wrap gap-3">
+                      {needsRetry && (
+                        <Link
+                          href={`/order-confirmation/${order.id}`}
+                          className="btn-luxury btn-luxury-primary text-center"
+                        >
+                          Retry Payment
+                        </Link>
+                      )}
+
+                      <Link
+                        href={`/order-confirmation/${order.id}`}
+                        className="btn-luxury btn-luxury-secondary text-center"
+                      >
+                        View Order
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <OrderStatusBadge status={STATUS_LABELS[order.status] as 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled'} />
-                  <span className="text-sm text-charcoal/70">{formatPrice(order.total)}</span>
-                </div>
-              </Link>
-            ))}
+              );
+            })}
           </div>
         )}
       </section>

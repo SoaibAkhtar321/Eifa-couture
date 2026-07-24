@@ -152,6 +152,16 @@ export interface OrderSummary {
   orderNumber: string;
   status: DbOrder['status'];
   paymentStatus: DbOrder['payment_status'];
+  /** 'razorpay' | 'stripe' | 'cod' | 'other' — used to gate Razorpay-specific retry/receipt UI. */
+  paymentProvider: DbOrder['payment_provider'];
+  /**
+   * Razorpay Order ID. Stored generically as `payment_provider_ref` since
+   * the column is shared across providers (see 0015 migration comment).
+   */
+  razorpayOrderId: string | null;
+  razorpayPaymentId: string | null;
+  /** Set by `mark_order_paid()` the moment verification succeeds. */
+  paymentVerifiedAt: string | null;
   total: number;
   itemCount: number;
   placedAt: string;
@@ -162,13 +172,27 @@ export async function fetchOrders(userId: string): Promise<{ data: OrderSummary[
 
   const { data, error } = await supabase
     .from('orders')
-    .select('id, order_number, status, payment_status, total, placed_at, order_items ( quantity )')
+    .select(
+      'id, order_number, status, payment_status, payment_provider, payment_provider_ref, razorpay_payment_id, payment_verified_at, total, placed_at, order_items ( quantity )'
+    )
     .eq('user_id', userId)
     .order('placed_at', { ascending: false });
 
   if (error || !data) return { data: [], error };
 
-  type Row = Pick<DbOrder, 'id' | 'order_number' | 'status' | 'payment_status' | 'total' | 'placed_at'> & {
+  type Row = Pick<
+    DbOrder,
+    | 'id'
+    | 'order_number'
+    | 'status'
+    | 'payment_status'
+    | 'payment_provider'
+    | 'payment_provider_ref'
+    | 'razorpay_payment_id'
+    | 'payment_verified_at'
+    | 'total'
+    | 'placed_at'
+  > & {
     order_items: Pick<DbOrderItem, 'quantity'>[];
   };
 
@@ -177,6 +201,10 @@ export async function fetchOrders(userId: string): Promise<{ data: OrderSummary[
     orderNumber: row.order_number,
     status: row.status,
     paymentStatus: row.payment_status,
+    paymentProvider: row.payment_provider,
+    razorpayOrderId: row.payment_provider_ref,
+    razorpayPaymentId: row.razorpay_payment_id,
+    paymentVerifiedAt: row.payment_verified_at,
     total: Number(row.total),
     itemCount: row.order_items.reduce((sum, item) => sum + item.quantity, 0),
     placedAt: row.placed_at,
@@ -209,7 +237,7 @@ export async function fetchOrderById(
   const { data, error } = await supabase
     .from('orders')
     .select(
-      'id, order_number, status, payment_status, subtotal, shipping_fee, total, placed_at, shipping_address, order_items ( id, name, image_url, size, color_name, quantity, unit_price )'
+      'id, order_number, status, payment_status, payment_provider, payment_provider_ref, razorpay_payment_id, payment_verified_at, subtotal, shipping_fee, total, placed_at, shipping_address, order_items ( id, name, image_url, size, color_name, quantity, unit_price )'
     )
     .eq('user_id', userId)
     .eq('id', orderId)
@@ -226,6 +254,10 @@ export async function fetchOrderById(
       orderNumber: row.order_number,
       status: row.status,
       paymentStatus: row.payment_status,
+      paymentProvider: row.payment_provider,
+      razorpayOrderId: row.payment_provider_ref,
+      razorpayPaymentId: row.razorpay_payment_id,
+      paymentVerifiedAt: row.payment_verified_at,
       subtotal: Number(row.subtotal),
       shippingFee: Number(row.shipping_fee),
       total: Number(row.total),
