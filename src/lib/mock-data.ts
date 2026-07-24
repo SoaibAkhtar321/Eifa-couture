@@ -66,14 +66,25 @@ function buildProductImages(categorySlug: string): string[] {
    ============================================ */
 
 // This file is dev-only sample data (superseded by the live Supabase
-// data layer in lib/data/products.ts) and predates per-variant pricing,
-// so none of these raw records carry `variants`/`minPrice`/`maxPrice`/
-// `hasPriceRange`. `withVariantPricing` derives them below — one
-// variant per size/color combo, all priced at the flat `price` — so
-// this file still satisfies the current `Product` shape.
+// data layer in lib/data/products.ts) and predates per-variant pricing
+// as well as the simple-product inventory fields, so none of these raw
+// records carry `variants`/`minPrice`/`maxPrice`/`hasPriceRange`/
+// `imagesByColor`, nor `sku`/`productType`/`stockQuantity`/
+// `trackInventory`/`allowBackorders`. `withVariantPricing` derives all
+// of these below with sane mock defaults, so this file still satisfies
+// the current `Product` shape without every entry needing updating.
 type RawMockProduct = Omit<
   Product,
-  "variants" | "minPrice" | "maxPrice" | "hasPriceRange" | "imagesByColor"
+  | "variants"
+  | "minPrice"
+  | "maxPrice"
+  | "hasPriceRange"
+  | "imagesByColor"
+  | "sku"
+  | "productType"
+  | "stockQuantity"
+  | "trackInventory"
+  | "allowBackorders"
 >;
 
 function withVariantPricing(product: RawMockProduct): Product {
@@ -92,6 +103,8 @@ function withVariantPricing(product: RawMockProduct): Product {
     }
   }
 
+  const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
+
   return {
     ...product,
     variants,
@@ -102,6 +115,14 @@ function withVariantPricing(product: RawMockProduct): Product {
     // product falls back to its single `images` gallery, same as a
     // live product whose colors have no images of their own.
     imagesByColor: {},
+    // Mock data also predates the simple-product inventory fields
+    // (migration 0013); every mock product has sizes/colors, so model
+    // it as a 'variant' product with per-variant stock already summed.
+    sku: `${product.id.toUpperCase()}`,
+    productType: "variant",
+    stockQuantity: totalStock,
+    trackInventory: true,
+    allowBackorders: false,
   };
 }
 
