@@ -34,7 +34,7 @@ const bodySchema = z.object({
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
-  const limit = rateLimit(`razorpay-verify:${ip}`, RATE_LIMITS.login);
+  const limit = rateLimit(`razorpay-verify:${ip}`, RATE_LIMITS.razorpayVerify);
 
   if (!limit.success) {
     return NextResponse.json(
@@ -94,6 +94,14 @@ export async function POST(request: NextRequest) {
   });
 
   if (!signatureValid) {
+    // Signal only — never log the signature/payment id values
+    // themselves, since a bad signature could originate from a
+    // tampering attempt and we don't want to help an attacker
+    // correlate probes via log output.
+    console.error('[razorpay/verify] Signature verification failed', {
+      orderId,
+      razorpayOrderId: razorpay_order_id,
+    });
     return NextResponse.json(
       { error: { message: 'Payment signature verification failed.' } },
       { status: 400 }
@@ -111,10 +119,27 @@ export async function POST(request: NextRequest) {
   });
 
   if (rpcError) {
+    console.error('[razorpay/verify] mark_order_paid RPC failed', {
+      orderId,
+      razorpayPaymentId: razorpay_payment_id,
+      error: rpcError.message,
+    });
     return NextResponse.json(
       { error: { message: 'Could not confirm payment. Please contact support.' } },
       { status: 500 }
     );
+  }
+
+  if (result?.needs_stock_review) {
+    // Payment succeeded but this order's reservation had already been
+    // released (declined-card retry, or retry after the 30-minute
+    // stale-reservation sweep) and current stock couldn't fully cover
+    // it — see migration 0016. Never blocks the customer; surfaced
+    // here purely so ops can reconcile.
+    console.warn('[razorpay/verify] Order paid but needs stock review', {
+      orderId,
+      orderNumber: result.order_number,
+    });
   }
 
   return NextResponse.json({

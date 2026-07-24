@@ -59,12 +59,16 @@ export async function POST(request: NextRequest) {
   let signatureValid: boolean;
   try {
     signatureValid = verifyWebhookSignature(rawBody, signatureHeader);
-  } catch {
+  } catch (err) {
     // Misconfigured RAZORPAY_WEBHOOK_SECRET — fail closed.
+    console.error('[webhooks/razorpay] Webhook secret not configured', {
+      error: err instanceof Error ? err.message : err,
+    });
     return NextResponse.json({ error: { message: 'Webhook not configured.' } }, { status: 500 });
   }
 
   if (!signatureValid) {
+    console.error('[webhooks/razorpay] Invalid webhook signature — request rejected.');
     return NextResponse.json({ error: { message: 'Invalid signature.' } }, { status: 400 });
   }
 
@@ -72,6 +76,7 @@ export async function POST(request: NextRequest) {
   try {
     event = JSON.parse(rawBody);
   } catch {
+    console.error('[webhooks/razorpay] Payload was not valid JSON despite a valid signature.');
     return NextResponse.json({ error: { message: 'Invalid JSON.' } }, { status: 400 });
   }
 
@@ -101,11 +106,15 @@ export async function POST(request: NextRequest) {
     // Nothing we can match this to. Acknowledge anyway — retrying
     // won't make a matching order appear, and returning non-2xx here
     // just causes Razorpay to hammer us with retries indefinitely.
+    console.error('[webhooks/razorpay] No order matches payment_provider_ref', {
+      event: event.event,
+      razorpayOrderId,
+    });
     return NextResponse.json({ received: true });
   }
 
   if (event.event === 'payment.captured') {
-    const { error: rpcError } = await serviceClient.rpc('mark_order_paid', {
+    const { data: result, error: rpcError } = await serviceClient.rpc('mark_order_paid', {
       p_order_id: order.id,
       p_razorpay_payment_id: razorpayPaymentId,
       p_razorpay_signature: signatureHeader,
@@ -114,7 +123,23 @@ export async function POST(request: NextRequest) {
     if (rpcError) {
       // Real failure (e.g. DB hiccup) — return 500 so Razorpay
       // retries this delivery later rather than silently losing it.
+      console.error('[webhooks/razorpay] mark_order_paid RPC failed', {
+        orderId: order.id,
+        razorpayPaymentId,
+        error: rpcError.message,
+      });
       return NextResponse.json({ error: { message: 'Failed to settle order.' } }, { status: 500 });
+    }
+
+    if (result?.needs_stock_review) {
+      // See migration 0016 — payment settled after this order's
+      // reservation had already been released and current stock
+      // couldn't fully cover it. Never blocks the webhook ack;
+      // surfaced purely for ops reconciliation.
+      console.warn('[webhooks/razorpay] Order paid but needs stock review', {
+        orderId: order.id,
+        orderNumber: result.order_number,
+      });
     }
 
     return NextResponse.json({ received: true });
@@ -127,6 +152,10 @@ export async function POST(request: NextRequest) {
     });
 
     if (rpcError) {
+      console.error('[webhooks/razorpay] release_order_reservation RPC failed', {
+        orderId: order.id,
+        error: rpcError.message,
+      });
       return NextResponse.json({ error: { message: 'Failed to release order.' } }, { status: 500 });
     }
 

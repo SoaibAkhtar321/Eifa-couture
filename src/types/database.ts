@@ -237,6 +237,11 @@ export interface DbOrder {
   razorpay_signature: string | null;
   payment_verified_at: string | null;
   stock_settled_at: string | null;
+  /** Set by mark_order_paid() when a payment settled after this order's
+   *  stock reservation had already been released and current stock
+   *  couldn't fully cover it (see migration 0016). Ops-facing only —
+   *  not currently surfaced in customer UI. */
+  needs_stock_review: boolean;
   subtotal: number;
   discount: number;
   shipping_fee: number;

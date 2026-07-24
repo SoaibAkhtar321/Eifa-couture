@@ -37,7 +37,7 @@ const bodySchema = z.object({
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
-  const limit = rateLimit(`razorpay-create-order:${ip}`, RATE_LIMITS.login);
+  const limit = rateLimit(`razorpay-create-order:${ip}`, RATE_LIMITS.razorpayCreateOrder);
 
   if (!limit.success) {
     return NextResponse.json(
@@ -135,7 +135,12 @@ export async function POST(request: NextRequest) {
       internalOrderId: order.id,
       orderNumber: order.order_number,
     });
-  } catch {
+  } catch (err) {
+    console.error('[razorpay/create-order] Razorpay order creation failed', {
+      orderId: order.id,
+      orderNumber: order.order_number,
+      error: err instanceof Error ? err.message : err,
+    });
     return NextResponse.json(
       { error: { message: 'Could not initiate payment. Please try again.' } },
       { status: 502 }
@@ -152,6 +157,11 @@ export async function POST(request: NextRequest) {
     .eq('id', order.id);
 
   if (updateError) {
+    console.error('[razorpay/create-order] Failed to stamp payment_provider_ref', {
+      orderId: order.id,
+      razorpayOrderId: razorpayOrder.razorpayOrderId,
+      error: updateError.message,
+    });
     return NextResponse.json(
       { error: { message: 'Could not link payment to order. Please try again.' } },
       { status: 500 }

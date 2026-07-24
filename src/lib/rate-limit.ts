@@ -105,6 +105,14 @@ export function getClientIp(request: NextRequest): string {
  * endpoint. That endpoint doesn't exist yet in the codebase (only
  * admin coupon management is implemented) — this config is here so
  * protecting it is a one-line `rateLimit()` call once it ships.
+ *
+ * `razorpayCreateOrder` / `razorpayVerify` are deliberately more
+ * permissive than `login`: unlike a login attempt, a single legitimate
+ * checkout can call create-order more than once (page refresh,
+ * dismissed-modal retry, "Retry Payment" on order-confirmation), and
+ * IPs are frequently shared across many customers behind mobile
+ * carrier NAT/office networks in this market. Both routes are still
+ * idempotent server-side regardless of how many times they're called.
  */
 export const RATE_LIMITS = {
   login: { limit: 5, windowMs: 60_000 },
@@ -112,6 +120,8 @@ export const RATE_LIMITS = {
   forgotPassword: { limit: 3, windowMs: 15 * 60_000 },
   contact: { limit: 5, windowMs: 10 * 60_000 },
   coupon: { limit: 10, windowMs: 60_000 },
+  razorpayCreateOrder: { limit: 20, windowMs: 60_000 },
+  razorpayVerify: { limit: 20, windowMs: 60_000 },
 } as const satisfies Record<string, RateLimitConfig>;
 
 export function rateLimitResponseHeaders(retryAfterSeconds: number): HeadersInit {
