@@ -149,6 +149,86 @@ export function verifyWebhookSignature(rawBody: string, signatureHeader: string)
   return safeCompare(expected, signatureHeader);
 }
 
+export interface CreateRazorpayRefundParams {
+  /** Razorpay Payment ID (the captured payment being refunded). */
+  razorpayPaymentId: string;
+  /** Amount in the smallest currency unit (paise for INR). */
+  amountInPaise: number;
+  /** Sent as `X-Razorpay-Idempotency-Key` — a retried call with the
+   *  same key returns the original refund instead of creating a
+   *  second one on Razorpay's side. */
+  idempotencyKey: string;
+  /** Our internal order id / refund id, stored in Razorpay's notes
+   *  for traceability from their dashboard back to our records. */
+  notes?: Record<string, string>;
+}
+
+export interface RazorpayRefundResult {
+  razorpayRefundId: string;
+  status: string;
+  amount: number;
+}
+
+interface RazorpayRefundApiResponse {
+  id: string;
+  status: string;
+  amount: number;
+}
+
+interface RazorpayApiErrorBody {
+  error?: { description?: string; code?: string };
+}
+
+/**
+ * Creates a refund for a captured payment via a direct call to
+ * Razorpay's REST API (bypassing the `razorpay` npm SDK's
+ * `payments.refund()`, which does not support custom headers beyond
+ * `X-Razorpay-Account`/`Content-Type` — see resources/api.js in the
+ * SDK). The idempotency key is the only thing that requires this;
+ * everything else about the request mirrors what the SDK would send.
+ *
+ * Throws on any non-2xx response — callers are expected to catch and
+ * translate into a `finalize_refund('failed', ...)` RPC call.
+ */
+export async function createRazorpayRefund(
+  params: CreateRazorpayRefundParams
+): Promise<RazorpayRefundResult> {
+  assertServerCredentials();
+
+  const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
+
+  const response = await fetch(
+    `https://api.razorpay.com/v1/payments/${params.razorpayPaymentId}/refund`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${auth}`,
+        'Content-Type': 'application/json',
+        'X-Razorpay-Idempotency-Key': params.idempotencyKey,
+      },
+      body: JSON.stringify({
+        amount: Math.round(params.amountInPaise),
+        speed: 'normal',
+        notes: params.notes ?? {},
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => null)) as RazorpayApiErrorBody | null;
+    const message = body?.error?.description ?? `Razorpay refund request failed (${response.status}).`;
+    throw new Error(message);
+  }
+
+  const refund = (await response.json()) as RazorpayRefundApiResponse;
+
+  return {
+    razorpayRefundId: refund.id,
+    status: refund.status,
+    amount: Number(refund.amount),
+  };
+}
+
 function safeCompare(a: string, b: string): boolean {
   const bufA = Buffer.from(a);
   const bufB = Buffer.from(b);

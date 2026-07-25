@@ -23,7 +23,7 @@ export type OrderStatus =
   | "cancelled"
   | "returned"
   | "refunded";
-export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
+export type PaymentStatus = "pending" | "paid" | "failed" | "refunded" | "partially_refunded";
 export type PaymentProvider = "razorpay" | "stripe" | "cod" | "other";
 export type CouponType = "percentage" | "fixed";
 export type NotificationType = "order" | "promotion" | "system" | "review";
@@ -282,6 +282,23 @@ export interface DbOrderStatusHistory {
   actor_id: string | null;
   notes: string | null;
   created_at: string;
+}
+
+export type RefundRowStatus = "processing" | "processed" | "failed";
+
+export interface DbRefund {
+  id: string;
+  order_id: string;
+  razorpay_payment_id: string;
+  razorpay_refund_id: string | null;
+  amount: number;
+  status: RefundRowStatus;
+  reason: string | null;
+  idempotency_key: string;
+  initiated_by: string | null;
+  error_message: string | null;
+  created_at: string;
+  processed_at: string | null;
 }
 
 export interface DbShipment {

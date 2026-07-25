@@ -12,6 +12,9 @@
      - /api/payments/razorpay/verify   (post-checkout client callback)
      - /api/webhooks/razorpay          (Razorpay server-to-server webhook)
      - /api/payments/razorpay/create-order (to stamp payment_provider_ref)
+     - /api/admin/orders/[id]/refund   (issues refunds — see migration
+       0017_refund_management.sql for why refunds writes are
+       service-role-only, same trust boundary as mark_order_paid())
 
    Every other server read (order history, account pages, etc.) must
    keep using lib/supabase/server.ts, which respects RLS and the

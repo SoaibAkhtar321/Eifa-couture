@@ -18,7 +18,7 @@
 import { resolveVariantId } from '@/lib/cart';
 import { createClient } from '@/lib/supabase/client';
 import type { CartItem } from '@/types';
-import type { DbAddress, DbOrder, DbOrderItem } from '@/types/database';
+import type { DbAddress, DbOrder, DbOrderItem, DbRefund } from '@/types/database';
 
 export interface CreateOrderShippingAddress {
   full_name: string;
@@ -146,6 +146,28 @@ export async function createOrder(
   return { data: data as CreateOrderResult, error: null };
 }
 
+/** Refund info shown to the customer — only 'processed' refunds are
+ *  surfaced (a 'processing' or 'failed' attempt is an internal detail
+ *  the admin panel tracks; the customer only needs to know about
+ *  money that's actually on its way back to them). */
+export interface CustomerRefundSummary {
+  amount: number;
+  reason: string | null;
+  refundedAt: string;
+}
+
+type RefundRow = Pick<DbRefund, 'amount' | 'status' | 'reason' | 'created_at' | 'processed_at'>;
+
+function toCustomerRefunds(rows: RefundRow[] | null | undefined): CustomerRefundSummary[] {
+  return (rows ?? [])
+    .filter((r) => r.status === 'processed')
+    .map((r) => ({
+      amount: Number(r.amount),
+      reason: r.reason,
+      refundedAt: r.processed_at ?? r.created_at,
+    }));
+}
+
 /** Order summary shape the Account → Orders list consumes. */
 export interface OrderSummary {
   id: string;
@@ -165,6 +187,7 @@ export interface OrderSummary {
   total: number;
   itemCount: number;
   placedAt: string;
+  refunds: CustomerRefundSummary[];
 }
 
 export async function fetchOrders(userId: string): Promise<{ data: OrderSummary[]; error: unknown }> {
@@ -173,7 +196,7 @@ export async function fetchOrders(userId: string): Promise<{ data: OrderSummary[
   const { data, error } = await supabase
     .from('orders')
     .select(
-      'id, order_number, status, payment_status, payment_provider, payment_provider_ref, razorpay_payment_id, payment_verified_at, total, placed_at, order_items ( quantity )'
+      'id, order_number, status, payment_status, payment_provider, payment_provider_ref, razorpay_payment_id, payment_verified_at, total, placed_at, order_items ( quantity ), refunds ( amount, status, reason, created_at, processed_at )'
     )
     .eq('user_id', userId)
     .order('placed_at', { ascending: false });
@@ -194,6 +217,7 @@ export async function fetchOrders(userId: string): Promise<{ data: OrderSummary[
     | 'placed_at'
   > & {
     order_items: Pick<DbOrderItem, 'quantity'>[];
+    refunds: RefundRow[];
   };
 
   const summaries: OrderSummary[] = (data as unknown as Row[]).map((row) => ({
@@ -208,6 +232,7 @@ export async function fetchOrders(userId: string): Promise<{ data: OrderSummary[
     total: Number(row.total),
     itemCount: row.order_items.reduce((sum, item) => sum + item.quantity, 0),
     placedAt: row.placed_at,
+    refunds: toCustomerRefunds(row.refunds),
   }));
 
   return { data: summaries, error: null };
@@ -237,7 +262,7 @@ export async function fetchOrderById(
   const { data, error } = await supabase
     .from('orders')
     .select(
-      'id, order_number, status, payment_status, payment_provider, payment_provider_ref, razorpay_payment_id, payment_verified_at, subtotal, shipping_fee, total, placed_at, shipping_address, order_items ( id, name, image_url, size, color_name, quantity, unit_price )'
+      'id, order_number, status, payment_status, payment_provider, payment_provider_ref, razorpay_payment_id, payment_verified_at, subtotal, shipping_fee, total, placed_at, shipping_address, order_items ( id, name, image_url, size, color_name, quantity, unit_price ), refunds ( amount, status, reason, created_at, processed_at )'
     )
     .eq('user_id', userId)
     .eq('id', orderId)
@@ -245,7 +270,7 @@ export async function fetchOrderById(
 
   if (error || !data) return { data: null, error };
 
-  type Row = DbOrder & { order_items: DbOrderItem[] };
+  type Row = DbOrder & { order_items: DbOrderItem[]; refunds: RefundRow[] };
   const row = data as unknown as Row;
 
   return {
@@ -273,6 +298,7 @@ export async function fetchOrderById(
         quantity: item.quantity,
         unitPrice: Number(item.unit_price),
       })),
+      refunds: toCustomerRefunds(row.refunds),
     },
     error: null,
   };

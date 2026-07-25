@@ -49,7 +49,14 @@ import { formatPrice } from '@/lib/utils';
 
 const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
 
-type PaymentUiState = 'pending' | 'processing' | 'successful' | 'failed' | 'cancelled';
+type PaymentUiState =
+  | 'pending'
+  | 'processing'
+  | 'successful'
+  | 'failed'
+  | 'cancelled'
+  | 'refunded'
+  | 'partially_refunded';
 
 type RetryPhase = 'idle' | 'launching' | 'awaiting_payment' | 'verifying';
 
@@ -86,7 +93,9 @@ function formatOrderDateTime(dateString: string) {
 
 function derivePaymentState(order: OrderDetail, isRetryInFlight: boolean): PaymentUiState {
   if (isRetryInFlight) return 'processing';
-  if (order.paymentStatus === 'paid' || order.paymentStatus === 'refunded') return 'successful';
+  if (order.paymentStatus === 'refunded') return 'refunded';
+  if (order.paymentStatus === 'partially_refunded') return 'partially_refunded';
+  if (order.paymentStatus === 'paid') return 'successful';
   if (order.paymentStatus === 'failed') {
     return order.status === 'cancelled' ? 'cancelled' : 'failed';
   }
@@ -99,6 +108,8 @@ const PAYMENT_BADGE_STYLES: Record<PaymentUiState, string> = {
   successful: 'bg-green-100 text-green-700',
   failed: 'bg-red-100 text-red-600',
   cancelled: 'bg-charcoal/10 text-charcoal/70',
+  refunded: 'bg-charcoal/10 text-charcoal/70',
+  partially_refunded: 'bg-amber-100 text-amber-800',
 };
 
 const PAYMENT_BADGE_LABELS: Record<PaymentUiState, string> = {
@@ -107,6 +118,8 @@ const PAYMENT_BADGE_LABELS: Record<PaymentUiState, string> = {
   successful: 'Payment Successful',
   failed: 'Payment Failed',
   cancelled: 'Payment Cancelled',
+  refunded: 'Refunded',
+  partially_refunded: 'Partially Refunded',
 };
 
 function PaymentStateBadge({ state }: { state: PaymentUiState }) {
@@ -350,7 +363,9 @@ export default function OrderConfirmationPage() {
                       close this window.
                     </p>
                   </>
-                ) : paymentState === 'successful' ? (
+                ) : paymentState === 'successful' ||
+                  paymentState === 'refunded' ||
+                  paymentState === 'partially_refunded' ? (
                   <>
                     <span className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-full border border-gold/40 bg-gold/10 text-2xl text-gold">
                       ✓
@@ -374,7 +389,7 @@ export default function OrderConfirmationPage() {
                         Order #{order.orderNumber}
                       </span>
 
-                      <PaymentStateBadge state="successful" />
+                      <PaymentStateBadge state={paymentState} />
                     </div>
 
                     <p className="mt-1 text-xs uppercase tracking-[0.18em] text-charcoal/45">
@@ -401,6 +416,28 @@ export default function OrderConfirmationPage() {
                             {order.razorpayOrderId}
                           </p>
                         )}
+                      </div>
+                    )}
+
+                    {order.refunds.length > 0 && (
+                      <div className="mx-auto mt-6 max-w-sm space-y-2 border-t border-beige pt-5 text-left text-xs text-charcoal/55">
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-charcoal/40">
+                          Refund{order.refunds.length > 1 ? 's' : ''}
+                        </p>
+                        {order.refunds.map((refund, index) => (
+                          <p key={index}>
+                            <span className="text-charcoal">{formatPrice(refund.amount)}</span>{' '}
+                            <span className="text-charcoal/40">refunded on</span>{' '}
+                            {formatOrderDateTime(refund.refundedAt)}
+                            {refund.reason && (
+                              <>
+                                <br />
+                                <span className="text-charcoal/40">Reason: </span>
+                                {refund.reason}
+                              </>
+                            )}
+                          </p>
+                        ))}
                       </div>
                     )}
 

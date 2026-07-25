@@ -37,10 +37,12 @@ const STATUS_LABELS: Record<OrderSummary['status'], string> = {
   refunded: 'Cancelled',
 };
 
-type PaymentUiState = 'pending' | 'successful' | 'failed' | 'cancelled';
+type PaymentUiState = 'pending' | 'successful' | 'failed' | 'cancelled' | 'refunded' | 'partially_refunded';
 
 function derivePaymentState(order: OrderSummary): PaymentUiState {
-  if (order.paymentStatus === 'paid' || order.paymentStatus === 'refunded') return 'successful';
+  if (order.paymentStatus === 'refunded') return 'refunded';
+  if (order.paymentStatus === 'partially_refunded') return 'partially_refunded';
+  if (order.paymentStatus === 'paid') return 'successful';
   if (order.paymentStatus === 'failed') {
     return order.status === 'cancelled' ? 'cancelled' : 'failed';
   }
@@ -52,6 +54,8 @@ const PAYMENT_BADGE_STYLES: Record<PaymentUiState, string> = {
   successful: 'bg-green-100 text-green-700',
   failed: 'bg-red-100 text-red-600',
   cancelled: 'bg-charcoal/10 text-charcoal/70',
+  refunded: 'bg-charcoal/10 text-charcoal/70',
+  partially_refunded: 'bg-amber-100 text-amber-800',
 };
 
 const PAYMENT_BADGE_LABELS: Record<PaymentUiState, string> = {
@@ -59,6 +63,8 @@ const PAYMENT_BADGE_LABELS: Record<PaymentUiState, string> = {
   successful: 'Payment Successful',
   failed: 'Payment Failed',
   cancelled: 'Payment Cancelled',
+  refunded: 'Refunded',
+  partially_refunded: 'Partially Refunded',
 };
 
 const PAYMENT_METHOD_LABELS: Record<OrderSummary['paymentProvider'], string> = {
@@ -210,6 +216,18 @@ export default function OrdersPage() {
                       </p>
                     )}
                   </div>
+
+                  {order.refunds.length > 0 && (
+                    <div className="mt-4 space-y-1.5 border-t border-beige pt-4">
+                      {order.refunds.map((refund, index) => (
+                        <p key={index} className="text-xs text-charcoal/60">
+                          <span className="text-charcoal/40">Refunded {formatPrice(refund.amount)} on </span>
+                          {formatDate(refund.refundedAt)}
+                          {refund.reason && <span className="text-charcoal/40"> — {refund.reason}</span>}
+                        </p>
+                      ))}
+                    </div>
+                  )}
 
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
                     <span className="text-sm text-charcoal/70">{formatPrice(order.total)}</span>

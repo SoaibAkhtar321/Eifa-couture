@@ -26,6 +26,7 @@ export const PAYMENT_STATUS_OPTIONS: { value: PaymentStatus; label: string }[] =
   { value: 'pending', label: 'Pending' },
   { value: 'paid', label: 'Paid' },
   { value: 'failed', label: 'Failed' },
+  { value: 'partially_refunded', label: 'Partially refunded' },
   { value: 'refunded', label: 'Refunded' },
 ];
 
@@ -57,6 +58,17 @@ export interface OrderListResult {
   pageSize: number;
 }
 
+export interface RefundRecord {
+  id: string;
+  amount: number;
+  status: 'processing' | 'processed' | 'failed';
+  reason: string | null;
+  razorpayRefundId: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  processedAt: string | null;
+}
+
 export interface OrderDetail {
   id: string;
   orderNumber: string;
@@ -64,6 +76,7 @@ export interface OrderDetail {
   paymentStatus: PaymentStatus;
   paymentProvider: PaymentProvider;
   paymentProviderRef: string | null;
+  razorpayPaymentId: string | null;
   subtotal: number;
   discount: number;
   shippingFee: number;
@@ -92,6 +105,10 @@ export interface OrderDetail {
     quantity: number;
     unitPrice: number;
   }[];
+  refunds: RefundRecord[];
+  /** total - sum(processed/processing refund amounts). 0 when there's
+   *  nothing left to refund. */
+  refundableAmount: number;
 }
 
 /** One row from `order_status_history`, joined with the actor's display name (if any). */

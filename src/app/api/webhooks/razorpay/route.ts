@@ -24,7 +24,22 @@
 
    Configure in Razorpay dashboard → Settings → Webhooks:
      URL: https://<your-domain>/api/webhooks/razorpay
-     Events: payment.authorized, payment.captured, payment.failed
+     Events: payment.authorized, payment.captured, payment.failed,
+             refund.processed, refund.failed
+
+   Refund reconciliation (added alongside migration
+   0017_refund_management.sql): the admin refund route
+   (/api/admin/orders/[id]/refund) already calls `finalize_refund`
+   synchronously right after Razorpay's refund API responds, so in
+   the normal case these two events are no-ops here (finalize_refund
+   is idempotent — see the migration). They exist to close the one
+   gap that route's own comment calls out: if the server process dies
+   between Razorpay confirming the refund and our finalize_refund
+   call running, the `refunds` row is stuck 'processing' forever with
+   no other signal that the money actually moved. These branches
+   reuse the exact same `finalize_refund` RPC that route uses, so
+   there is no duplicated settlement logic — just an additional,
+   independent trigger for it.
    ============================================ */
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -40,6 +55,13 @@ interface RazorpayWebhookPayload {
         id: string;
         order_id: string;
         notes?: { internal_order_id?: string };
+      };
+    };
+    refund?: {
+      entity?: {
+        id: string;
+        payment_id: string;
+        status: string;
       };
     };
   };
@@ -75,11 +97,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: { message: 'Invalid JSON.' } }, { status: 400 });
   }
 
+  if (event.event === 'refund.processed' || event.event === 'refund.failed') {
+    return handleRefundEvent(event);
+  }
+
   const paymentEntity = event.payload?.payment?.entity;
 
   if (!paymentEntity) {
-    // Event type we don't act on (e.g. refund events). Acknowledge
-    // with 200 so Razorpay doesn't retry it forever.
+    // Event type we don't act on. Acknowledge with 200 so Razorpay
+    // doesn't retry it forever.
     return NextResponse.json({ received: true });
   }
 
@@ -159,5 +185,61 @@ export async function POST(request: NextRequest) {
 
   // Any other event type (refund.created, order.paid, etc.) — not
   // handled yet. Acknowledge so Razorpay stops retrying it.
+  return NextResponse.json({ received: true });
+}
+
+async function handleRefundEvent(event: RazorpayWebhookPayload): Promise<NextResponse> {
+  const refundEntity = event.payload?.refund?.entity;
+
+  if (!refundEntity) {
+    return NextResponse.json({ received: true });
+  }
+
+  const serviceClient = createServiceClient();
+
+  // Prefer matching by razorpay_refund_id — set the moment our own
+  // finalize_refund call succeeds, so this is the common case and
+  // means the row is already in a terminal state (idempotent no-op).
+  let refundRow = (
+    await serviceClient
+      .from('refunds')
+      .select('id, status')
+      .eq('razorpay_refund_id', refundEntity.id)
+      .maybeSingle<{ id: string; status: string }>()
+  ).data;
+
+  if (!refundRow) {
+    // Not found by refund id — this is the crash-recovery case this
+    // handler exists for: our record of the Razorpay refund id was
+    // never written. Fall back to the one 'processing' row for this
+    // payment (initiate_refund's order-row lock guarantees there is
+    // at most one 'processing' refund per order at a time).
+    refundRow = (
+      await serviceClient
+        .from('refunds')
+        .select('id, status')
+        .eq('razorpay_payment_id', refundEntity.payment_id)
+        .eq('status', 'processing')
+        .maybeSingle<{ id: string; status: string }>()
+    ).data;
+  }
+
+  if (!refundRow) {
+    // Nothing to reconcile against — acknowledge so Razorpay doesn't
+    // retry indefinitely for a refund we have no record of.
+    return NextResponse.json({ received: true });
+  }
+
+  const { error: rpcError } = await serviceClient.rpc('finalize_refund', {
+    p_refund_id: refundRow.id,
+    p_status: event.event === 'refund.processed' ? 'processed' : 'failed',
+    p_razorpay_refund_id: event.event === 'refund.processed' ? refundEntity.id : null,
+    p_error_message: event.event === 'refund.failed' ? 'Reported failed by Razorpay webhook.' : null,
+  });
+
+  if (rpcError) {
+    return NextResponse.json({ error: { message: 'Failed to reconcile refund.' } }, { status: 500 });
+  }
+
   return NextResponse.json({ received: true });
 }

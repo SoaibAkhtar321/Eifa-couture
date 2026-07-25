@@ -43,6 +43,7 @@ const PAYMENT_BADGE_CLASSES: Record<string, string> = {
   pending: 'bg-charcoal/10 text-charcoal/60',
   paid: 'bg-green-100 text-green-800',
   failed: 'bg-red-100 text-red-800',
+  partially_refunded: 'bg-amber-100 text-amber-800',
   refunded: 'bg-red-100 text-red-800',
 };
 

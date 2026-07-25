@@ -9,8 +9,15 @@
    ============================================ */
 
 import { createClient as createServerClient } from '@/lib/supabase/server';
-import type { DbOrder, DbOrderItem, DbOrderStatusHistory } from '@/types/database';
-import type { OrderListFilters, OrderListResult, OrderListRow, OrderDetail, OrderHistoryEntry } from './orders-types';
+import type { DbOrder, DbOrderItem, DbOrderStatusHistory, DbRefund } from '@/types/database';
+import type {
+  OrderListFilters,
+  OrderListResult,
+  OrderListRow,
+  OrderDetail,
+  OrderHistoryEntry,
+  RefundRecord,
+} from './orders-types';
 
 export * from './orders-types';
 
@@ -110,8 +117,8 @@ export async function getOrderById(orderId: string): Promise<{
     .select(
       `
       id, order_number, status, payment_status, payment_provider, payment_provider_ref,
-      subtotal, discount, shipping_fee, total, tracking_number, shipping_provider, invoice_url,
-      shipping_address, placed_at, updated_at,
+      razorpay_payment_id, subtotal, discount, shipping_fee, total, tracking_number,
+      shipping_provider, invoice_url, shipping_address, placed_at, updated_at,
       order_items ( id, name, image_url, size, color_name, quantity, unit_price )
     `
     )
@@ -129,6 +136,37 @@ export async function getOrderById(orderId: string): Promise<{
   const row = data as unknown as Row;
   const address = row.shipping_address as Record<string, unknown>;
 
+  // Separate query rather than a nested select: `refunds` has no
+  // foreign-key embed configured for this shape yet, and keeping it
+  // standalone means a refund query failure doesn't fail the whole
+  // order detail fetch — worst case the page renders with an empty
+  // refund history and the admin can still see/act on the order.
+  const { data: refundRows } = await supabase
+    .from('refunds')
+    .select('id, amount, status, reason, razorpay_refund_id, error_message, created_at, processed_at')
+    .eq('order_id', orderId)
+    .order('created_at', { ascending: false });
+
+  const refunds: RefundRecord[] = ((refundRows ?? []) as unknown as DbRefund[]).map((r) => ({
+    id: r.id,
+    amount: Number(r.amount),
+    status: r.status,
+    reason: r.reason,
+    razorpayRefundId: r.razorpay_refund_id,
+    errorMessage: r.error_message,
+    createdAt: r.created_at,
+    processedAt: r.processed_at,
+  }));
+
+  const committedRefundTotal = refunds
+    .filter((r) => r.status === 'processing' || r.status === 'processed')
+    .reduce((sum, r) => sum + r.amount, 0);
+
+  const refundableAmount =
+    row.payment_status === 'paid' || row.payment_status === 'partially_refunded'
+      ? Math.max(Number(row.total) - committedRefundTotal, 0)
+      : 0;
+
   return {
     data: {
       id: row.id,
@@ -137,6 +175,7 @@ export async function getOrderById(orderId: string): Promise<{
       paymentStatus: row.payment_status,
       paymentProvider: row.payment_provider,
       paymentProviderRef: row.payment_provider_ref,
+      razorpayPaymentId: row.razorpay_payment_id,
       subtotal: Number(row.subtotal),
       discount: Number(row.discount),
       shippingFee: Number(row.shipping_fee),
@@ -165,6 +204,8 @@ export async function getOrderById(orderId: string): Promise<{
         quantity: item.quantity,
         unitPrice: Number(item.unit_price),
       })),
+      refunds,
+      refundableAmount,
     },
     error: null,
   };

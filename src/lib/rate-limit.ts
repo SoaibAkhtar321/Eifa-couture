@@ -122,6 +122,12 @@ export const RATE_LIMITS = {
   coupon: { limit: 10, windowMs: 60_000 },
   razorpayCreateOrder: { limit: 20, windowMs: 60_000 },
   razorpayVerify: { limit: 20, windowMs: 60_000 },
+  /** Admin refund issuance — keyed by admin user id (see the refund
+   *  route), not IP, since admins may share an office network. Loose
+   *  enough not to interfere with legitimate use, tight enough to
+   *  slow down a compromised admin session or a UI double-click bug
+   *  from firing many refunds in a row. */
+  adminRefund: { limit: 20, windowMs: 60_000 },
 } as const satisfies Record<string, RateLimitConfig>;
 
 export function rateLimitResponseHeaders(retryAfterSeconds: number): HeadersInit {

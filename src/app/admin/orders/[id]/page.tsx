@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { getOrderById, getOrderStatusHistory } from '@/lib/admin/orders';
 import OrderStatusUpdate from '@/components/admin/orders/OrderStatusUpdate';
 import OrderTimeline from '@/components/admin/orders/OrderTimeline';
+import RefundPanel from '@/components/admin/orders/RefundPanel';
 import { formatPrice, formatDate } from '@/lib/utils';
 
 export const metadata = { title: 'Order detail' };
@@ -138,6 +139,16 @@ export default async function AdminOrderDetailPage({ params }: OrderDetailPagePr
               )}
             </div>
           </section>
+
+          <RefundPanel
+            orderId={order.id}
+            orderTotal={order.total}
+            paymentStatus={order.paymentStatus}
+            paymentProvider={order.paymentProvider}
+            razorpayPaymentId={order.razorpayPaymentId}
+            refundableAmount={order.refundableAmount}
+            refunds={order.refunds}
+          />
         </div>
       </div>
     </div>
