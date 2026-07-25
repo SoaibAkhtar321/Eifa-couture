@@ -243,6 +243,10 @@ export interface DbOrder {
    *  couldn't fully cover it (see migration 0016). Ops-facing only —
    *  not currently surfaced in customer UI. */
   needs_stock_review: boolean;
+  /** Razorpay method at settlement (upi, netbanking, wallet, emi,
+   *  credit_card, debit_card, card, other). Null until paid. See
+   *  migration 0019. */
+  payment_method: string | null;
   subtotal: number;
   discount: number;
   shipping_fee: number;

@@ -55,6 +55,13 @@ interface RazorpayWebhookPayload {
         id: string;
         order_id: string;
         notes?: { internal_order_id?: string };
+        // Already present on every payment.captured delivery — no
+        // extra Razorpay API call needed to read these. `method` is
+        // Razorpay's own classification (card / upi / netbanking /
+        // wallet / emi / other); `card.type` is only present when
+        // method === 'card' and distinguishes credit vs. debit.
+        method?: string;
+        card?: { type?: string } | null;
       };
     };
     refund?: {
@@ -157,6 +164,7 @@ export async function POST(request: NextRequest) {
       p_order_id: order.id,
       p_razorpay_payment_id: razorpayPaymentId,
       p_razorpay_signature: signatureHeader,
+      p_payment_method: derivePaymentMethod(paymentEntity),
       p_actor_type: 'webhook',
     });
 
@@ -186,6 +194,35 @@ export async function POST(request: NextRequest) {
   // Any other event type (refund.created, order.paid, etc.) — not
   // handled yet. Acknowledge so Razorpay stops retrying it.
   return NextResponse.json({ received: true });
+}
+
+/**
+ * Maps Razorpay's payment.entity method/card fields to the bucket
+ * names used by the Financial Dashboard's Payment Method Analytics
+ * (see migration 0019). Pure/no side effects — does not call
+ * Razorpay or the database, just reads fields already present on the
+ * webhook payload.
+ */
+function derivePaymentMethod(entity: {
+  method?: string;
+  card?: { type?: string } | null;
+}): string | null {
+  const method = entity.method?.toLowerCase();
+
+  if (!method) return null;
+
+  if (method === 'card') {
+    const cardType = entity.card?.type?.toLowerCase();
+    if (cardType === 'credit') return 'credit_card';
+    if (cardType === 'debit') return 'debit_card';
+    return 'card';
+  }
+
+  if (['upi', 'netbanking', 'wallet', 'emi'].includes(method)) {
+    return method;
+  }
+
+  return 'other';
 }
 
 async function handleRefundEvent(event: RazorpayWebhookPayload): Promise<NextResponse> {
