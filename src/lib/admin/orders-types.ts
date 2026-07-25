@@ -34,6 +34,11 @@ export interface OrderListFilters {
   search?: string;
   status?: OrderStatus;
   paymentStatus?: PaymentStatus;
+
+  // Add these two lines
+  dateFrom?: string;
+  dateTo?: string;
+
   sort?: 'newest' | 'oldest' | 'total_desc' | 'total_asc';
   page?: number;
   pageSize?: number;
@@ -44,13 +49,17 @@ export interface OrderListRow {
   orderNumber: string;
   status: OrderStatus;
   paymentStatus: PaymentStatus;
+  paymentMethod: PaymentProvider;
+
   total: number;
   placedAt: string;
+
   customerName: string;
+  customerEmail: string;
   customerPhone: string;
+
   itemCount: number;
 }
-
 export interface OrderListResult {
   rows: OrderListRow[];
   totalCount: number;
