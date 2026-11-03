@@ -1,5 +1,5 @@
 /* ============================================
-   EIFA COUTURE — Auth Middleware
+   EIFA COUTURE — Auth Proxy (Next 16 "middleware")
    ============================================
    Runs on every matched request to refresh the Supabase session
    cookie before it expires. This is the piece `lib/supabase/server.ts`
@@ -20,7 +20,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   let response = NextResponse.next({
     request,
   });

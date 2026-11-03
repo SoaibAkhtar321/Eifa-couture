@@ -1,6 +1,7 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/ui/CartDrawer';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 import CartSyncProvider from '@/providers/CartSyncProvider';
 import WishlistSyncProvider from '@/providers/WishlistSyncProvider';
 
@@ -18,6 +19,7 @@ export default function StorefrontLayout({
           <div className="flex-1 w-full relative z-10">{children}</div>
 
           <Footer />
+          <MobileBottomNav />
           <CartDrawer />
         </div>
       </WishlistSyncProvider>

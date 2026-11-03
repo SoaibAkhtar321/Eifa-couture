@@ -21,9 +21,9 @@
   --color-light-ivory: #FEFDFB;
 
   /* ── Typography ── */
-  --font-heading: "Playfair Display", serif;
-  --font-subheading: "Cormorant Garamond", serif;
-  --font-body: "Inter", sans-serif;
+  --font-heading: "Playfair Display Variable", "Playfair Display", Georgia, serif;
+  --font-subheading: "Cormorant Garamond Variable", "Cormorant Garamond", Georgia, serif;
+  --font-body: "Inter Variable", "Inter", system-ui, sans-serif;
 
   /* ── Luxury Spacing ── */
   --spacing-luxury-xs: 0.5rem;

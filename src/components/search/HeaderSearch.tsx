@@ -1,5 +1,6 @@
 'use client';
 
+import { getCategoryPlaceholder } from '@/lib/utils';
 import {
   useEffect,
   useMemo,
@@ -38,19 +39,7 @@ import type { Category, Product } from '@/types';
 const PRODUCT_LIMIT = 5;
 const DEBOUNCE_DELAY = 140;
 
-const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
-  'womens-kurtas': '/images/categories/kurtas.png',
-  'mens-kurtas': '/images/categories/men-kurtas.png',
-  anarkalis: '/images/categories/anarkali.png',
-  dupattas: '/images/categories/dupattas.png',
-  sarees: '/images/categories/sarees.png',
-  'palazzo-sets': '/images/categories/palazzo.png',
-  'bridal-collection': '/images/categories/bridal.png',
-  accessories: '/images/categories/dupattas.png',
-  'crochet-bags': '/images/categories/dupattas.png',
-};
 
-const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
 
 type AutocompleteItem =
   | { id: string; type: 'product'; product: Product }
@@ -64,7 +53,7 @@ type AutocompleteItem =
 function getProductImage(product: Product) {
   const image = product.images?.[0];
   if (!image || image.includes('picsum.photos')) {
-    return CATEGORY_FALLBACK_IMAGES[product.category] || DEFAULT_PRODUCT_IMAGE;
+    return getCategoryPlaceholder(product.category);
   }
   return image;
 }

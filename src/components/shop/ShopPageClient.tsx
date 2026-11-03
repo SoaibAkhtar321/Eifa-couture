@@ -13,11 +13,12 @@ import {
   sortProducts,
   type PriceFilter,
 } from '@/lib/search';
+import { AUDIENCE_LABELS, expandCategorySlugs, getAudienceSlugs, isAudience } from '@/lib/catalog';
 import type { Category, Product, SortOption } from '@/types';
 
 const PRODUCTS_PER_PAGE = 8;
 
-type CollectionFilter = 'all' | 'new-arrivals' | 'best-sellers';
+type CollectionFilter = 'all' | 'new-arrivals' | 'best-sellers' | 'featured';
 
 type AvailabilityFilter = 'all' | 'in-stock';
 
@@ -54,7 +55,7 @@ const sortOptions = SORT_OPTIONS.filter(
 const priceFilterOptions = PRICE_FILTER_OPTIONS;
 
 function getCollectionFromUrl(value: string | null): CollectionFilter {
-  if (value === 'new-arrivals' || value === 'best-sellers') {
+  if (value === 'new-arrivals' || value === 'best-sellers' || value === 'featured') {
     return value;
   }
   return 'all';
@@ -75,6 +76,7 @@ function getPageTitle(
 ) {
   if (collection === 'new-arrivals') return 'New Arrivals';
   if (collection === 'best-sellers') return 'Best Sellers';
+  if (collection === 'featured') return 'Featured';
 
   if (categorySlug !== 'all') {
     const activeCategory = getCategoryBySlug(categories, categorySlug);
@@ -93,6 +95,9 @@ function getPageDescription(
   }
   if (collection === 'best-sellers') {
     return 'Discover the most loved handcrafted pieces chosen by our customers.';
+  }
+  if (collection === 'featured') {
+    return 'Handpicked pieces from our latest edit.';
   }
   if (categorySlug !== 'all') {
     const activeCategory = getCategoryBySlug(categories, categorySlug);
@@ -222,6 +227,8 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
 
   const rawCategoryFromUrl = searchParams.get('category') ?? 'all';
   const collectionFromUrl = getCollectionFromUrl(searchParams.get('collection'));
+  const rawAudience = searchParams.get('audience');
+  const audienceFromUrl = isAudience(rawAudience) ? rawAudience : null;
 
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [searchQuery, setSearchQuery] = useState('');
@@ -258,6 +265,16 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
   const effectiveCategory =
     collectionFromUrl === 'all' ? categoryFromUrl : 'all';
 
+  // A category filter includes its sub-categories; an audience filter
+  // (women/men) resolves to whichever admin categories match it.
+  const allowedCategorySlugs = useMemo(() => {
+    if (effectiveCategory !== 'all') {
+      return expandCategorySlugs(activeCategories, [effectiveCategory]);
+    }
+    if (audienceFromUrl) return getAudienceSlugs(activeCategories, audienceFromUrl);
+    return null;
+  }, [activeCategories, audienceFromUrl, effectiveCategory]);
+
   const activeProducts = useMemo(
     () => products.filter((product) => product.isActive),
     [products]
@@ -275,7 +292,10 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
     ).sort((a, b) => a.localeCompare(b));
   }, [activeProducts]);
 
-  const pageTitle = getPageTitle(activeCategories, effectiveCategory, collectionFromUrl);
+  const pageTitle =
+    audienceFromUrl && effectiveCategory === 'all' && collectionFromUrl === 'all'
+      ? AUDIENCE_LABELS[audienceFromUrl]
+      : getPageTitle(activeCategories, effectiveCategory, collectionFromUrl);
   const pageDescription = getPageDescription(
     activeCategories,
     effectiveCategory,
@@ -285,12 +305,13 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
   const filteredProducts = useMemo(() => {
     const filtered = activeProducts.filter((product) => {
       const matchesCategory =
-        effectiveCategory === 'all' || product.category === effectiveCategory;
+        !allowedCategorySlugs || allowedCategorySlugs.has(product.category);
 
       const matchesCollection =
         collectionFromUrl === 'all' ||
         (collectionFromUrl === 'new-arrivals' && product.isNewArrival) ||
-        (collectionFromUrl === 'best-sellers' && product.isBestSeller);
+        (collectionFromUrl === 'best-sellers' && product.isBestSeller) ||
+        (collectionFromUrl === 'featured' && product.isFeatured);
 
       const matchesSearch = productMatchesSearch(product, searchQuery);
       const matchesSize =
@@ -315,9 +336,9 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
     return sortProducts(filtered, sortBy);
   }, [
     activeProducts,
+    allowedCategorySlugs,
     availability,
     collectionFromUrl,
-    effectiveCategory,
     searchQuery,
     selectedFabric,
     selectedPrice,
@@ -328,6 +349,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
   const filterKey = [
     collectionFromUrl,
     effectiveCategory,
+    audienceFromUrl,
     searchQuery,
     selectedSize,
     selectedFabric,
@@ -387,7 +409,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
   }, []);
 
   const canLoadMore = visibleCount < filteredProducts.length;
-  const isAllActive = effectiveCategory === 'all' && collectionFromUrl === 'all';
+  const isAllActive = effectiveCategory === 'all' && collectionFromUrl === 'all' && !audienceFromUrl;
 
   const hasActiveFilters =
     !isAllActive ||
@@ -403,6 +425,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
     collection?: CollectionFilter;
   }) => {
     const nextParams = new URLSearchParams(searchParams.toString());
+    nextParams.delete('audience');
 
     if (params.category !== undefined) {
       if (params.category === 'all') {

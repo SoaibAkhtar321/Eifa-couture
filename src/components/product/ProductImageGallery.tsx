@@ -19,17 +19,18 @@ export default function ProductImageGallery({
   product,
   images = product.images,
 }: ProductImageGalleryProps) {
-  const [selectedImage, setSelectedImage] = useState(images[0]);
+  // Selection is tracked per gallery: when `images` changes (shopper
+  // switched color) the stale selection is ignored and the new
+  // gallery's first photo is shown — no effect/extra render needed.
+  const [selection, setSelection] = useState<{ gallery: string[]; image: string | undefined }>({
+    gallery: images,
+    image: images[0],
+  });
+  const selectedImage =
+    selection.gallery === images && selection.image ? selection.image : images[0];
+  const setSelectedImage = (image: string) => setSelection({ gallery: images, image });
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   useBodyScrollLock(isZoomOpen);
-
-  // `images` changes when the shopper switches color (a new array from
-  // the parent, not a mutation of this one) — jump the main viewer back
-  // to that color's first photo instead of leaving it pointed at an
-  // image that may not even be in the new gallery.
-  useEffect(() => {
-    setSelectedImage(images[0]);
-  }, [images]);
 
   const zoomTriggerRef = useRef<HTMLButtonElement | null>(null);
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);

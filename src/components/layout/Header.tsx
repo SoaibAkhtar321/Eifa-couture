@@ -16,9 +16,9 @@ import HeaderSearch from '@/components/search/HeaderSearch';
 
 // ── Minimalist Luxury Navigation ──
 const CORE_LINKS = [
-  { label: 'Women', href: '/shop?category=womens-kurtas' },
-  { label: 'Men', href: '/shop?category=mens-kurtas' },
-  { label: 'Bridal', href: '/shop?category=bridal-collection' },
+  { label: 'Women', href: '/shop?audience=women' },
+  { label: 'Men', href: '/shop?audience=men' },
+  { label: 'Shop All', href: '/shop' },
   { label: 'New Arrivals', href: '/shop?collection=new-arrivals' },
   { label: 'Best Sellers', href: '/shop?collection=best-sellers' },
 ];

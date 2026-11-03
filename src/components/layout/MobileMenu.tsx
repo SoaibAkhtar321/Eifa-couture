@@ -16,13 +16,16 @@ type MenuLink = { label: string; href: string };
 const quickLinks: MenuLink[] = [
   { label: 'Home', href: '/' },
   { label: 'Shop All', href: '/shop' },
+  { label: 'Women', href: '/shop?audience=women' },
+  { label: 'Men', href: '/shop?audience=men' },
   { label: 'New Arrivals', href: '/shop?collection=new-arrivals' },
   { label: 'Best Sellers', href: '/shop?collection=best-sellers' },
 ];
 
 const supportLinks: MenuLink[] = [
   { label: 'Contact', href: '/contact' },
-  { label: 'Help Center', href: '/help' },
+  { label: 'Size Guide', href: '/size-guide' },
+  { label: 'Shipping & Returns', href: '/refund-policy' },
 ];
 
 const overlayVariants: Variants = {

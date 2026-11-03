@@ -6,23 +6,12 @@
    products.ts for the reasoning behind this pattern.
    ============================================ */
 
+import { getCategoryPlaceholder } from '@/lib/utils';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Category } from '@/types';
 import type { DbCategory } from '@/types/database';
 
-const CATEGORY_PLACEHOLDER_IMAGES: Record<string, string> = {
-  'womens-kurtas': '/images/categories/kurtas.png',
-  'mens-kurtas': '/images/categories/men-kurtas.png',
-  anarkalis: '/images/categories/anarkali.png',
-  dupattas: '/images/categories/dupattas.png',
-  sarees: '/images/categories/sarees.png',
-  'palazzo-sets': '/images/categories/palazzo.png',
-  'bridal-collection': '/images/categories/bridal.png',
-  accessories: '/images/categories/dupattas.png',
-  'crochet-bags': '/images/categories/dupattas.png',
-};
-const DEFAULT_PLACEHOLDER_IMAGE = '/images/categories/kurtas.png';
 
 function mapCategoryRow(row: DbCategory): Category {
   return {
@@ -32,8 +21,7 @@ function mapCategoryRow(row: DbCategory): Category {
     description: row.description,
     image:
       row.image_url ??
-      CATEGORY_PLACEHOLDER_IMAGES[row.slug] ??
-      DEFAULT_PLACEHOLDER_IMAGE,
+      getCategoryPlaceholder(row.slug),
     parentId: row.parent_id,
     isActive: row.is_active,
     order: row.sort_order,

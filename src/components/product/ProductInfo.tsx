@@ -202,11 +202,11 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
 
   const showStickyBar = hasHydrated && isMobileOrTablet && !isPrimaryCTAVisible;
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- fire once
-  // for the initial default color; later changes go through
+  // Fire once for the initial default color; later changes go through
   // handleColorChange below instead of re-running this effect.
   useEffect(() => {
     if (selectedColor) onColorChange?.(selectedColor);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /* ============================================

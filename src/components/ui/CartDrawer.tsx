@@ -1,35 +1,25 @@
 'use client';
 
+import { getCategoryPlaceholder } from '@/lib/utils';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
-import { SHIPPING_INFO } from '@/lib/constants';
+import { useShippingConfig } from '@/hooks/useShippingConfig';
 import { formatPrice, isSupabaseImageUrl } from '@/lib/utils';
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
 
 import type { Product } from '@/types';
 
-const CATEGORY_FALLBACK_IMAGES: Record<string, string> = {
-  'womens-kurtas': '/images/categories/kurtas.png',
-  'mens-kurtas': '/images/categories/men-kurtas.png',
-  anarkalis: '/images/categories/anarkali.png',
-  dupattas: '/images/categories/dupattas.png',
-  sarees: '/images/categories/sarees.png',
-  'palazzo-sets': '/images/categories/palazzo.png',
-  'bridal-collection': '/images/categories/bridal.png',
-  accessories: '/images/categories/accessories.png',
-};
 
-const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
 
 function getCartProductImage(product: Product) {
   const image = product.images?.[0];
 
   if (!image || image.includes('picsum.photos')) {
-    return CATEGORY_FALLBACK_IMAGES[product.category] || DEFAULT_PRODUCT_IMAGE;
+    return getCategoryPlaceholder(product.category);
   }
 
   return image;
@@ -84,7 +74,8 @@ export default function CartDrawer() {
   const total = useCartStore((state) => state.getTotal());
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const freeShippingDelta = SHIPPING_INFO.freeShippingThreshold - total;
+  const { freeThreshold } = useShippingConfig();
+  const freeShippingDelta = freeThreshold === null ? 0 : freeThreshold - total;
 
   useBodyScrollLock(isCartOpen);
 
@@ -189,7 +180,7 @@ export default function CartDrawer() {
                     initial={{ width: 0 }}
                     animate={{
                       width: `${Math.min(
-                        (total / SHIPPING_INFO.freeShippingThreshold) * 100,
+                        freeThreshold ? (total / freeThreshold) * 100 : 100,
                         100
                       )}%`,
                     }}

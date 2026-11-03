@@ -50,7 +50,7 @@ export default function OrderTimeline({
                     <span className="shrink-0 text-xs text-charcoal/50">{formatDate(entry.createdAt, 'long')}</span>
                   </div>
                   <p className="text-xs text-charcoal/50">{getHistoryActorLabel(entry)}</p>
-                  {entry.notes && <p className="mt-1 text-xs text-charcoal/70 italic">"{entry.notes}"</p>}
+                  {entry.notes && <p className="mt-1 text-xs text-charcoal/70 italic">&ldquo;{entry.notes}&rdquo;</p>}
                 </div>
               </li>
             );

@@ -298,3 +298,19 @@ export function isSafeRedirectPath(path: string | null | undefined): path is str
 export function sanitizeRedirectPath(path: string | null | undefined, fallback = '/account'): string {
   return isSafeRedirectPath(path) ? path : fallback;
 }
+// ── Placeholder imagery for products without uploaded photos ──
+const CATEGORY_PLACEHOLDER_IMAGES: Record<string, string> = {
+  'womens-wear': '/images/categories/kurtas.png',
+  'mens-wear': '/images/categories/men-kurtas.png',
+  'bags-accessories': '/images/categories/dupattas.png',
+  sarees: '/images/categories/sarees.png',
+  dupattas: '/images/categories/dupattas.png',
+  anarkalis: '/images/categories/anarkali.png',
+  'palazzo-sets': '/images/categories/palazzo.png',
+};
+
+export const DEFAULT_PLACEHOLDER_IMAGE = '/images/categories/kurtas.png';
+
+export function getCategoryPlaceholder(slug: string | null | undefined): string {
+  return (slug && CATEGORY_PLACEHOLDER_IMAGES[slug]) || DEFAULT_PLACEHOLDER_IMAGE;
+}

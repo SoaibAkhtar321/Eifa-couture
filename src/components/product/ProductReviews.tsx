@@ -1,101 +1,111 @@
 'use client';
 
-import { FormEvent, useMemo, useState, useSyncExternalStore } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
+import Link from 'next/link';
 
-import { useReviewStore } from '@/store/review-store';
-
+import { useAuth } from '@/hooks/useAuth';
+import { createClient } from '@/lib/supabase/client';
 import type { Product } from '@/types';
 
 type ProductReviewsProps = {
   product: Product;
 };
 
+type ReviewRow = {
+  id: string;
+  user_id: string;
+  rating: number;
+  title: string | null;
+  comment: string | null;
+  is_verified: boolean;
+  created_at: string;
+};
+
 function getStars(rating: number) {
-  return Array.from({ length: 5 }, (_, index) =>
-    index < Math.round(rating) ? '★' : '☆'
-  ).join('');
+  return Array.from({ length: 5 }, (_, index) => (index < Math.round(rating) ? '★' : '☆')).join('');
 }
 
 function formatReviewDate(date: string) {
-  return new Intl.DateTimeFormat('en-IN', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  }).format(new Date(date));
-}
-
-const subscribeToHydration = () => () => {};
-
-function useHasHydrated() {
-  return useSyncExternalStore(
-    subscribeToHydration,
-    () => true,
-    () => false
+  return new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).format(
+    new Date(date)
   );
 }
 
 export default function ProductReviews({ product }: ProductReviewsProps) {
-  const hasHydrated = useHasHydrated();
+  const { user, isAuthenticated } = useAuth();
+  const [reviews, setReviews] = useState<ReviewRow[] | null>(null);
   const [rating, setRating] = useState(5);
   const [title, setTitle] = useState('');
   const [comment, setComment] = useState('');
-  const [successMessage, setSuccessMessage] = useState('');
+  const [message, setMessage] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
-  const reviews = useReviewStore((state) => state.reviews);
-  const addReview = useReviewStore((state) => state.addReview);
+  const loadReviews = useCallback(async () => {
+    const supabase = createClient();
+    const { data } = await supabase
+      .from('reviews')
+      .select('id, user_id, rating, title, comment, is_verified, created_at')
+      .eq('product_id', product.id)
+      .eq('is_published', true)
+      .order('created_at', { ascending: false })
+      .limit(50);
+    return (data ?? []) as ReviewRow[];
+  }, [product.id]);
 
-  const productReviews = useMemo(() => {
-    if (!hasHydrated) return [];
-
-    return reviews
-      .filter((review) => review.productId === product.id)
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
-  }, [hasHydrated, product.id, reviews]);
-
-  const reviewSummary = useMemo(() => {
-    if (productReviews.length === 0) {
-      return {
-        averageRating: 0,
-        reviewCount: 0,
-      };
-    }
-
-    const totalRating = productReviews.reduce(
-      (sum, review) => sum + review.rating,
-      0
-    );
-
-    return {
-      averageRating: Number((totalRating / productReviews.length).toFixed(1)),
-      reviewCount: productReviews.length,
+  useEffect(() => {
+    let cancelled = false;
+    loadReviews().then((rows) => {
+      if (!cancelled) setReviews(rows);
+    });
+    return () => {
+      cancelled = true;
     };
-  }, [productReviews]);
+  }, [loadReviews]);
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const summary = useMemo(() => {
+    if (!reviews || reviews.length === 0) return { averageRating: 0, reviewCount: 0 };
+    const total = reviews.reduce((sum, review) => sum + review.rating, 0);
+    return { averageRating: Number((total / reviews.length).toFixed(1)), reviewCount: reviews.length };
+  }, [reviews]);
+
+  const hasReviewed = !!user && !!reviews?.some((review) => review.user_id === user.id);
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!user) return;
 
-    if (!title.trim() || !comment.trim()) {
-      setSuccessMessage('Please add review title and comment.');
+    const trimmedTitle = title.trim();
+    const trimmedComment = comment.trim();
+    if (!trimmedTitle || !trimmedComment) {
+      setMessage('Please add a review title and comment.');
       return;
     }
 
-    addReview({
-      userId: 'demo-customer',
-      productId: product.id,
-      rating,
-      title: title.trim(),
-      comment: comment.trim(),
-      images: [],
-      isVerified: false,
-    });
+    setSubmitting(true);
+    setMessage('');
+    const supabase = createClient();
+    const { error } = await supabase.from('reviews').upsert(
+      {
+        user_id: user.id,
+        product_id: product.id,
+        rating,
+        title: trimmedTitle.slice(0, 120),
+        comment: trimmedComment.slice(0, 2000),
+      },
+      { onConflict: 'user_id,product_id' }
+    );
+    setSubmitting(false);
 
-    setRating(5);
+    if (error) {
+      setMessage('Could not save your review. Please try again.');
+      return;
+    }
+
     setTitle('');
     setComment('');
-    setSuccessMessage('Thank you. Your review has been added.');
+    setRating(5);
+    setMessage('Thank you — your review has been saved.');
+    setReviews(await loadReviews());
   };
 
   return (
@@ -106,189 +116,131 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
             <span className="mb-3 block font-body text-[10px] uppercase tracking-[0.3em] text-gold sm:text-xs">
               Customer Reviews
             </span>
-
-            <h2 className="font-heading text-4xl leading-tight text-charcoal sm:text-5xl">
-              Ratings & Reviews
-            </h2>
+            <h2 className="font-heading text-4xl leading-tight text-charcoal sm:text-5xl">Ratings & Reviews</h2>
 
             <div className="mt-6 border border-beige bg-white p-6">
-              {hasHydrated && reviewSummary.reviewCount > 0 ? (
+              {summary.reviewCount > 0 ? (
                 <>
                   <div className="flex items-end gap-3">
-                    <span className="font-heading text-6xl leading-none text-maroon">
-                      {reviewSummary.averageRating}
-                    </span>
-
-                    <span className="pb-2 text-sm uppercase tracking-[0.2em] text-charcoal/45">
-                      / 5
-                    </span>
+                    <span className="font-heading text-6xl leading-none text-maroon">{summary.averageRating}</span>
+                    <span className="pb-2 text-sm uppercase tracking-[0.2em] text-charcoal/45">/ 5</span>
                   </div>
-
-                  <p className="mt-3 text-2xl leading-none text-gold">
-                    {getStars(reviewSummary.averageRating)}
-                  </p>
-
+                  <p className="mt-3 text-2xl leading-none text-gold">{getStars(summary.averageRating)}</p>
                   <p className="mt-4 text-sm leading-7 text-charcoal/58">
-                    Based on {reviewSummary.reviewCount}{' '}
-                    {reviewSummary.reviewCount === 1 ? 'review' : 'reviews'} for
-                    this product.
+                    Based on {summary.reviewCount} {summary.reviewCount === 1 ? 'review' : 'reviews'}.
                   </p>
                 </>
               ) : (
                 <>
                   <p className="text-2xl leading-none text-gold">☆☆☆☆☆</p>
-
-                  <h3 className="mt-4 font-heading text-3xl text-charcoal">
-                    No reviews yet
-                  </h3>
-
-                  <p className="mt-3 text-sm leading-7 text-charcoal/58">
-                    Be the first customer to review this product.
-                  </p>
+                  <h3 className="mt-4 font-heading text-3xl text-charcoal">No reviews yet</h3>
+                  <p className="mt-3 text-sm leading-7 text-charcoal/58">Be the first to review this piece.</p>
                 </>
               )}
             </div>
 
-            <form
-              onSubmit={handleSubmit}
-              className="mt-6 border border-beige bg-white p-5 sm:p-6"
-            >
-              <h3 className="font-heading text-3xl text-charcoal">
-                Write A Review
-              </h3>
+            {isAuthenticated ? (
+              <form onSubmit={handleSubmit} className="mt-6 border border-beige bg-white p-5 sm:p-6">
+                <h3 className="font-heading text-3xl text-charcoal">
+                  {hasReviewed ? 'Update Your Review' : 'Write A Review'}
+                </h3>
 
-              <div className="mt-5">
-                <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
-                  Your Rating
-                </span>
+                <fieldset className="mt-5">
+                  <legend className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">Your Rating</legend>
+                  <div className="flex gap-2">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setRating(value)}
+                        className={`text-3xl leading-none transition-colors ${value <= rating ? 'text-gold' : 'text-charcoal/20'}`}
+                        aria-label={`${value} star rating`}
+                        aria-pressed={value === rating}
+                      >
+                        ★
+                      </button>
+                    ))}
+                  </div>
+                </fieldset>
 
-                <div className="flex gap-2">
-                  {[1, 2, 3, 4, 5].map((value) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setRating(value)}
-                      className={`text-3xl leading-none transition-colors ${
-                        value <= rating ? 'text-gold' : 'text-charcoal/20'
-                      }`}
-                      aria-label={`${value} star rating`}
-                    >
-                      ★
-                    </button>
-                  ))}
-                </div>
+                <label className="mt-5 block">
+                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">Review Title</span>
+                  <input
+                    type="text"
+                    value={title}
+                    maxLength={120}
+                    onChange={(event) => setTitle(event.target.value)}
+                    placeholder="Example: Beautiful craftsmanship"
+                    className="w-full border border-beige bg-ivory px-4 py-3 text-base text-charcoal outline-none transition-colors focus:border-gold sm:text-sm"
+                  />
+                </label>
+
+                <label className="mt-5 block">
+                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">Your Review</span>
+                  <textarea
+                    rows={5}
+                    value={comment}
+                    maxLength={2000}
+                    onChange={(event) => setComment(event.target.value)}
+                    placeholder="Share your experience with this product"
+                    className="w-full resize-none border border-beige bg-ivory px-4 py-3 text-base text-charcoal outline-none transition-colors focus:border-gold sm:text-sm"
+                  />
+                </label>
+
+                <button type="submit" disabled={submitting} className="btn-luxury btn-luxury-primary mt-6 w-full disabled:opacity-60">
+                  {submitting ? 'Saving…' : 'Submit Review'}
+                </button>
+
+                {message && <p className="mt-4 text-center text-sm text-maroon" role="status">{message}</p>}
+              </form>
+            ) : (
+              <div className="mt-6 border border-beige bg-white p-5 text-center sm:p-6">
+                <p className="text-sm text-charcoal/60">Sign in to write a review.</p>
+                <Link
+                  href={`/login?next=${encodeURIComponent(`/product/${product.slug}`)}`}
+                  className="btn-luxury btn-luxury-secondary mt-4 inline-flex"
+                >
+                  Sign In
+                </Link>
               </div>
-
-              <label className="mt-5 block">
-                <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
-                  Review Title
-                </span>
-
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(event) => setTitle(event.target.value)}
-                  placeholder="Example: Beautiful craftsmanship"
-                  className="w-full border border-beige bg-ivory px-4 py-3 text-sm text-charcoal outline-none transition-colors focus:border-gold"
-                />
-              </label>
-
-              <label className="mt-5 block">
-                <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
-                  Your Review
-                </span>
-
-                <textarea
-                  rows={5}
-                  value={comment}
-                  onChange={(event) => setComment(event.target.value)}
-                  placeholder="Share your experience with this product"
-                  className="w-full resize-none border border-beige bg-ivory px-4 py-3 text-sm text-charcoal outline-none transition-colors focus:border-gold"
-                />
-              </label>
-
-              <button
-                type="submit"
-                className="btn-luxury btn-luxury-primary mt-6 w-full"
-              >
-                Submit Review
-              </button>
-
-              {successMessage && (
-                <p className="mt-4 text-center text-sm text-maroon">
-                  {successMessage}
-                </p>
-              )}
-
-              <p className="mt-4 text-center text-xs leading-6 text-charcoal/45">
-                Demo review system. Later, reviews can be connected with login,
-                order verification, and admin approval.
-              </p>
-            </form>
+            )}
           </div>
 
           <div>
-            <div className="mb-5 flex items-end justify-between gap-4">
-              <div>
-                <p className="text-xs uppercase tracking-[0.26em] text-gold">
-                  Review List
-                </p>
+            <p className="text-xs uppercase tracking-[0.26em] text-gold">Review List</p>
+            <h3 className="mb-5 mt-2 font-heading text-3xl text-charcoal">What Customers Say</h3>
 
-                <h3 className="mt-2 font-heading text-3xl text-charcoal">
-                  What Customers Say
-                </h3>
-              </div>
-            </div>
-
-            {!hasHydrated ? (
+            {reviews === null ? (
               <div className="border border-beige bg-white p-6 text-center">
-                <p className="text-sm text-charcoal/55">Loading reviews...</p>
+                <p className="text-sm text-charcoal/55">Loading reviews…</p>
               </div>
-            ) : productReviews.length === 0 ? (
+            ) : reviews.length === 0 ? (
               <div className="border border-beige bg-white p-8 text-center">
-                <h3 className="font-heading text-3xl text-charcoal">
-                  No customer reviews yet
-                </h3>
-
-                <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-charcoal/55">
-                  Once customers review this product, their feedback will appear
-                  here.
+                <p className="mx-auto max-w-sm text-sm leading-7 text-charcoal/55">
+                  Once customers review this product, their feedback will appear here.
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                {productReviews.map((review) => (
-                  <article
-                    key={review.id}
-                    className="border border-beige bg-white p-5 sm:p-6"
-                  >
+                {reviews.map((review) => (
+                  <article key={review.id} className="border border-beige bg-white p-5 sm:p-6">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                       <div>
-                        <p className="text-xl leading-none text-gold">
+                        <p className="text-xl leading-none text-gold" aria-label={`${review.rating} out of 5`}>
                           {getStars(review.rating)}
                         </p>
-
-                        <h4 className="mt-3 font-heading text-2xl text-charcoal">
-                          {review.title}
-                        </h4>
+                        {review.title && <h4 className="mt-3 font-heading text-2xl text-charcoal">{review.title}</h4>}
                       </div>
-
                       <div className="text-left sm:text-right">
                         <p className="text-xs uppercase tracking-[0.18em] text-charcoal/45">
-                          {formatReviewDate(review.createdAt)}
+                          {formatReviewDate(review.created_at)}
                         </p>
-
                         <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-maroon">
-                          {review.isVerified
-                            ? 'Verified Purchase'
-                            : 'Customer Review'}
+                          {review.is_verified ? 'Verified Purchase' : 'Customer Review'}
                         </p>
                       </div>
                     </div>
-
-                    <p className="mt-4 text-sm leading-7 text-charcoal/60">
-                      {review.comment}
-                    </p>
+                    {review.comment && <p className="mt-4 text-sm leading-7 text-charcoal/60">{review.comment}</p>}
                   </article>
                 ))}
               </div>

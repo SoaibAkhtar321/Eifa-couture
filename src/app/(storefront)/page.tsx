@@ -6,11 +6,10 @@ import FeaturedCollection from '@/components/home/FeaturedCollection';
 import NewArrivalsSection from '@/components/home/NewArrivalsSection';
 import BestSellersSection from '@/components/home/BestSellersSection';
 import ShopByCategorySection from '@/components/home/ShopByCategorySection';
-import WomensCollectionSection from '@/components/home/WomensCollectionSection';
-import MensCollectionSection from '@/components/home/MensCollectionSection';
+import AudienceSection from '@/components/home/AudienceSection';
+import CategoryRails from '@/components/home/CategoryRails';
 import WhyChooseUsSection from '@/components/home/WhyChooseUsSection';
 import HeritageSection from '@/components/home/HeritageSection';
-import DynamicHomeSections from '@/components/home/DynamicHomeSections';
 import {
   FeaturedCollectionSkeleton,
   NewArrivalsSkeleton,
@@ -18,6 +17,8 @@ import {
   ShopByCategorySkeleton,
 } from '@/components/home/HomeSectionSkeletons';
 import { getActiveHomepageSectionMap } from '@/lib/data/homepage-sections';
+import { fetchActiveCategories } from '@/lib/data/categories';
+import { createClient } from '@/lib/supabase/server';
 import type { HomepageSectionKey } from '@/types/database';
 
 export const metadata: Metadata = {
@@ -27,7 +28,11 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const sectionMap = await getActiveHomepageSectionMap();
+  const supabase = await createClient();
+  const [sectionMap, categories] = await Promise.all([
+    getActiveHomepageSectionMap(),
+    fetchActiveCategories(supabase),
+  ]);
 
   // Renders in admin-configured `sort_order`; a missing/deleted config
   // row falls back to each component's own defaults rather than being
@@ -93,8 +98,7 @@ export default async function HomePage() {
     .sort((a, b) => a.order - b.order);
 
   return (
-    <>
-      <main>
+    <main>
         <HeroSection />
 
         {/* Each data-driven section gets its own Suspense boundary so the
@@ -105,13 +109,18 @@ export default async function HomePage() {
           <div key={section.key}>{section.node}</div>
         ))}
 
-        <WomensCollectionSection />
-        <MensCollectionSection />
-        <DynamicHomeSections />
+        <Suspense fallback={<NewArrivalsSkeleton />}>
+          <AudienceSection audience="women" categories={categories} />
+        </Suspense>
+        <Suspense fallback={<NewArrivalsSkeleton />}>
+          <AudienceSection audience="men" categories={categories} />
+        </Suspense>
+        <Suspense fallback={null}>
+          <CategoryRails categories={categories} />
+        </Suspense>
         <WhyChooseUsSection />
         <HeritageSection />
-      </main>
-    </>
+    </main>
   );
 }
 

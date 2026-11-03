@@ -207,8 +207,8 @@ export default function VariantTable({
           <div>
             <h3 className="font-heading text-lg text-maroon">Color images</h3>
             <p className="text-xs text-charcoal/50">
-              Each color has its own gallery, shared across all its sizes. Leave a color's
-              gallery empty to fall back to the product's main images.
+              Each color has its own gallery, shared across all its sizes. Leave a color&apos;s
+              gallery empty to fall back to the product&apos;s main images.
             </p>
           </div>
 

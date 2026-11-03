@@ -1,121 +1,49 @@
-import Link from 'next/link';
-
-import ProductImage from '@/components/ui/ProductImage';
+import ProductRail from '@/components/home/ProductRail';
 import { createClient } from '@/lib/supabase/server';
 import { fetchFeaturedCollection } from '@/lib/data/collections';
-import { formatPrice, getDiscountPercentage } from '@/lib/utils';
+import { fetchFeaturedProducts } from '@/lib/data/products';
 
-interface FeaturedCollectionProps {
+interface Props {
   limit?: number;
   collectionId?: string | null;
-  /** Overrides the section heading; falls back to the collection's own name when omitted. */
   title?: string | null;
-  /** Overrides the section subtitle; falls back to the collection's own description when omitted. */
   subtitle?: string | null;
 }
 
-export default async function FeaturedCollection({
-  limit = 4,
-  collectionId = null,
-  title,
-  subtitle,
-}: FeaturedCollectionProps = {}) {
+/**
+ * Uses the collection chosen in Homepage CMS (or the active featured
+ * collection). When no collection is set up, falls back to products
+ * the admin toggled "Featured" so that toggle always has an effect.
+ */
+export default async function FeaturedCollection({ limit = 8, collectionId = null, title, subtitle }: Props) {
   const supabase = await createClient();
   const result = await fetchFeaturedCollection(supabase, limit, collectionId);
 
-  // Empty state: no active/featured/in-window collection right now, or
-  // it has no member products yet — hide the section rather than show
-  // a half-empty grid on the homepage.
-  if (!result || result.products.length === 0) return null;
+  if (result && result.products.length > 0) {
+    return (
+      <ProductRail
+        id="featured-heading"
+        eyebrow="Curated for You"
+        title={title || result.collection.name}
+        subtitle={subtitle || result.collection.description}
+        products={result.products}
+        viewAllHref="/shop?collection=featured"
+        viewAllLabel="View all"
+      />
+    );
+  }
 
-  const { collection, products } = result;
+  const products = await fetchFeaturedProducts(supabase, limit);
 
   return (
-    <section className="bg-ivory py-10 md:py-16 lg:py-24" aria-labelledby="featured-heading">
-      <div className="luxury-container">
-        <div className="mb-8 text-center md:mb-12">
-          <span className="mb-3 block font-body text-[10px] uppercase tracking-[0.28em] text-gold md:text-xs">
-            Curated for You
-          </span>
-
-          <h2
-            id="featured-heading"
-            className="font-heading text-2xl text-charcoal md:text-5xl lg:text-6xl"
-          >
-            {title || collection.name}
-          </h2>
-
-          <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
-
-          <p className="mx-auto mt-4 max-w-xl font-subheading text-base italic text-charcoal/60 md:text-xl">
-            {subtitle || collection.description || 'Handpicked masterpieces that define the art of Lucknowi Chikankari'}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4 lg:gap-6">
-          {products.map((product) => {
-            const discount = product.compareAtPrice
-              ? getDiscountPercentage(product.compareAtPrice, product.minPrice)
-              : 0;
-
-            return (
-              <article key={product.id} className="group">
-                <Link href={`/product/${product.slug}`} className="block h-full">
-                  <div className="flex h-full flex-col overflow-hidden bg-white">
-                    <div className="relative aspect-[4/5] overflow-hidden bg-beige">
-                      <ProductImage
-                        src={product.images?.[0]}
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 1024px) 50vw, 25vw"
-                        className="object-cover transition-transform duration-700 group-hover:scale-105"
-                      />
-
-                      {discount > 0 && (
-                        <span className="absolute left-2 top-2 z-10 bg-maroon px-2 py-1 font-body text-[8px] uppercase tracking-[0.12em] text-white md:left-3 md:top-3 md:px-3 md:py-1.5 md:text-[10px]">
-                          {discount}% Off
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex flex-grow flex-col justify-between px-2.5 py-3 md:p-5">
-                      <div>
-                        <p className="mb-1 font-body text-[9px] uppercase tracking-[0.16em] text-gold md:text-[11px]">
-                          {product.fabric}
-                        </p>
-
-                        <h3 className="line-clamp-2 font-heading text-sm leading-snug text-charcoal transition-colors duration-300 group-hover:text-maroon md:text-lg">
-                          {product.name}
-                        </h3>
-                      </div>
-
-                      <div className="mt-2 flex flex-wrap items-center gap-1.5 md:mt-4 md:gap-3">
-                        <span className="font-subheading text-base font-semibold text-charcoal md:text-xl">
-                          {product.hasPriceRange
-                            ? `From ${formatPrice(product.minPrice)}`
-                            : formatPrice(product.minPrice)}
-                        </span>
-
-                        {product.compareAtPrice && (
-                          <span className="font-body text-[11px] text-charcoal/40 line-through md:text-sm">
-                            {formatPrice(product.compareAtPrice)}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </Link>
-              </article>
-            );
-          })}
-        </div>
-
-        <div className="mt-8 text-center md:mt-12">
-          <Link href="/shop" className="btn-luxury btn-luxury-secondary px-6 py-3 text-[11px] md:px-10 md:py-4 md:text-sm">
-            View All Collection
-          </Link>
-        </div>
-      </div>
-    </section>
+    <ProductRail
+      id="featured-heading"
+      eyebrow="Curated for You"
+      title={title || 'Featured'}
+      subtitle={subtitle}
+      products={products}
+      viewAllHref="/shop?collection=featured"
+      viewAllLabel="View all"
+    />
   );
 }

@@ -1,29 +1,14 @@
 import type { Metadata, Viewport } from 'next';
-import { Cormorant_Garamond, Inter, Playfair_Display } from 'next/font/google';
+// Self-hosted fonts (bundled at build time, no Google Fonts fetch —
+// builds work offline/in CI and no third-party font request at runtime).
+import '@fontsource-variable/playfair-display/wght.css';
+import '@fontsource-variable/playfair-display/wght-italic.css';
+import '@fontsource-variable/cormorant-garamond/wght.css';
+import '@fontsource-variable/cormorant-garamond/wght-italic.css';
+import '@fontsource-variable/inter/wght.css';
 import './globals.css';
 
 import AuthProvider from '@/providers/AuthProvider';
-
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
-  variable: '--font-heading',
-  display: 'swap',
-});
-
-const cormorantGaramond = Cormorant_Garamond({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-subheading',
-  display: 'swap',
-});
-
-const inter = Inter({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  variable: '--font-body',
-  display: 'swap',
-});
 
 export const metadata: Metadata = {
   title: {
@@ -48,9 +33,6 @@ export const metadata: Metadata = {
   creator: 'Eifa Couture',
   publisher: 'Eifa Couture',
   metadataBase: new URL('https://eifacouture.com'),
-  alternates: {
-    canonical: '/',
-  },
   openGraph: {
     type: 'website',
     locale: 'en_IN',
@@ -100,6 +82,7 @@ export const metadata: Metadata = {
 // have no effect.
 export const viewport: Viewport = {
   viewportFit: 'cover',
+  themeColor: '#FFFEF9',
 };
 
 export default function RootLayout({
@@ -110,7 +93,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfairDisplay.variable} ${cormorantGaramond.variable} ${inter.variable} antialiased`}
+      className="antialiased"
     >
       <body className="min-h-screen bg-ivory font-body text-charcoal selection:bg-maroon selection:text-white">
         <AuthProvider>{children}</AuthProvider>

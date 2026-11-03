@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
-import { SOCIAL_LINKS } from '@/lib/constants';
+import { CONTACT_INFO } from '@/lib/constants';
+import { getStoreSettings } from '@/lib/data/store-settings';
 import { createClient } from '@/lib/supabase/server';
 import { fetchActiveCategories } from '@/lib/data/categories';
 import type { Category } from '@/types';
@@ -44,7 +45,23 @@ function getShopLinks(categories: Category[]): FooterLink[] {
 
 export default async function Footer() {
   const supabase = await createClient();
-  const categories = await fetchActiveCategories(supabase);
+  const [categories, { data: settings }] = await Promise.all([
+    fetchActiveCategories(supabase),
+    getStoreSettings(),
+  ]);
+  // Contact + social details come from Admin → Settings, falling back
+  // to defaults only for fields the admin hasn't filled in.
+  const email = settings?.store_email || CONTACT_INFO.email;
+  const phone = settings?.store_phone || CONTACT_INFO.phone;
+  const location =
+    [settings?.address_city, settings?.address_state].filter(Boolean).join(', ') || 'Lucknow, Uttar Pradesh';
+  const socialLinks = [
+    { name: 'Instagram', href: settings?.social_instagram_url },
+    { name: 'Facebook', href: settings?.social_facebook_url },
+    { name: 'Pinterest', href: settings?.social_pinterest_url },
+    { name: 'YouTube', href: settings?.social_youtube_url },
+    { name: 'X', href: settings?.social_twitter_url },
+  ].filter((link): link is { name: string; href: string } => !!link.href);
   const shopLinks = getShopLinks(categories);
   const currentYear = new Date().getFullYear();
 
@@ -68,19 +85,21 @@ export default async function Footer() {
               piece celebrates heritage, patience, and refined craftsmanship.
             </p>
 
+            {socialLinks.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-3">
-              {SOCIAL_LINKS.slice(0, 3).map((link) => (
+              {socialLinks.map((link) => (
                 <a
                   key={link.href}
                   href={link.href}
                   target="_blank"
-                  rel="noreferrer"
+                  rel="noopener noreferrer"
                   className="border border-beige bg-white px-4 py-2 text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
                 >
                   {link.name}
                 </a>
               ))}
             </div>
+            )}
           </div>
 
           <div>
@@ -127,20 +146,20 @@ export default async function Footer() {
             </h3>
 
             <div className="mt-5 space-y-3 font-subheading text-[17px] text-charcoal/60">
-              <p>Lucknow, Uttar Pradesh</p>
+              <p>{location}</p>
 
               <a
-                href="mailto:support@eifacouture.com"
+                href={`mailto:${email}`}
                 className="block transition-colors duration-300 hover:text-maroon"
               >
-                support@eifacouture.com
+                {email}
               </a>
 
               <a
-                href="tel:+919876543210"
+                href={`tel:${phone.replace(/[^+\d]/g, '')}`}
                 className="block transition-colors duration-300 hover:text-maroon"
               >
-                +91 98765 43210
+                {phone}
               </a>
             </div>
 

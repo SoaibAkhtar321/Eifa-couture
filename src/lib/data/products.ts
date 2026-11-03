@@ -12,6 +12,7 @@
    (lib/supabase/client) without duplicating query logic.
    ============================================ */
 
+import { getCategoryPlaceholder } from '@/lib/utils';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import { SIZES } from '@/lib/constants';
@@ -23,21 +24,6 @@ import type {
   DbProductVariant,
 } from '@/types/database';
 
-// ── Fallback images (mirrors the CATEGORY_FALLBACK_IMAGES maps already
-//    duplicated across components) — used only when a product has no
-//    Supabase Storage images yet. ──
-const CATEGORY_PLACEHOLDER_IMAGES: Record<string, string> = {
-  'womens-kurtas': '/images/categories/kurtas.png',
-  'mens-kurtas': '/images/categories/men-kurtas.png',
-  anarkalis: '/images/categories/anarkali.png',
-  dupattas: '/images/categories/dupattas.png',
-  sarees: '/images/categories/sarees.png',
-  'palazzo-sets': '/images/categories/palazzo.png',
-  'bridal-collection': '/images/categories/bridal.png',
-  accessories: '/images/categories/dupattas.png',
-  'crochet-bags': '/images/categories/dupattas.png',
-};
-const DEFAULT_PLACEHOLDER_IMAGE = '/images/categories/kurtas.png';
 
 const SIZE_ORDER = new Map(SIZES.map((size, index) => [size, index]));
 
@@ -165,7 +151,7 @@ export function mapProductRow(row: ProductRow): Product {
     shortDescription: row.short_description,
     price: row.price,
     compareAtPrice: row.compare_at_price,
-    images: images.length > 0 ? images : [CATEGORY_PLACEHOLDER_IMAGES[categorySlug] ?? DEFAULT_PLACEHOLDER_IMAGE],
+    images: images.length > 0 ? images : [getCategoryPlaceholder(categorySlug)],
     imagesByColor,
     category: categorySlug,
     subcategory: '',
@@ -243,55 +229,55 @@ export async function fetchProductsByIds(
   return (data as unknown as ProductRow[]).map(mapProductRow);
 }
 
-export async function fetchFeaturedProducts(
+type ProductFlag = 'is_featured' | 'is_best_seller' | 'is_new_arrival';
+
+async function fetchProductList(
   supabase: SupabaseClient,
-  limit = 4
+  limit: number,
+  options: { flag?: ProductFlag; categoryIds?: string[]; orderBy?: 'created_at' | 'rating_avg' } = {}
 ): Promise<Product[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from('products')
     .select(PRODUCT_SELECT)
     .eq('is_active', true)
-    .eq('is_featured', true)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+    .is('deleted_at', null);
+
+  if (options.flag) query = query.eq(options.flag, true);
+  if (options.categoryIds) query = query.in('category_id', options.categoryIds);
+  if (options.orderBy === 'rating_avg') query = query.order('rating_avg', { ascending: false });
+
+  const { data, error } = await query.order('created_at', { ascending: false }).limit(limit);
 
   if (error || !data) return [];
   return (data as unknown as ProductRow[]).map(mapProductRow);
 }
 
-export async function fetchBestSellers(
-  supabase: SupabaseClient,
-  limit = 4
-): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from('products')
-    .select(PRODUCT_SELECT)
-    .eq('is_active', true)
-    .eq('is_best_seller', true)
-    .is('deleted_at', null)
-    .order('rating_avg', { ascending: false })
-    .limit(limit);
-
-  if (error || !data) return [];
-  return (data as unknown as ProductRow[]).map(mapProductRow);
+/** Products the admin marked "Featured". */
+export function fetchFeaturedProducts(supabase: SupabaseClient, limit = 4) {
+  return fetchProductList(supabase, limit, { flag: 'is_featured' });
 }
 
-export async function fetchNewArrivals(
-  supabase: SupabaseClient,
-  limit = 6
-): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from('products')
-    .select(PRODUCT_SELECT)
-    .eq('is_active', true)
-    .eq('is_new_arrival', true)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+export function fetchBestSellers(supabase: SupabaseClient, limit = 4) {
+  return fetchProductList(supabase, limit, { flag: 'is_best_seller', orderBy: 'rating_avg' });
+}
 
-  if (error || !data) return [];
-  return (data as unknown as ProductRow[]).map(mapProductRow);
+/**
+ * Products marked "New arrival". If the admin hasn't flagged anything
+ * yet, the newest uploads are shown instead so a freshly added product
+ * always reaches the homepage.
+ */
+export async function fetchNewArrivals(supabase: SupabaseClient, limit = 6) {
+  const flagged = await fetchProductList(supabase, limit, { flag: 'is_new_arrival' });
+  return flagged.length > 0 ? flagged : fetchProductList(supabase, limit);
+}
+
+export async function fetchProductsInCategories(
+  supabase: SupabaseClient,
+  categoryIds: string[],
+  limit = 8
+): Promise<Product[]> {
+  if (categoryIds.length === 0) return [];
+  return fetchProductList(supabase, limit, { categoryIds });
 }
 
 /**

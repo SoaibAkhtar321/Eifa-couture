@@ -21,7 +21,8 @@ export default async function ShopByCategorySection({
 }: ShopByCategorySectionProps = {}) {
   const supabase = await createClient();
   const allCategories = await fetchActiveCategories(supabase);
-  const categories = limit ? allCategories.slice(0, limit) : allCategories;
+  const topLevel = allCategories.filter((category) => !category.parentId);
+  const categories = limit ? topLevel.slice(0, limit) : topLevel;
 
   if (categories.length === 0) return null;
 
