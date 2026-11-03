@@ -39,6 +39,21 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
   const [comment, setComment] = useState('');
   const [message, setMessage] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  // Only customers whose order containing this product was delivered may review.
+  const [canReview, setCanReview] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    createClient()
+      .rpc('has_received_product', { p_product_id: product.id })
+      .then(({ data }) => {
+        if (!cancelled) setCanReview(data === true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user, product.id]);
 
   const loadReviews = useCallback(async () => {
     const supabase = createClient();
@@ -97,7 +112,7 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
     setSubmitting(false);
 
     if (error) {
-      setMessage('Could not save your review. Please try again.');
+      setMessage('Only customers who received this product can review it.');
       return;
     }
 
@@ -139,7 +154,14 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
               )}
             </div>
 
-            {isAuthenticated ? (
+            {isAuthenticated && canReview === null ? null : isAuthenticated && !canReview ? (
+              <div className="mt-6 border border-beige bg-white p-5 text-center sm:p-6">
+                <p className="text-sm leading-7 text-charcoal/75">
+                  Reviews are written by customers who have received this piece. Once your order is delivered, you can
+                  share your experience here.
+                </p>
+              </div>
+            ) : isAuthenticated ? (
               <form onSubmit={handleSubmit} className="mt-6 border border-beige bg-white p-5 sm:p-6">
                 <h3 className="font-heading text-3xl text-charcoal">
                   {hasReviewed ? 'Update Your Review' : 'Write A Review'}
@@ -195,7 +217,7 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
               </form>
             ) : (
               <div className="mt-6 border border-beige bg-white p-5 text-center sm:p-6">
-                <p className="text-sm text-charcoal/60">Sign in to write a review.</p>
+                <p className="text-sm text-charcoal/60">Bought this piece? Sign in to write a review once it’s delivered.</p>
                 <Link
                   href={`/login?next=${encodeURIComponent(`/product/${product.slug}`)}`}
                   className="btn-luxury btn-luxury-secondary mt-4 inline-flex"

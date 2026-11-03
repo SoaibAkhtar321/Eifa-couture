@@ -256,6 +256,9 @@ export interface DbOrder {
   shipping_address: Record<string, unknown>; // jsonb snapshot
   tracking_number: string | null;
   shipping_provider: string | null;
+  tracking_url: string | null;
+  shipped_at: string | null;
+  delivered_at: string | null;
   invoice_url: string | null;
   placed_at: string;
   created_at: string;

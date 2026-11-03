@@ -4,6 +4,7 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import Image from 'next/image';
 
+import { ActiveToggle, SectionToggles } from '@/components/admin/products/SectionToggles';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { TextField, SelectField } from '@/components/admin/FormField';
 import { formatPrice } from '@/lib/utils';
@@ -120,21 +121,22 @@ export default function ProductTable({
     },
     {
       key: 'active',
-      header: 'Active',
-      render: (row) => (
-        <span
-          className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-            row.is_active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-charcoal/50'
-          }`}
-        >
-          {row.is_active ? 'Active' : 'Inactive'}
-        </span>
-      ),
+      header: 'Store',
+      render: (row) => <ActiveToggle productId={row.id} initial={row.is_active} />,
     },
     {
-      key: 'featured',
-      header: 'Featured',
-      render: (row) => (row.is_featured ? '★' : <span className="text-charcoal/30">—</span>),
+      key: 'sections',
+      header: 'Homepage sections',
+      render: (row) => (
+        <SectionToggles
+          productId={row.id}
+          initial={{
+            is_featured: row.is_featured,
+            is_best_seller: row.is_best_seller,
+            is_new_arrival: row.is_new_arrival,
+          }}
+        />
+      ),
     },
     {
       key: 'stock',

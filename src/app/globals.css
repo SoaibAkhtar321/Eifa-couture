@@ -619,3 +619,7 @@ input[type='search']::-webkit-search-results-decoration {
   pointer-events: none;
   z-index: 1;
 }
+@keyframes eifa-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}

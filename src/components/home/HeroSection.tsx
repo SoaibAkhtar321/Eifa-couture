@@ -2,237 +2,155 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-type Slide = {
-  image: string;
-  alt: string;
-  eyebrow: string;
-  title: string;
-  accent: string;
-  text: string;
-  cta: string;
-  href: string;
-  panel: string;
-  light: boolean;
-  focus: string; // object-position so faces are never cropped
-};
-
-const SLIDES: Slide[] = [
-  {
-    image: '/images/hero/hero-1.png',
-    alt: 'Model wearing a white hand-embroidered Chikankari kurta',
-    eyebrow: 'Lucknow · Est. 1998',
-    title: 'Handcrafted Chikankari,',
-    accent: 'made to be treasured.',
-    text: 'Heritage Lucknowi embroidery on sarees, kurtas and silks.',
-    cta: 'Shop Women',
-    href: '/shop?audience=women',
-    panel: 'bg-ivory',
-    light: false,
-    focus: 'object-[50%_15%]',
-  },
-  {
-    image: '/images/hero/hero-2.png',
-    alt: 'Model in an ivory and gold Chikankari anarkali with dupatta',
-    eyebrow: 'Festive Edit',
-    title: 'Ivory & gold',
-    accent: 'for the season of celebrations.',
-    text: 'Anarkalis and kurta sets with zari-touched Chikankari.',
-    cta: 'Shop New Arrivals',
-    href: '/shop?collection=new-arrivals',
-    panel: 'bg-[#6B1A2E]',
-    light: true,
-    focus: 'object-[50%_15%]',
-  },
-  {
-    image: '/images/collections/men.png',
-    alt: 'Model in an ivory Chikankari kurta',
-    eyebrow: 'For Him',
-    title: 'Quiet elegance,',
-    accent: 'stitched by hand.',
-    text: 'Chikankari kurtas in cotton lawn, silk and chanderi.',
-    cta: 'Shop Men',
-    href: '/shop?audience=men',
-    panel: 'bg-[#2B2B2B]',
-    light: true,
-    focus: 'object-[50%_20%]',
-  },
-  {
-    image: '/images/categories/dupattas.png',
-    alt: 'Hand-embroidered silk dupattas and accessories',
-    eyebrow: 'Silk Accessories',
-    title: 'Silk bags & dupattas,',
-    accent: 'the finishing touch.',
-    text: 'Potlis, crochet clutches and embroidered stoles.',
-    cta: 'Shop Accessories',
-    href: '/shop?category=bags-accessories',
-    panel: 'bg-[#E9D9BD]',
-    light: false,
-    focus: 'object-center',
-  },
+const LOOKS = [
+  { src: '/images/hero/hero-1.png', alt: 'Model in a white hand-embroidered Chikankari kurta' },
+  { src: '/images/hero/hero-2.png', alt: 'Model in an ivory and gold Chikankari anarkali' },
+  { src: '/images/collections/women.png', alt: 'Model in a maroon silk Chikankari anarkali' },
+  { src: '/images/collections/men.png', alt: 'Model in an ivory Chikankari kurta for men' },
 ];
 
-const AUTOPLAY_MS = 5000;
+const STATS = [
+  { value: '1998', label: 'Family atelier' },
+  { value: '50+', label: 'Master karigars' },
+  { value: '36', label: 'Hand stitches' },
+  { value: 'All India', label: 'Delivery' },
+];
+
+const MARQUEE = [
+  'Hand-embroidered in Lucknow',
+  'Pure silk & fine cotton',
+  'Since 1998',
+  'Sarees · Kurtas · Dupattas',
+  'Silk bags & potlis',
+  'Made by master karigars',
+];
+
+const ROTATE_MS = 4500;
 
 export default function HeroSection() {
-  const trackRef = useRef<HTMLDivElement>(null);
-  const [active, setActive] = useState(0);
-  const [paused, setPaused] = useState(false);
-
-  const goTo = useCallback((index: number) => {
-    const track = trackRef.current;
-    if (!track) return;
-    const slide = track.children[index] as HTMLElement | undefined;
-    if (slide) track.scrollTo({ left: slide.offsetLeft - track.offsetLeft, behavior: 'smooth' });
-  }, []);
-
-  // Track which slide is in view (works for swipe, arrows and autoplay).
-  useEffect(() => {
-    const track = trackRef.current;
-    if (!track) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) setActive(Number((entry.target as HTMLElement).dataset.index));
-        }
-      },
-      { root: track, threshold: 0.6 }
-    );
-    Array.from(track.children).forEach((child) => observer.observe(child));
-    return () => observer.disconnect();
-  }, []);
+  const [look, setLook] = useState(0);
 
   useEffect(() => {
-    if (paused) return;
-    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) return;
-    const timer = window.setTimeout(() => goTo((active + 1) % SLIDES.length), AUTOPLAY_MS);
-    return () => window.clearTimeout(timer);
-  }, [active, paused, goTo]);
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const timer = window.setInterval(() => setLook((i) => (i + 1) % LOOKS.length), ROTATE_MS);
+    return () => window.clearInterval(timer);
+  }, []);
 
   return (
-    <section
-      className="relative bg-ivory pb-4 pt-3 lg:pb-0 lg:pt-0"
-      aria-roledescription="carousel"
-      aria-label="Eifa Couture highlights"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onTouchStart={() => setPaused(true)}
-      onTouchEnd={() => setPaused(false)}
-    >
-      <div
-        ref={trackRef}
-        className="flex snap-x snap-mandatory gap-3 overflow-x-auto scroll-smooth px-4 [scrollbar-width:none] lg:gap-0 lg:px-0 [&::-webkit-scrollbar]:hidden"
-      >
-        {SLIDES.map((slide, i) => (
-          <article
-            key={slide.image}
-            data-index={i}
-            aria-roledescription="slide"
-            aria-label={`${i + 1} of ${SLIDES.length}`}
-            className="relative w-[88%] shrink-0 snap-center overflow-hidden rounded-2xl lg:grid lg:w-full lg:grid-cols-2 lg:rounded-none"
-          >
-            {/* Image */}
-            <div className="relative aspect-[4/5] lg:order-2 lg:aspect-auto lg:min-h-[640px] xl:min-h-[700px]">
+    <section aria-label="Eifa Couture — Lucknow Chikankari & silk" className="bg-ivory">
+      <div className="luxury-container grid items-center gap-8 pb-8 pt-4 lg:grid-cols-[1fr_1.05fr] lg:gap-14 lg:pb-16 lg:pt-12">
+        {/* Visual: rotating looks + karigar inset */}
+        <div className="relative lg:order-2">
+          <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] bg-beige sm:aspect-[5/4] lg:aspect-[5/5.2]">
+            {LOOKS.map((item, i) => (
               <Image
-                src={slide.image}
-                alt={slide.alt}
+                key={item.src}
+                src={item.src}
+                alt={item.alt}
                 fill
                 priority={i === 0}
-                sizes="(max-width: 1024px) 88vw, 50vw"
-                className={`object-cover ${slide.focus} transition-transform duration-[6s] ease-out ${
-                  active === i ? 'scale-105' : 'scale-100'
+                sizes="(max-width: 1024px) 92vw, 48vw"
+                className={`object-cover object-[50%_15%] transition-[opacity,transform] duration-[1400ms] ease-out ${
+                  look === i ? 'scale-100 opacity-100' : 'scale-105 opacity-0'
                 }`}
               />
-            </div>
+            ))}
 
-            {/* Mobile caption: frosted card over the image */}
-            <div className="absolute inset-x-3 bottom-3 rounded-xl bg-charcoal/50 px-4 py-3 text-white backdrop-blur-md lg:hidden">
-              <p className="text-[10px] uppercase tracking-[0.26em] text-gold-light">{slide.eyebrow}</p>
-              <p className="mt-1 font-heading text-lg leading-snug">
-                {slide.title} <span className="italic text-gold-light">{slide.accent}</span>
-              </p>
-              <Link
-                href={slide.href}
-                className="mt-2.5 inline-flex min-h-9 items-center rounded-full bg-white px-4 text-[10px] font-semibold uppercase tracking-[0.16em] text-charcoal"
-              >
-                {slide.cta}
-              </Link>
+            <div className="absolute right-3 top-3 flex gap-1.5 rounded-full bg-white/80 px-2.5 py-1.5 backdrop-blur">
+              {LOOKS.map((item, i) => (
+                <button
+                  key={item.src}
+                  type="button"
+                  aria-label={`Show look ${i + 1}`}
+                  onClick={() => setLook(i)}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${look === i ? 'w-5 bg-maroon' : 'w-1.5 bg-charcoal/30'}`}
+                />
+              ))}
             </div>
+          </div>
 
-            {/* Desktop text panel */}
-            <div
-              className={`hidden items-center px-16 xl:px-24 lg:order-1 lg:flex ${slide.panel} ${
-                slide.light ? 'text-white' : 'text-charcoal'
-              }`}
+          {/* Karigar inset — the craft behind the brand */}
+          <figure className="absolute -bottom-6 left-3 w-[46%] overflow-hidden rounded-2xl border-4 border-ivory bg-white shadow-[0_18px_40px_rgba(43,43,43,0.18)] sm:w-[34%] lg:-bottom-8 lg:-left-10 lg:w-[42%]">
+            <div className="relative aspect-[4/3]">
+              <Image
+                src="/images/about/heritage.png"
+                alt="A karigar hand-embroidering Chikankari on a wooden hoop"
+                fill
+                sizes="(max-width: 1024px) 45vw, 20vw"
+                className="object-cover"
+              />
+            </div>
+            <figcaption className="px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-maroon sm:text-[11px]">
+              Every stitch by hand
+            </figcaption>
+          </figure>
+        </div>
+
+        {/* Story */}
+        <div className="pt-4 lg:order-1 lg:pt-0">
+          <p className="flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-gold-dark sm:text-xs">
+            <span className="block h-px w-10 bg-gold" aria-hidden="true" />
+            The Chikankari House of Lucknow
+          </p>
+
+          <h1 className="mt-4 font-heading text-[2.35rem] leading-[1.05] text-charcoal sm:text-6xl xl:text-[4rem]">
+            Lucknow’s heritage,
+            <span className="block italic text-maroon">woven in silk.</span>
+          </h1>
+
+          <p className="mt-5 max-w-lg text-[15px] leading-7 text-charcoal/80 sm:text-base sm:leading-8">
+            For over two decades our family atelier has worked with Lucknow’s master karigars — hand-embroidering
+            Chikankari on pure silk, chanderi and fine cotton. Sarees, kurtas, dupattas and silk accessories, made the
+            slow, honest way.
+          </p>
+
+          <div className="mt-7 flex flex-wrap gap-3">
+            <Link
+              href="/shop?audience=women"
+              className="inline-flex min-h-12 items-center rounded-full bg-maroon px-7 text-[11px] font-medium uppercase tracking-[0.18em] text-white shadow-[0_10px_24px_rgba(107,26,46,0.25)] transition-colors hover:bg-charcoal"
             >
-              <div
-                className={`max-w-xl transition-all duration-700 ${
-                  active === i ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'
-                }`}
-              >
-                <p className={`flex items-center gap-3 text-xs uppercase tracking-[0.32em] ${slide.light ? 'text-gold-light' : 'text-gold-dark'}`}>
-                  <span className="block h-px w-10 bg-current" aria-hidden="true" />
-                  {slide.eyebrow}
-                </p>
-                <h1 className={`mt-6 font-heading text-6xl leading-[1.04] xl:text-7xl ${slide.light ? 'text-white' : 'text-charcoal'}`}>
-                  {slide.title}
-                  <span className={`block italic ${slide.light ? 'text-gold-light' : 'text-maroon'}`}>{slide.accent}</span>
-                </h1>
-                <p className={`mt-6 max-w-md text-base leading-8 ${slide.light ? 'text-white/85' : 'text-charcoal/80'}`}>
-                  {slide.text}
-                </p>
-                <Link
-                  href={slide.href}
-                  className={`mt-9 inline-flex min-h-12 items-center px-9 text-[11px] font-medium uppercase tracking-[0.2em] transition-colors ${
-                    slide.light
-                      ? 'bg-white text-charcoal hover:bg-gold'
-                      : 'bg-maroon text-white hover:bg-charcoal'
-                  }`}
-                >
-                  {slide.cta}
-                </Link>
+              Shop Women
+            </Link>
+            <Link
+              href="/shop?audience=men"
+              className="inline-flex min-h-12 items-center rounded-full border border-charcoal/80 px-7 text-[11px] font-medium uppercase tracking-[0.18em] text-charcoal transition-colors hover:bg-charcoal hover:text-white"
+            >
+              Shop Men
+            </Link>
+            <Link
+              href="/about"
+              className="inline-flex min-h-12 items-center px-2 text-[11px] font-medium uppercase tracking-[0.18em] text-maroon underline-offset-4 hover:underline"
+            >
+              Our story →
+            </Link>
+          </div>
+
+          <dl className="mt-8 grid grid-cols-4 gap-2 border-t border-beige pt-6 sm:gap-6">
+            {STATS.map((stat) => (
+              <div key={stat.label}>
+                <dt className="sr-only">{stat.label}</dt>
+                <dd className="whitespace-nowrap font-heading text-lg text-maroon sm:text-3xl">{stat.value}</dd>
+                <dd className="mt-1 text-[9px] uppercase leading-tight tracking-[0.12em] text-charcoal/70 sm:text-[11px]">
+                  {stat.label}
+                </dd>
               </div>
-            </div>
-          </article>
-        ))}
+            ))}
+          </dl>
+        </div>
       </div>
 
-      {/* Dots */}
-      <div className="mt-3 flex justify-center gap-2 lg:absolute lg:bottom-8 lg:left-16 lg:mt-0 xl:left-24">
-        {SLIDES.map((slide, i) => (
-          <button
-            key={slide.image}
-            type="button"
-            onClick={() => goTo(i)}
-            aria-label={`Go to slide ${i + 1}`}
-            aria-current={active === i}
-            className={`h-1.5 rounded-full transition-all duration-500 ${
-              active === i ? 'w-7 bg-maroon lg:bg-gold' : 'w-1.5 bg-charcoal/25 lg:bg-gold/40'
-            }`}
-          />
-        ))}
-      </div>
-
-      {/* Desktop arrows */}
-      <div className="absolute bottom-6 right-8 hidden gap-2 lg:flex">
-        {[
-          { label: 'Previous slide', dir: -1, d: 'M15 18l-6-6 6-6' },
-          { label: 'Next slide', dir: 1, d: 'M9 18l6-6-6-6' },
-        ].map((arrow) => (
-          <button
-            key={arrow.label}
-            type="button"
-            aria-label={arrow.label}
-            onClick={() => goTo((active + arrow.dir + SLIDES.length) % SLIDES.length)}
-            className="flex h-12 w-12 items-center justify-center rounded-full bg-white/90 text-charcoal shadow-md transition-colors hover:bg-maroon hover:text-white"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <path d={arrow.d} />
-            </svg>
-          </button>
-        ))}
+      {/* Moving heritage ribbon */}
+      <div className="overflow-hidden border-y border-gold/30 bg-maroon py-3 text-white" aria-hidden="true">
+        <div className="flex w-max animate-[eifa-marquee_32s_linear_infinite] gap-10 whitespace-nowrap motion-reduce:animate-none">
+          {[...MARQUEE, ...MARQUEE].map((text, i) => (
+            <span key={i} className="flex items-center gap-10 font-subheading text-base italic tracking-wide sm:text-lg">
+              {text}
+              <span className="text-gold-light">✦</span>
+            </span>
+          ))}
+        </div>
       </div>
     </section>
   );

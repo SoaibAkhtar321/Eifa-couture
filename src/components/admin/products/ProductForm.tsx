@@ -347,10 +347,11 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
           </div>
 
           <div className="rounded-lg border border-charcoal/10 bg-ivory p-6 space-y-1">
-            <ToggleField label="Active" checked={values.is_active} onChange={(v) => setField('is_active', v)} hint="Visible on the storefront" />
-            <ToggleField label="Featured" checked={values.is_featured} onChange={(v) => setField('is_featured', v)} />
-            <ToggleField label="Best seller" checked={values.is_best_seller} onChange={(v) => setField('is_best_seller', v)} />
-            <ToggleField label="New arrival" checked={values.is_new_arrival} onChange={(v) => setField('is_new_arrival', v)} />
+            <ToggleField label="Live in store" checked={values.is_active} onChange={(v) => setField('is_active', v)} hint="Turn off to hide this product from customers" />
+            <p className="pt-3 text-xs font-medium uppercase tracking-wide text-charcoal/60">Show on homepage in</p>
+            <ToggleField label="Featured" checked={values.is_featured} onChange={(v) => setField('is_featured', v)} hint="Homepage “Featured” section only" />
+            <ToggleField label="Best seller" checked={values.is_best_seller} onChange={(v) => setField('is_best_seller', v)} hint="Homepage “Best Sellers” section only" />
+            <ToggleField label="New arrival" checked={values.is_new_arrival} onChange={(v) => setField('is_new_arrival', v)} hint="Homepage “New Arrivals” section only" />
           </div>
 
           {formError && (

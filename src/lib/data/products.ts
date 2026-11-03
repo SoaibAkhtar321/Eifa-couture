@@ -261,14 +261,9 @@ export function fetchBestSellers(supabase: SupabaseClient, limit = 4) {
   return fetchProductList(supabase, limit, { flag: 'is_best_seller', orderBy: 'rating_avg' });
 }
 
-/**
- * Products marked "New arrival". If the admin hasn't flagged anything
- * yet, the newest uploads are shown instead so a freshly added product
- * always reaches the homepage.
- */
-export async function fetchNewArrivals(supabase: SupabaseClient, limit = 6) {
-  const flagged = await fetchProductList(supabase, limit, { flag: 'is_new_arrival' });
-  return flagged.length > 0 ? flagged : fetchProductList(supabase, limit);
+/** Products marked "New arrival" — only those, newest first. */
+export function fetchNewArrivals(supabase: SupabaseClient, limit = 6) {
+  return fetchProductList(supabase, limit, { flag: 'is_new_arrival' });
 }
 
 export async function fetchProductsInCategories(

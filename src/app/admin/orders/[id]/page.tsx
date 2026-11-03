@@ -5,6 +5,7 @@ import { getOrderById, getOrderStatusHistory } from '@/lib/admin/orders';
 import OrderStatusUpdate from '@/components/admin/orders/OrderStatusUpdate';
 import OrderTimeline from '@/components/admin/orders/OrderTimeline';
 import RefundPanel from '@/components/admin/orders/RefundPanel';
+import ShippingPanel from '@/components/admin/orders/ShippingPanel';
 import { formatPrice, formatDate } from '@/lib/utils';
 
 export const metadata = { title: 'Order detail' };
@@ -91,6 +92,8 @@ export default async function AdminOrderDetailPage({ params }: OrderDetailPagePr
               </div>
             </div>
           </section>
+
+          <ShippingPanel orderId={order.id} />
 
           <OrderTimeline
             status={order.status}

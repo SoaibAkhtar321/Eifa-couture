@@ -248,6 +248,13 @@ export default function OrdersPage() {
                       >
                         View Order
                       </Link>
+
+                      <Link
+                        href={`/track-order?order=${order.orderNumber}`}
+                        className="btn-luxury btn-luxury-primary text-center"
+                      >
+                        Track
+                      </Link>
                     </div>
                   </div>
                 </div>
