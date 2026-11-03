@@ -36,7 +36,7 @@ export default function HeroSection() {
               <span className="block italic text-maroon">made to be treasured.</span>
             </h1>
 
-            <p className="mt-5 max-w-md text-sm leading-7 text-charcoal/65 sm:text-base sm:leading-8">
+            <p className="mt-5 max-w-md text-sm leading-7 text-charcoal/78 sm:text-base sm:leading-8">
               Heritage Lucknowi embroidery on sarees, kurtas and silks — for women, men, festive moments
               and everyday elegance.
             </p>
@@ -61,7 +61,7 @@ export default function HeroSection() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="border-b border-charcoal/20 pb-0.5 text-[11px] uppercase tracking-[0.16em] text-charcoal/70 transition-colors hover:border-maroon hover:text-maroon"
+                  className="border-b border-charcoal/20 pb-0.5 text-[11px] uppercase tracking-[0.16em] text-charcoal/80 transition-colors hover:border-maroon hover:text-maroon"
                 >
                   {link.label}
                 </Link>

@@ -39,7 +39,7 @@ export default function AnnouncementBar() {
             {/* Close button */}
             <button
               onClick={() => setIsVisible(false)}
-              className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 p-1 text-white/60 hover:text-white transition-colors duration-300"
+              className="absolute right-3 sm:right-6 top-1/2 -translate-y-1/2 p-1 text-white/78 hover:text-white transition-colors duration-300"
               aria-label="Close announcement"
             >
               <svg

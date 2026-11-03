@@ -52,7 +52,7 @@ function SectionHeading({
 
       <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
 
-      <p className="mx-auto mt-4 max-w-xl font-subheading text-base italic text-charcoal/60 md:text-xl">
+      <p className="mx-auto mt-4 max-w-xl font-subheading text-base italic text-charcoal/75 md:text-xl">
         {subtitle}
       </p>
     </div>
@@ -139,7 +139,7 @@ export function ShopByCategorySkeleton() {
             <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
           </div>
 
-          <p className="mx-auto max-w-xl text-sm leading-7 text-charcoal/55 md:text-base md:leading-8">
+          <p className="mx-auto max-w-xl text-sm leading-7 text-charcoal/70 md:text-base md:leading-8">
             Move directly into the collection you are looking for — from
             handcrafted Chikankari classics to festive accessories.
           </p>

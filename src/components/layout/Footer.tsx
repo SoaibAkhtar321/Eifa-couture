@@ -80,7 +80,7 @@ export default async function Footer() {
               </span>
             </Link>
 
-            <p className="mt-5 max-w-sm text-sm leading-7 text-charcoal/60">
+            <p className="mt-5 max-w-sm text-sm leading-7 text-charcoal/75">
               Premium handcrafted Lucknowi Chikankari fashion since 1998. Every
               piece celebrates heritage, patience, and refined craftsmanship.
             </p>
@@ -93,7 +93,7 @@ export default async function Footer() {
                   href={link.href}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="border border-beige bg-white px-4 py-2 text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
+                  className="border border-beige bg-white px-4 py-2 text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/75 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
                 >
                   {link.name}
                 </a>
@@ -112,7 +112,7 @@ export default async function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="font-subheading text-[17px] text-charcoal/60 transition-colors duration-300 hover:text-maroon"
+                    className="font-subheading text-[17px] text-charcoal/75 transition-colors duration-300 hover:text-maroon"
                   >
                     {link.label}
                   </Link>
@@ -131,7 +131,7 @@ export default async function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="font-subheading text-[17px] text-charcoal/60 transition-colors duration-300 hover:text-maroon"
+                    className="font-subheading text-[17px] text-charcoal/75 transition-colors duration-300 hover:text-maroon"
                   >
                     {link.label}
                   </Link>
@@ -145,7 +145,7 @@ export default async function Footer() {
               Contact
             </h3>
 
-            <div className="mt-5 space-y-3 font-subheading text-[17px] text-charcoal/60">
+            <div className="mt-5 space-y-3 font-subheading text-[17px] text-charcoal/75">
               <p>{location}</p>
 
               <a
@@ -168,7 +168,7 @@ export default async function Footer() {
                 <li key={link.href}>
                   <Link
                     href={link.href}
-                    className="text-xs uppercase tracking-[0.22em] text-charcoal/45 transition-colors duration-300 hover:text-maroon"
+                    className="text-xs uppercase tracking-[0.22em] text-charcoal/60 transition-colors duration-300 hover:text-maroon"
                   >
                     {link.label}
                   </Link>
@@ -178,7 +178,7 @@ export default async function Footer() {
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 border-t border-beige py-5 text-xs uppercase tracking-[0.22em] text-charcoal/45 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-3 border-t border-beige py-5 text-xs uppercase tracking-[0.22em] text-charcoal/60 sm:flex-row sm:items-center sm:justify-between">
           <p>© {currentYear} Eifa Couture. All rights reserved.</p>
           <p>Handcrafted in Lucknow</p>
         </div>

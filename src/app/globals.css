@@ -13,12 +13,12 @@
   --color-gold: #C8A548;
   --color-gold-light: #D4B96A;
   --color-gold-dark: #A68A3A;
-  --color-cream: #FAF8F4;
-  --color-beige: #F3EEE6;
+  --color-cream: #F7EFE0;
+  --color-beige: #EFE3CF;
   --color-charcoal: #2B2B2B;
-  --color-ivory: #FFFEF9;
+  --color-ivory: #FBF5EA;
   --color-antique-gold: #B89B5E;
-  --color-light-ivory: #FEFDFB;
+  --color-light-ivory: #FDF9F1;
 
   /* ── Typography ── */
   --font-heading: "Playfair Display Variable", "Playfair Display", Georgia, serif;
@@ -217,7 +217,6 @@ h4 {
   font-weight: 600;
   line-height: 1.2;
   letter-spacing: -0.01em;
-  color: var(--color-charcoal);
 }
 
 h5,

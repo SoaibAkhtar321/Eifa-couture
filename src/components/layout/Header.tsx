@@ -40,6 +40,7 @@ export default function Header() {
 
   const openCart = useUIStore((state) => state.openCart);
   const openMobileMenu = useUIStore((state) => state.openMobileMenu);
+  const openSearch = useUIStore((state) => state.openSearch);
 
   const cartItemCount = useCartStore((state) => state.getItemCount());
   const wishlistCount = useWishlistStore((state) => state.items.length);
@@ -76,7 +77,7 @@ export default function Header() {
         }`}
       >
         <div className="luxury-container">
-          <div className="flex h-[72px] items-center justify-between gap-4 sm:h-[78px] lg:h-[84px]">
+          <div className="flex h-[64px] items-center justify-between gap-4 sm:h-[78px] lg:h-[84px]">
             
             {/* ── Logo ── */}
             <Link
@@ -133,7 +134,7 @@ export default function Header() {
               {showAccountIcon ? (
                 <Link
                   href="/account"
-                  className="hidden items-center gap-2 px-2 text-charcoal/55 transition-colors duration-300 hover:text-maroon lg:flex pointer-events-auto"
+                  className="hidden items-center gap-2 px-2 text-charcoal/70 transition-colors duration-300 hover:text-maroon lg:flex pointer-events-auto"
                   aria-label="My Account"
                 >
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-maroon font-body text-[11px] font-medium text-white pointer-events-none">
@@ -146,7 +147,7 @@ export default function Header() {
               ) : (
                 <Link
                   href="/login"
-                  className="hidden items-center gap-2 text-charcoal/55 transition-colors duration-300 hover:text-maroon lg:flex px-2 pointer-events-auto"
+                  className="hidden items-center gap-2 text-charcoal/70 transition-colors duration-300 hover:text-maroon lg:flex px-2 pointer-events-auto"
                   aria-label="Sign In or Register"
                 >
                   <svg
@@ -173,7 +174,7 @@ export default function Header() {
               {/* Wishlist */}
               <Link
                 href="/wishlist"
-                className="tap-feedback relative hidden h-11 w-11 items-center justify-center text-charcoal/55 hover:text-maroon sm:flex min-h-[44px] min-w-[44px] pointer-events-auto"
+                className="tap-feedback relative hidden h-11 w-11 items-center justify-center text-charcoal/70 hover:text-maroon sm:flex min-h-[44px] min-w-[44px] pointer-events-auto"
                 aria-label={`Wishlist${
                   visibleWishlistCount > 0 ? ` (${visibleWishlistCount} items)` : ''
                 }`}
@@ -203,7 +204,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={openCart}
-                className="tap-feedback relative flex h-11 w-11 items-center justify-center text-charcoal/55 hover:text-maroon min-h-[44px] min-w-[44px] pointer-events-auto cursor-pointer"
+                className="tap-feedback relative flex h-11 w-11 items-center justify-center text-charcoal/70 hover:text-maroon min-h-[44px] min-w-[44px] pointer-events-auto cursor-pointer"
                 aria-label={`Shopping bag${
                   visibleCartItemCount > 0 ? ` (${visibleCartItemCount} items)` : ''
                 }`}
@@ -235,7 +236,7 @@ export default function Header() {
               <button
                 type="button"
                 onClick={openMobileMenu}
-                className="tap-feedback flex h-11 w-11 items-center justify-center text-charcoal/55 hover:text-maroon lg:hidden min-h-[44px] min-w-[44px] pointer-events-auto cursor-pointer"
+                className="tap-feedback flex h-11 w-11 items-center justify-center text-charcoal/70 hover:text-maroon lg:hidden min-h-[44px] min-w-[44px] pointer-events-auto cursor-pointer"
                 aria-label="Open menu"
               >
                 <svg
@@ -257,6 +258,19 @@ export default function Header() {
               </button>
             </div>
           </div>
+
+          {/* Mobile: app-style search bar under the logo (Flipkart/Meesho pattern) */}
+          <button
+            type="button"
+            onClick={openSearch}
+            className="mb-3 flex h-11 w-full items-center gap-3 rounded-md border border-beige bg-white px-4 text-left text-sm text-charcoal/60 lg:hidden"
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            Search sarees, kurtas, dupattas…
+          </button>
         </div>
       </header>
 

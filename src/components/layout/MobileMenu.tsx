@@ -108,7 +108,7 @@ export default function MobileMenu() {
             tabIndex={-1}
             aria-label="Close menu"
             onClick={closeMobileMenu}
-            className="absolute inset-0 z-0 h-full w-full cursor-pointer bg-charcoal/50 backdrop-blur-[2px] pointer-events-auto"
+            className="absolute inset-0 z-0 h-full w-full cursor-pointer bg-charcoal/65 backdrop-blur-[2px] pointer-events-auto"
           />
 
           <motion.aside
@@ -152,7 +152,7 @@ export default function MobileMenu() {
               <button
                 type="button"
                 onClick={closeMobileMenu}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-beige bg-white text-2xl text-charcoal/60 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white min-h-[44px] min-w-[44px] cursor-pointer"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-beige bg-white text-2xl text-charcoal/75 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white min-h-[44px] min-w-[44px] cursor-pointer"
                 aria-label="Close menu"
               >
                 ×
@@ -238,7 +238,7 @@ export default function MobileMenu() {
                     href={social.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="min-h-[44px] flex items-center justify-center border border-beige bg-white px-3 py-3 text-center text-[10px] font-medium uppercase tracking-[0.18em] text-charcoal/60 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
+                    className="min-h-[44px] flex items-center justify-center border border-beige bg-white px-3 py-3 text-center text-[10px] font-medium uppercase tracking-[0.18em] text-charcoal/75 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
                   >
                     {social.name}
                   </a>

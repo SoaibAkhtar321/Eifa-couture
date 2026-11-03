@@ -33,11 +33,11 @@ export default function HeritageSection() {
               Since 1998, Eifa Couture has been at the heart of Lucknow&apos;s Chikankari tradition.
             </p>
 
-            <p className="mt-4 font-body text-sm leading-relaxed text-white/60 md:mt-5">
+            <p className="mt-4 font-body text-sm leading-relaxed text-white/78 md:mt-5">
               Chikankari, an embroidery art from the Mughal era, is one of India&apos;s most refined textile traditions. At Eifa Couture, we honour this 400-year legacy.
             </p>
 
-            <p className="mt-3 hidden font-body text-sm leading-relaxed text-white/60 md:block">
+            <p className="mt-3 hidden font-body text-sm leading-relaxed text-white/78 md:block">
               Our atelier works with over 50 skilled karigars across Lucknow, each specializing in specific stitches.
             </p>
 
