@@ -5,9 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useSyncExternalStore, type ReactNode } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
-import { useUIStore } from '@/store/ui-store';
 import { useWishlistStore } from '@/store/wishlist-store';
-import { useCartStore } from '@/store/cart-store';
 
 const subscribe = () => () => {};
 const useHydrated = () => useSyncExternalStore(subscribe, () => true, () => false);
@@ -35,11 +33,7 @@ function Count({ value }: { value: number }) {
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const hydrated = useHydrated();
-  const openSearch = useUIStore((state) => state.openSearch);
-  const openCart = useUIStore((state) => state.openCart);
-  const isSearchOpen = useUIStore((state) => state.isSearchOpen);
   const wishlistCount = useWishlistStore((state) => state.items.length);
-  const cartCount = useCartStore((state) => state.getItemCount());
   const { isAuthenticated } = useAuth();
 
   if (HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return null;
@@ -74,16 +68,8 @@ export default function MobileBottomNav() {
               <rect x="3" y="14" width="7" height="7" />
               <rect x="14" y="14" width="7" height="7" />
             </Icon>
-            Shop
+            Categories
           </Link>
-
-          <button type="button" onClick={openSearch} className={itemClass(isSearchOpen || pathname.startsWith('/search'))}>
-            <Icon>
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </Icon>
-            Search
-          </button>
 
           <Link href="/wishlist" className={itemClass(pathname.startsWith('/wishlist'))}>
             <span className="relative">
@@ -95,17 +81,6 @@ export default function MobileBottomNav() {
             Wishlist
           </Link>
 
-          <button type="button" onClick={openCart} className={itemClass(false)}>
-            <span className="relative">
-              <Icon>
-                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
-                <path d="M3 6h18M16 10a4 4 0 0 1-8 0" />
-              </Icon>
-              <Count value={hydrated ? cartCount : 0} />
-            </span>
-            Bag
-          </button>
-
           <Link
             href={hydrated && isAuthenticated ? '/account' : '/login'}
             className={itemClass(pathname.startsWith('/account') || pathname === '/login')}
@@ -114,7 +89,7 @@ export default function MobileBottomNav() {
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </Icon>
-            {hydrated && isAuthenticated ? 'Account' : 'Sign In'}
+            Account
           </Link>
         </div>
       </nav>

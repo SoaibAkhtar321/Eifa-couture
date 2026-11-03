@@ -13,7 +13,7 @@ export default function StorefrontLayout({
   return (
     <CartSyncProvider>
       <WishlistSyncProvider>
-        <div className="relative flex min-h-screen flex-col overflow-x-hidden">
+        <div className="relative flex min-h-screen flex-col overflow-x-clip">
           <Header />
 
           <div className="flex-1 w-full relative z-10">{children}</div>

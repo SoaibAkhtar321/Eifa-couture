@@ -6,8 +6,7 @@ import FeaturedCollection from '@/components/home/FeaturedCollection';
 import NewArrivalsSection from '@/components/home/NewArrivalsSection';
 import BestSellersSection from '@/components/home/BestSellersSection';
 import ShopByCategorySection from '@/components/home/ShopByCategorySection';
-import WomensCollectionSection from '@/components/home/WomensCollectionSection';
-import MensCollectionSection from '@/components/home/MensCollectionSection';
+import StackedCollections from '@/components/home/StackedCollections';
 import AudienceSection from '@/components/home/AudienceSection';
 import CategoryRails from '@/components/home/CategoryRails';
 import WhyChooseUsSection from '@/components/home/WhyChooseUsSection';
@@ -111,11 +110,10 @@ export default async function HomePage() {
           <div key={section.key}>{section.node}</div>
         ))}
 
-        <WomensCollectionSection />
+        <StackedCollections />
         <Suspense fallback={<NewArrivalsSkeleton />}>
           <AudienceSection audience="women" categories={categories} />
         </Suspense>
-        <MensCollectionSection />
         <Suspense fallback={<NewArrivalsSkeleton />}>
           <AudienceSection audience="men" categories={categories} />
         </Suspense>

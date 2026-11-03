@@ -147,7 +147,7 @@ body {
   background-color: var(--color-ivory);
   line-height: 1.7;
   letter-spacing: 0.01em;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 /* ============================================
