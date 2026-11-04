@@ -40,7 +40,7 @@ export default function HeroSection() {
 
   return (
     <section aria-label="Eifa Couture — Lucknow Chikankari & silk" className="bg-ivory">
-      <div className="luxury-container grid items-center gap-8 pb-8 pt-4 lg:grid-cols-[1fr_1.05fr] lg:gap-14 lg:pb-16 lg:pt-12">
+      <div className="luxury-container grid items-center gap-8 pb-8 pt-4 lg:grid-cols-[1.1fr_1fr] lg:gap-8 xl:gap-10 lg:pb-16 lg:pt-12">
         {/* Visual: rotating looks + karigar inset */}
         <div className="relative lg:order-2">
           <div className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] bg-beige sm:aspect-[5/4] lg:aspect-[5/5.2]">
@@ -72,7 +72,7 @@ export default function HeroSection() {
           </div>
 
           {/* Karigar inset — the craft behind the brand */}
-          <figure className="absolute -bottom-6 left-3 w-[46%] overflow-hidden rounded-2xl border-4 border-ivory bg-white shadow-[0_18px_40px_rgba(43,43,43,0.18)] sm:w-[34%] lg:-bottom-8 lg:-left-10 lg:w-[42%]">
+          <figure className="absolute -bottom-6 left-3 w-[46%] overflow-hidden rounded-2xl border-4 border-ivory bg-white shadow-[0_18px_40px_rgba(43,43,43,0.18)] sm:w-[34%] lg:-bottom-8 lg:-left-6 lg:w-[38%]">
             <div className="relative aspect-[4/3]">
               <Image
                 src="/images/about/heritage.png"
@@ -100,7 +100,7 @@ export default function HeroSection() {
             <span className="block italic text-maroon">woven in silk.</span>
           </h1>
 
-          <p className="mt-5 max-w-lg text-[15px] leading-7 text-charcoal/80 sm:text-base sm:leading-8">
+          <p className="mt-5 max-w-xl text-[15px] leading-7 text-charcoal/80 sm:text-base sm:leading-8">
             For over two decades our family atelier has worked with Lucknow’s master karigars — hand-embroidering
             Chikankari on pure silk, chanderi and fine cotton. Sarees, kurtas, dupattas and silk accessories, made the
             slow, honest way.
@@ -127,7 +127,7 @@ export default function HeroSection() {
             </Link>
           </div>
 
-          <dl className="mt-8 grid grid-cols-4 gap-2 border-t border-beige pt-6 sm:gap-6">
+          <dl className="mt-8 grid max-w-xl grid-cols-4 gap-2 border-t border-beige pt-6 sm:gap-6">
             {STATS.map((stat) => (
               <div key={stat.label}>
                 <dt className="sr-only">{stat.label}</dt>

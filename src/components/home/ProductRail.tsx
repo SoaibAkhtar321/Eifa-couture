@@ -24,7 +24,7 @@ function ProductCard({ product, badge }: { product: Product; badge: Badge }) {
     : 0;
 
   return (
-    <article className="group w-[46vw] shrink-0 snap-start sm:w-auto">
+    <article className="group w-[46vw] shrink-0 snap-start sm:w-[calc((100%-2.5rem)/3)] lg:w-[calc((100%-4.5rem)/4)]">
       <Link href={`/product/${product.slug}`} className="flex h-full flex-col bg-white">
         <div className="relative aspect-[4/5] overflow-hidden bg-beige">
           <ProductImage
@@ -114,7 +114,10 @@ export default function ProductRail({
           </Link>
         </div>
 
-        <div className="-mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:grid sm:grid-cols-3 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-4 lg:gap-6 [&::-webkit-scrollbar]:hidden">
+        <div className={`-mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:gap-5 sm:overflow-visible sm:px-0 lg:gap-6 [&::-webkit-scrollbar]:hidden ${
+            // Few products: centre them instead of leaving a wide empty row
+            products.length <= 2 ? 'justify-center' : products.length === 3 ? 'sm:justify-center' : ''
+          }`}>
           {products.map((product) => (
             <ProductCard key={product.id} product={product} badge={badge} />
           ))}
