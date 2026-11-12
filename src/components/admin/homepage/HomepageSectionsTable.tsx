@@ -25,7 +25,7 @@ export default function HomepageSectionsTable({ rows, error }: HomepageSectionsT
       render: (row) => (
         <div>
           <p className="font-medium text-charcoal">{SECTION_LABELS[row.section_key]}</p>
-          <p className="text-xs text-charcoal/50">{row.title || 'Uses default heading'}</p>
+          <p className="text-xs text-ink-muted">{row.title || 'Uses default heading'}</p>
         </div>
       ),
     },
@@ -45,7 +45,7 @@ export default function HomepageSectionsTable({ rows, error }: HomepageSectionsT
       render: (row) => (
         <span
           className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-            row.is_active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-charcoal/50'
+            row.is_active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-ink-muted'
           }`}
         >
           {row.is_active ? 'Active' : 'Inactive'}

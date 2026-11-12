@@ -7,7 +7,7 @@ export default function Loading() {
           <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-gold" />
         </div>
 
-        <span className="font-body text-[10px] uppercase tracking-[0.32em] text-charcoal/50">
+        <span className="font-body text-[10px] uppercase tracking-[0.32em] text-ink-muted">
           Eifa Couture
         </span>
       </div>

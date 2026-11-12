@@ -70,7 +70,7 @@ export default function CouponTable({ rows, error }: CouponTableProps) {
     {
       key: 'min_order',
       header: 'Min. order',
-      render: (row) => (row.min_order ? formatPrice(row.min_order) : <span className="text-charcoal/40">—</span>),
+      render: (row) => (row.min_order ? formatPrice(row.min_order) : <span className="text-ink-muted">—</span>),
     },
     {
       key: 'usage',
@@ -86,7 +86,7 @@ export default function CouponTable({ rows, error }: CouponTableProps) {
             {new Date(row.expires_at).toLocaleDateString('en-IN')}
           </span>
         ) : (
-          <span className="text-charcoal/40">Never</span>
+          <span className="text-ink-muted">Never</span>
         ),
     },
     {
@@ -101,7 +101,7 @@ export default function CouponTable({ rows, error }: CouponTableProps) {
             void handleToggleActive(row);
           }}
           className={`rounded-full px-2.5 py-1 text-xs font-medium transition disabled:opacity-50 ${
-            row.is_active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-charcoal/50'
+            row.is_active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-ink-muted'
           }`}
         >
           {row.is_active ? 'Active' : 'Inactive'}

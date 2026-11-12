@@ -21,10 +21,10 @@ export default function AccountOverview({ user }: { user: User | null }) {
       <dl className="mt-6 grid gap-5 sm:grid-cols-2">
         {fields(user).map((field) => (
           <div key={field.label}>
-            <dt className="text-[11px] uppercase tracking-[0.18em] text-charcoal/45">
+            <dt className="text-[11px] uppercase tracking-[0.18em] text-ink-muted">
               {field.label}
             </dt>
-            <dd className="mt-1 text-sm text-charcoal/80">{field.value}</dd>
+            <dd className="mt-1 text-sm text-ink-soft">{field.value}</dd>
           </div>
         ))}
       </dl>

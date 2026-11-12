@@ -53,7 +53,7 @@ export function SectionToggles({
           className={`rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors disabled:opacity-50 ${
             values[flag]
               ? 'border-maroon bg-maroon text-white'
-              : 'border-charcoal/15 bg-white text-charcoal/60 hover:border-maroon hover:text-maroon'
+              : 'border-charcoal/15 bg-white text-ink-muted hover:border-maroon hover:text-maroon'
           }`}
         >
           {values[flag] ? '✓ ' : '+ '}
@@ -88,7 +88,7 @@ export function ActiveToggle({ productId, initial }: { productId: string; initia
       disabled={saving}
       title={active ? 'Visible in store — click to hide' : 'Hidden — click to show in store'}
       className={`rounded-full px-2.5 py-1 text-xs font-medium disabled:opacity-50 ${
-        active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-charcoal/60'
+        active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-ink-muted'
       }`}
     >
       {active ? 'Live' : 'Hidden'}

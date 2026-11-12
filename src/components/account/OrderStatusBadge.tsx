@@ -1,5 +1,5 @@
 const statusStyles: Record<string, string> = {
-  Pending: 'bg-charcoal/10 text-charcoal/70',
+  Pending: 'bg-charcoal/10 text-ink-soft',
   Processing: 'bg-gold/15 text-gold',
   Shipped: 'bg-maroon/10 text-maroon',
   Delivered: 'bg-green-100 text-green-700',

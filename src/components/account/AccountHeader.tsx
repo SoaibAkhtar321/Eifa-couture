@@ -35,7 +35,7 @@ export default function AccountHeader({ user }: { user: User | null }) {
           <h2 className="font-heading text-2xl text-charcoal sm:text-3xl">
             {user?.user_metadata?.full_name || 'Welcome'}
           </h2>
-          <p className="mt-1 text-sm text-charcoal/55">{user?.email}</p>
+          <p className="mt-1 text-sm text-ink-muted">{user?.email}</p>
           {memberSince && (
             <p className="mt-1 text-xs uppercase tracking-[0.2em] text-gold">
               Member since {memberSince}

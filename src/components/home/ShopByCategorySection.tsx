@@ -48,7 +48,7 @@ export default async function ShopByCategorySection({
             <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
           </div>
 
-          <p className="mx-auto max-w-xl text-sm leading-7 text-charcoal/70 md:text-base md:leading-8">
+          <p className="mx-auto max-w-xl text-sm leading-7 text-ink-soft md:text-base md:leading-8">
             {subtitle ||
               'Move directly into the collection you are looking for — from handcrafted Chikankari classics to festive accessories.'}
           </p>

@@ -297,7 +297,7 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
                 />
               </>
             ) : (
-              <p className="rounded-md border border-beige bg-beige/30 p-3 text-xs text-charcoal/60">
+              <p className="rounded-md border border-beige bg-beige/30 p-3 text-xs text-ink-muted">
                 Inventory is managed per variant.
               </p>
             )}
@@ -348,7 +348,7 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
 
           <div className="rounded-lg border border-charcoal/10 bg-ivory p-6 space-y-1">
             <ToggleField label="Live in store" checked={values.is_active} onChange={(v) => setField('is_active', v)} hint="Turn off to hide this product from customers" />
-            <p className="pt-3 text-xs font-medium uppercase tracking-wide text-charcoal/60">Show on homepage in</p>
+            <p className="pt-3 text-xs font-medium uppercase tracking-wide text-ink-muted">Show on homepage in</p>
             <ToggleField label="Featured" checked={values.is_featured} onChange={(v) => setField('is_featured', v)} hint="Homepage “Featured” section only" />
             <ToggleField label="Best seller" checked={values.is_best_seller} onChange={(v) => setField('is_best_seller', v)} hint="Homepage “Best Sellers” section only" />
             <ToggleField label="New arrival" checked={values.is_new_arrival} onChange={(v) => setField('is_new_arrival', v)} hint="Homepage “New Arrivals” section only" />
@@ -367,7 +367,7 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
           </button>
 
           {!isEditing && (
-            <p className="text-xs text-charcoal/50">
+            <p className="text-xs text-ink-muted">
               Variants and images can be added once the product is created.
             </p>
           )}

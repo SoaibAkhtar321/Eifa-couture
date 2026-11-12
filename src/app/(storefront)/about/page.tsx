@@ -101,7 +101,7 @@ export default function AboutPage() {
                 </h2>
               </div>
 
-              <div className="space-y-5 text-sm leading-8 text-charcoal/62 sm:text-base sm:leading-9">
+              <div className="space-y-5 text-sm leading-8 text-ink-muted sm:text-base sm:leading-9">
                 <p>
                   Eifa Couture is built around the belief that handcrafted
                   clothing should feel personal, graceful, and timeless. Our
@@ -150,7 +150,7 @@ export default function AboutPage() {
                     {value.title}
                   </h3>
 
-                  <p className="mt-4 text-sm leading-7 text-charcoal/58">
+                  <p className="mt-4 text-sm leading-7 text-ink-muted">
                     {value.description}
                   </p>
                 </article>
@@ -171,7 +171,7 @@ export default function AboutPage() {
                   Our Journey
                 </h2>
 
-                <p className="mt-5 text-sm leading-7 text-charcoal/58 sm:text-base sm:leading-8">
+                <p className="mt-5 text-sm leading-7 text-ink-muted sm:text-base sm:leading-8">
                   A slow, careful journey from traditional craft to premium
                   contemporary Chikankari.
                 </p>
@@ -192,7 +192,7 @@ export default function AboutPage() {
                         {item.title}
                       </h3>
 
-                      <p className="mt-2 text-sm leading-7 text-charcoal/58">
+                      <p className="mt-2 text-sm leading-7 text-ink-muted">
                         {item.description}
                       </p>
                     </div>

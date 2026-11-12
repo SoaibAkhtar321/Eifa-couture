@@ -20,7 +20,7 @@ export default function RelatedProducts({ products }: RelatedProductsProps) {
             Related Pieces
           </h2>
 
-          <p className="max-w-2xl text-sm leading-7 text-charcoal/60">
+          <p className="max-w-2xl text-sm leading-7 text-ink-muted">
             Continue exploring handcrafted silhouettes that carry the same quiet
             luxury and Lucknowi refinement.
           </p>

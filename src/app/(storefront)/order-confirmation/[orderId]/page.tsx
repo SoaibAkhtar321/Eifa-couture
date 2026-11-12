@@ -107,8 +107,8 @@ const PAYMENT_BADGE_STYLES: Record<PaymentUiState, string> = {
   processing: 'bg-gold/15 text-gold',
   successful: 'bg-green-100 text-green-700',
   failed: 'bg-red-100 text-red-600',
-  cancelled: 'bg-charcoal/10 text-charcoal/70',
-  refunded: 'bg-charcoal/10 text-charcoal/70',
+  cancelled: 'bg-charcoal/10 text-ink-soft',
+  refunded: 'bg-charcoal/10 text-ink-soft',
   partially_refunded: 'bg-amber-100 text-amber-800',
 };
 
@@ -296,7 +296,7 @@ export default function OrderConfirmationPage() {
         <div className="luxury-container py-5 sm:py-6">
           <nav
             aria-label="Breadcrumb"
-            className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-charcoal/45 sm:text-[11px]"
+            className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-muted sm:text-[11px]"
           >
             <Link href="/" className="hover:text-maroon">
               Home
@@ -310,7 +310,7 @@ export default function OrderConfirmationPage() {
 
             <span>/</span>
 
-            <span className="text-charcoal/70">Confirmation</span>
+            <span className="text-ink-soft">Confirmation</span>
           </nav>
         </div>
       </section>
@@ -319,11 +319,11 @@ export default function OrderConfirmationPage() {
         <div className="luxury-container">
           {isAuthLoading || (isLoading && !order) ? (
             <div className="mx-auto max-w-2xl border border-beige bg-white p-8 text-center">
-              <p className="text-sm text-charcoal/55">Loading your order…</p>
+              <p className="text-sm text-ink-muted">Loading your order…</p>
             </div>
           ) : !user ? (
             <div className="mx-auto max-w-2xl border border-beige bg-white p-8 text-center">
-              <p className="text-sm text-charcoal/55">Please sign in to view this order.</p>
+              <p className="text-sm text-ink-muted">Please sign in to view this order.</p>
               <Link
                 href={`/login?redirect=${encodeURIComponent(`/order-confirmation/${orderId}`)}`}
                 className="btn-luxury btn-luxury-primary mt-6 inline-flex"
@@ -337,7 +337,7 @@ export default function OrderConfirmationPage() {
             </div>
           ) : notFound || !order || !paymentState ? (
             <div className="mx-auto max-w-2xl border border-beige bg-white p-8 text-center">
-              <p className="text-sm text-charcoal/55">We couldn&apos;t find this order.</p>
+              <p className="text-sm text-ink-muted">We couldn&apos;t find this order.</p>
               <Link href="/account/orders" className="btn-luxury btn-luxury-primary mt-6 inline-flex">
                 View My Orders
               </Link>
@@ -357,7 +357,7 @@ export default function OrderConfirmationPage() {
                       Confirming Your Payment
                     </h1>
 
-                    <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-charcoal/55 sm:text-base">
+                    <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-ink-muted sm:text-base">
                       This usually takes just a few seconds. We&apos;ll update this page
                       automatically the moment your payment is confirmed — please don&apos;t
                       close this window.
@@ -379,7 +379,7 @@ export default function OrderConfirmationPage() {
                       Thank You For Your Order
                     </h1>
 
-                    <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-charcoal/55 sm:text-base">
+                    <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-ink-muted sm:text-base">
                       Your payment was successful and your order has been placed. We&apos;ll
                       send updates to your email as it&apos;s processed and shipped.
                     </p>
@@ -392,27 +392,27 @@ export default function OrderConfirmationPage() {
                       <PaymentStateBadge state={paymentState} />
                     </div>
 
-                    <p className="mt-1 text-xs uppercase tracking-[0.18em] text-charcoal/45">
+                    <p className="mt-1 text-xs uppercase tracking-[0.18em] text-ink-muted">
                       Placed on {formatOrderDate(order.placedAt)}
                     </p>
 
                     {order.paymentProvider === 'razorpay' && (
-                      <div className="mx-auto mt-6 max-w-sm space-y-1.5 border-t border-beige pt-5 text-left text-xs text-charcoal/55">
+                      <div className="mx-auto mt-6 max-w-sm space-y-1.5 border-t border-beige pt-5 text-left text-xs text-ink-muted">
                         {order.paymentVerifiedAt && (
                           <p>
-                            <span className="text-charcoal/40">Paid on:</span>{' '}
+                            <span className="text-ink-muted">Paid on:</span>{' '}
                             {formatOrderDateTime(order.paymentVerifiedAt)}
                           </p>
                         )}
                         {order.razorpayPaymentId && (
                           <p>
-                            <span className="text-charcoal/40">Payment ID:</span>{' '}
+                            <span className="text-ink-muted">Payment ID:</span>{' '}
                             {order.razorpayPaymentId}
                           </p>
                         )}
                         {order.razorpayOrderId && (
                           <p>
-                            <span className="text-charcoal/40">Razorpay Order ID:</span>{' '}
+                            <span className="text-ink-muted">Razorpay Order ID:</span>{' '}
                             {order.razorpayOrderId}
                           </p>
                         )}
@@ -420,19 +420,19 @@ export default function OrderConfirmationPage() {
                     )}
 
                     {order.refunds.length > 0 && (
-                      <div className="mx-auto mt-6 max-w-sm space-y-2 border-t border-beige pt-5 text-left text-xs text-charcoal/55">
-                        <p className="text-[10px] uppercase tracking-[0.2em] text-charcoal/40">
+                      <div className="mx-auto mt-6 max-w-sm space-y-2 border-t border-beige pt-5 text-left text-xs text-ink-muted">
+                        <p className="text-[10px] uppercase tracking-[0.2em] text-ink-muted">
                           Refund{order.refunds.length > 1 ? 's' : ''}
                         </p>
                         {order.refunds.map((refund, index) => (
                           <p key={index}>
                             <span className="text-charcoal">{formatPrice(refund.amount)}</span>{' '}
-                            <span className="text-charcoal/40">refunded on</span>{' '}
+                            <span className="text-ink-muted">refunded on</span>{' '}
                             {formatOrderDateTime(refund.refundedAt)}
                             {refund.reason && (
                               <>
                                 <br />
-                                <span className="text-charcoal/40">Reason: </span>
+                                <span className="text-ink-muted">Reason: </span>
                                 {refund.reason}
                               </>
                             )}
@@ -465,7 +465,7 @@ export default function OrderConfirmationPage() {
                       {paymentState === 'cancelled' && 'This Order Was Cancelled'}
                     </h1>
 
-                    <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-charcoal/55 sm:text-base">
+                    <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-ink-muted sm:text-base">
                       {paymentState === 'pending' &&
                         "We placed your order but haven't received your payment yet. Complete payment now to confirm it — nothing will be charged twice."}
                       {paymentState === 'failed' &&
@@ -480,7 +480,7 @@ export default function OrderConfirmationPage() {
                       </span>
                     </div>
 
-                    <p className="mt-1 text-xs uppercase tracking-[0.18em] text-charcoal/45">
+                    <p className="mt-1 text-xs uppercase tracking-[0.18em] text-ink-muted">
                       Placed on {formatOrderDate(order.placedAt)}
                     </p>
 
@@ -521,11 +521,11 @@ export default function OrderConfirmationPage() {
                             {item.name}
                           </h3>
 
-                          <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-charcoal/45">
+                          <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-ink-muted">
                             {item.size} / {item.colorName}
                           </p>
 
-                          <p className="mt-2 text-sm text-charcoal/60">Qty: {item.quantity}</p>
+                          <p className="mt-2 text-sm text-ink-muted">Qty: {item.quantity}</p>
                         </div>
 
                         <p className="shrink-0 text-sm text-charcoal">
@@ -540,7 +540,7 @@ export default function OrderConfirmationPage() {
                   <div className="border border-beige bg-white p-5 sm:p-6">
                     <h2 className="font-heading text-xl text-charcoal">Delivery Address</h2>
 
-                    <div className="mt-4 text-sm leading-7 text-charcoal/60">
+                    <div className="mt-4 text-sm leading-7 text-ink-muted">
                       <p className="font-subheading text-charcoal">{shippingAddress.full_name}</p>
 
                       <p>
@@ -560,12 +560,12 @@ export default function OrderConfirmationPage() {
                     <h2 className="font-heading text-xl text-charcoal">Order Summary</h2>
 
                     <div className="mt-4 space-y-3">
-                      <div className="flex items-center justify-between text-sm text-charcoal/60">
+                      <div className="flex items-center justify-between text-sm text-ink-muted">
                         <span>Subtotal</span>
                         <span>{formatPrice(order.subtotal)}</span>
                       </div>
 
-                      <div className="flex items-center justify-between text-sm text-charcoal/60">
+                      <div className="flex items-center justify-between text-sm text-ink-muted">
                         <span>Shipping</span>
                         <span>
                           {order.shippingFee === 0 ? 'Complimentary' : formatPrice(order.shippingFee)}
@@ -573,7 +573,7 @@ export default function OrderConfirmationPage() {
                       </div>
 
                       <div className="flex items-center justify-between border-t border-beige pt-4">
-                        <span className="font-body text-xs uppercase tracking-[0.2em] text-charcoal/55">
+                        <span className="font-body text-xs uppercase tracking-[0.2em] text-ink-muted">
                           Total
                         </span>
 

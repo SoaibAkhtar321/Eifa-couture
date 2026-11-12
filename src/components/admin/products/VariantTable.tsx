@@ -142,7 +142,7 @@ export default function VariantTable({
       render: (row) => (
         <span
           className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-            row.is_active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-charcoal/50'
+            row.is_active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-ink-muted'
           }`}
         >
           {row.is_active ? 'Active' : 'Inactive'}
@@ -206,7 +206,7 @@ export default function VariantTable({
         <div className="space-y-6 border-t border-charcoal/10 pt-6">
           <div>
             <h3 className="font-heading text-lg text-maroon">Color images</h3>
-            <p className="text-xs text-charcoal/50">
+            <p className="text-xs text-ink-muted">
               Each color has its own gallery, shared across all its sizes. Leave a color&apos;s
               gallery empty to fall back to the product&apos;s main images.
             </p>

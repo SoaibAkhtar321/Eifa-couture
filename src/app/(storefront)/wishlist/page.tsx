@@ -97,7 +97,7 @@ export default function WishlistPage() {
           <div className="luxury-container py-6 sm:py-8 lg:py-12">
             <nav
               aria-label="Breadcrumb"
-              className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-charcoal/45 sm:text-[11px]"
+              className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-muted sm:text-[11px]"
             >
               <Link href="/" className="hover:text-maroon">
                 Home
@@ -105,7 +105,7 @@ export default function WishlistPage() {
 
               <span>/</span>
 
-              <span className="text-charcoal/70">Wishlist</span>
+              <span className="text-ink-soft">Wishlist</span>
             </nav>
 
             <div className="max-w-2xl">
@@ -117,7 +117,7 @@ export default function WishlistPage() {
                 Your Wishlist
               </h1>
 
-              <p className="mt-4 max-w-xl text-sm leading-7 text-charcoal/55 sm:text-base">
+              <p className="mt-4 max-w-xl text-sm leading-7 text-ink-muted sm:text-base">
                 Keep your favourite handcrafted Chikankari pieces in one place
                 and add them to your bag whenever you are ready.
               </p>
@@ -133,7 +133,7 @@ export default function WishlistPage() {
                   Loading Wishlist
                 </h2>
 
-                <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-charcoal/55">
+                <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-ink-muted">
                   Preparing your saved pieces.
                 </p>
               </div>
@@ -147,7 +147,7 @@ export default function WishlistPage() {
                   Your wishlist is empty
                 </h2>
 
-                <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-charcoal/55">
+                <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-ink-muted">
                   Explore the collection and tap the heart icon to save pieces
                   you love.
                 </p>
@@ -235,7 +235,7 @@ export default function WishlistPage() {
                             </h3>
                           </Link>
 
-                          <p className="mt-1 line-clamp-2 hidden text-sm leading-6 text-charcoal/60 sm:mt-2 sm:block">
+                          <p className="mt-1 line-clamp-2 hidden text-sm leading-6 text-ink-muted sm:mt-2 sm:block">
                             {product.shortDescription}
                           </p>
 
@@ -247,7 +247,7 @@ export default function WishlistPage() {
                             </span>
 
                             {product.compareAtPrice && (
-                              <span className="text-[11px] text-charcoal/40 line-through sm:text-xs">
+                              <span className="text-[11px] text-ink-muted line-through sm:text-xs">
                                 {formatPrice(product.compareAtPrice)}
                               </span>
                             )}

@@ -24,7 +24,7 @@ export default async function AdminCouponsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-3xl text-maroon">Coupons</h1>
-          <p className="text-charcoal/60 mt-1">
+          <p className="text-ink-muted mt-1">
             {coupons.length} coupon{coupons.length === 1 ? '' : 's'}
           </p>
         </div>

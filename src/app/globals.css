@@ -20,6 +20,16 @@
   --color-antique-gold: #B89B5E;
   --color-light-ivory: #FDF9F1;
 
+  /* ── Readable text tokens (WCAG AA on ivory/cream) ── */
+  --color-ink: #1F1A17;          /* headings / primary text (~15:1) */
+  --color-ink-soft: #4A423B;     /* body copy (~9:1) */
+  --color-ink-muted: #5F564E;    /* captions, hints (~6.5:1) */
+  --color-gold-deep: #7A5F14;    /* gold text on light backgrounds (~5.5:1) */
+
+  /* ── Luxury surfaces ── */
+  --color-parchment: #F3E7D0;
+  --color-espresso: #1E0A10;
+
   /* ── Typography ── */
   --font-heading: "Playfair Display Variable", "Playfair Display", Georgia, serif;
   --font-subheading: "Cormorant Garamond Variable", "Cormorant Garamond", Georgia, serif;
@@ -143,8 +153,12 @@
 
 body {
   font-family: var(--font-body);
-  color: var(--color-charcoal);
+  color: var(--color-ink-soft);
   background-color: var(--color-ivory);
+  background-image:
+    radial-gradient(1200px 600px at 10% -10%, rgba(200, 165, 72, 0.10), transparent 60%),
+    radial-gradient(900px 500px at 100% 0%, rgba(90, 11, 34, 0.05), transparent 60%);
+  background-attachment: fixed;
   line-height: 1.7;
   letter-spacing: 0.01em;
   overflow-x: clip;
@@ -225,7 +239,7 @@ h6 {
   font-weight: 500;
   line-height: 1.3;
   letter-spacing: 0.02em;
-  color: var(--color-charcoal);
+  color: var(--color-ink);
 }
 
 p {
@@ -622,4 +636,44 @@ input[type='search']::-webkit-search-results-decoration {
 @keyframes eifa-marquee {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }
+}
+
+/* ============================================
+   LUXURY SURFACES (Phase 1)
+   ============================================ */
+.surface-parchment {
+  background: linear-gradient(180deg, var(--color-parchment), var(--color-cream));
+}
+
+.surface-dark {
+  color: var(--color-ivory);
+  background:
+    radial-gradient(800px 400px at 15% 0%, rgba(200, 165, 72, 0.16), transparent 60%),
+    linear-gradient(180deg, var(--color-maroon-dark), var(--color-espresso));
+}
+
+.surface-dark h1,
+.surface-dark h2,
+.surface-dark h3,
+.surface-dark h4 {
+  color: var(--color-ivory);
+}
+
+.hairline-gold {
+  border-color: rgba(184, 155, 94, 0.45);
+}
+
+.eyebrow {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--color-gold-deep);
+}
+
+@keyframes eifa-scroll-cue {
+  0% { transform: translateY(-100%); opacity: 0; }
+  30% { opacity: 1; }
+  100% { transform: translateY(260%); opacity: 0; }
 }

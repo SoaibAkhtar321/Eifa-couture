@@ -58,7 +58,7 @@ export default function MobileStickyActionBar({
         )}
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[11px] font-medium uppercase tracking-[0.12em] text-charcoal/70">
+          <p className="truncate text-[11px] font-medium uppercase tracking-[0.12em] text-ink-soft">
             {productName}
           </p>
           <p className="font-subheading text-base text-maroon">{priceLabel}</p>

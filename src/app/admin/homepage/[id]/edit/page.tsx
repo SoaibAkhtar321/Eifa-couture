@@ -72,19 +72,19 @@ export default async function EditHomepageSectionPage({ params }: EditHomepageSe
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-3xl text-maroon">{SECTION_LABELS[section.section_key]}</h1>
-        <p className="text-charcoal/60 mt-1">Edit how this section appears on the homepage.</p>
+        <p className="text-ink-muted mt-1">Edit how this section appears on the homepage.</p>
       </div>
 
       <HomepageSectionForm section={section} collectionOptions={collectionOptions} />
 
       <div className="space-y-3">
         <h2 className="text-sm font-medium text-charcoal">Live preview</h2>
-        <p className="text-xs text-charcoal/50">
+        <p className="text-xs text-ink-muted">
           Reflects the last saved version of this section. Save changes above to update it.
         </p>
         <div className="rounded-lg border border-charcoal/10 overflow-hidden">
           {preview ?? (
-            <div className="p-10 text-center text-sm text-charcoal/50">
+            <div className="p-10 text-center text-sm text-ink-muted">
               Nothing to preview yet — this section has no matching content.
             </div>
           )}

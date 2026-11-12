@@ -148,7 +148,7 @@ export default function ImageManager({
       )}
 
       {sortedImages.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-charcoal/20 p-8 text-center text-sm text-charcoal/50">
+        <div className="rounded-lg border border-dashed border-charcoal/20 p-8 text-center text-sm text-ink-muted">
           {emptyMessage}
         </div>
       ) : (
@@ -203,7 +203,7 @@ export default function ImageManager({
         </div>
       )}
 
-      <p className="text-xs text-charcoal/50">Drag to reorder. The first image is used as the thumbnail unless a primary is set.</p>
+      <p className="text-xs text-ink-muted">Drag to reorder. The first image is used as the thumbnail unless a primary is set.</p>
     </div>
   );
 }

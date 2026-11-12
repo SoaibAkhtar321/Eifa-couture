@@ -49,7 +49,7 @@ export default function ContactPage() {
           <div className="luxury-container py-6 sm:py-8 lg:py-12">
             <nav
               aria-label="Breadcrumb"
-              className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-charcoal/45 sm:text-[11px]"
+              className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-muted sm:text-[11px]"
             >
               <Link href="/" className="hover:text-maroon">
                 Home
@@ -57,7 +57,7 @@ export default function ContactPage() {
 
               <span>/</span>
 
-              <span className="text-charcoal/70">Contact</span>
+              <span className="text-ink-soft">Contact</span>
             </nav>
 
             <div className="max-w-2xl">
@@ -69,7 +69,7 @@ export default function ContactPage() {
                 Contact Eifa Couture
               </h1>
 
-              <p className="mt-4 max-w-xl text-sm leading-7 text-charcoal/55 sm:text-base">
+              <p className="mt-4 max-w-xl text-sm leading-7 text-ink-muted sm:text-base">
                 We are here to help with product details, size guidance, custom
                 requests, order support, and handcrafted Chikankari enquiries.
               </p>
@@ -89,7 +89,7 @@ export default function ContactPage() {
                     {card.title}
                   </h2>
 
-                  <p className="mt-3 text-sm leading-7 text-charcoal/58">
+                  <p className="mt-3 text-sm leading-7 text-ink-muted">
                     {card.description}
                   </p>
 
@@ -121,7 +121,7 @@ export default function ContactPage() {
                   Tell Us What You Are Looking For
                 </h2>
 
-                <p className="mt-5 max-w-md text-sm leading-7 text-charcoal/58 sm:text-base sm:leading-8">
+                <p className="mt-5 max-w-md text-sm leading-7 text-ink-muted sm:text-base sm:leading-8">
                   This is a demo-ready form. Later, we can connect it with email,
                   WhatsApp, Firebase, or an admin enquiry dashboard.
                 </p>
@@ -135,7 +135,7 @@ export default function ContactPage() {
                     {enquiryTypes.map((type) => (
                       <span
                         key={type}
-                        className="border border-beige bg-ivory px-3 py-2 text-[11px] uppercase tracking-[0.14em] text-charcoal/58"
+                        className="border border-beige bg-ivory px-3 py-2 text-[11px] uppercase tracking-[0.14em] text-ink-muted"
                       >
                         {type}
                       </span>
@@ -147,7 +147,7 @@ export default function ContactPage() {
               <form className="space-y-5 border border-beige bg-white p-5 sm:p-7 lg:p-8">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="block">
-                    <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                    <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
                       Full Name
                     </span>
 
@@ -160,7 +160,7 @@ export default function ContactPage() {
                   </label>
 
                   <label className="block">
-                    <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                    <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
                       Phone Number
                     </span>
 
@@ -174,7 +174,7 @@ export default function ContactPage() {
                 </div>
 
                 <label className="block">
-                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
                     Email Address
                   </span>
 
@@ -187,7 +187,7 @@ export default function ContactPage() {
                 </label>
 
                 <label className="block">
-                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
                     Enquiry Type
                   </span>
 
@@ -209,7 +209,7 @@ export default function ContactPage() {
                 </label>
 
                 <label className="block">
-                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
                     Message
                   </span>
 
@@ -228,7 +228,7 @@ export default function ContactPage() {
                   Send Enquiry Soon
                 </button>
 
-                <p className="text-center text-xs leading-6 text-charcoal/45">
+                <p className="text-center text-xs leading-6 text-ink-muted">
                   Form submission is not connected yet. For now, customers can
                   use email or WhatsApp enquiry.
                 </p>

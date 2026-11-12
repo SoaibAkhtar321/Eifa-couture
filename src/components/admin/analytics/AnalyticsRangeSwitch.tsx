@@ -28,7 +28,7 @@ export default function AnalyticsRangeSwitch({ active }: AnalyticsRangeSwitchPro
           onClick={() => handleChange(option.value)}
           className={cn(
             'px-3 py-1.5 text-sm rounded transition-colors',
-            active === option.value ? 'bg-maroon text-cream' : 'text-charcoal/60 hover:text-maroon'
+            active === option.value ? 'bg-maroon text-cream' : 'text-ink-muted hover:text-maroon'
           )}
         >
           {option.label}

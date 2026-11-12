@@ -174,7 +174,7 @@ export default function CollectionForm({ collection }: CollectionFormProps) {
 
           <div className="rounded-lg border border-charcoal/10 bg-ivory p-6 space-y-4">
             <h2 className="text-sm font-medium text-charcoal">Scheduling</h2>
-            <p className="text-xs text-charcoal/50">
+            <p className="text-xs text-ink-muted">
               Optional campaign window. Leave blank for a side with no bound on that end.
             </p>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

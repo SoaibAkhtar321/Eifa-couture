@@ -52,7 +52,7 @@ export default function SeriesChart({
   }, [points]);
 
   if (points.length === 0) {
-    return <p className="text-sm text-charcoal/50">{emptyMessage}</p>;
+    return <p className="text-sm text-ink-muted">{emptyMessage}</p>;
   }
 
   const active = activeIndex !== null ? plotted[activeIndex] : null;
@@ -64,7 +64,7 @@ export default function SeriesChart({
     <div className="relative">
       {active && (
         <div className="absolute top-0 right-0 rounded-md border border-charcoal/10 bg-cream px-3 py-2 text-xs shadow-sm">
-          <p className="text-charcoal/50">{active.label}</p>
+          <p className="text-ink-muted">{active.label}</p>
           <p className="font-heading text-maroon">{format(active.value)}</p>
         </div>
       )}
@@ -116,7 +116,7 @@ export default function SeriesChart({
         ))}
       </svg>
 
-      <div className="flex justify-between text-[11px] text-charcoal/40 mt-1">
+      <div className="flex justify-between text-[11px] text-ink-muted mt-1">
         <span>{plotted[0]?.label}</span>
         <span>Peak: {format(maxValue)}</span>
         <span>{plotted[plotted.length - 1]?.label}</span>

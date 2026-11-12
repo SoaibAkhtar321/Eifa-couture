@@ -93,13 +93,13 @@ export default function OrderTracker() {
     router.replace(`/track-order?order=${encodeURIComponent(query.trim())}`);
   }
 
-  if (isLoading) return <p className="text-sm text-charcoal/70">Loading…</p>;
+  if (isLoading) return <p className="text-sm text-ink-soft">Loading…</p>;
 
   if (!isAuthenticated) {
     return (
       <div className="mx-auto max-w-md rounded-xl border border-beige bg-white p-8 text-center">
         <h2 className="font-heading text-2xl text-charcoal">Sign in to track your order</h2>
-        <p className="mt-2 text-sm text-charcoal/70">Your orders and their live status appear here after you sign in.</p>
+        <p className="mt-2 text-sm text-ink-soft">Your orders and their live status appear here after you sign in.</p>
         <Link href="/login?next=/track-order" className="btn-luxury btn-luxury-primary mt-6 inline-flex">
           Sign In
         </Link>
@@ -107,7 +107,7 @@ export default function OrderTracker() {
     );
   }
 
-  if (orders === null) return <p className="text-sm text-charcoal/70">Loading your orders…</p>;
+  if (orders === null) return <p className="text-sm text-ink-soft">Loading your orders…</p>;
 
   if (orders.length === 0) {
     return (
@@ -147,7 +147,7 @@ export default function OrderTracker() {
                 className={`block px-4 py-3 text-sm ${selected?.id === order.id ? 'bg-cream' : 'hover:bg-cream/60'}`}
               >
                 <span className="font-medium text-charcoal">{order.order_number}</span>
-                <span className="mt-0.5 block text-xs capitalize text-charcoal/65">
+                <span className="mt-0.5 block text-xs capitalize text-ink-muted">
                   {order.status.replace(/_/g, ' ')} · {formatPrice(order.total)}
                 </span>
               </Link>
@@ -157,7 +157,7 @@ export default function OrderTracker() {
       </aside>
 
       {!selected ? (
-        <div className="rounded-xl border border-beige bg-white p-8 text-sm text-charcoal/70">
+        <div className="rounded-xl border border-beige bg-white p-8 text-sm text-ink-soft">
           No order found with number “{requested}” on your account.
         </div>
       ) : (
@@ -166,7 +166,7 @@ export default function OrderTracker() {
             <div>
               <p className="text-xs uppercase tracking-[0.2em] text-gold-dark">Order</p>
               <h2 className="mt-1 font-heading text-2xl text-charcoal sm:text-3xl">{selected.order_number}</h2>
-              <p className="mt-1 text-sm text-charcoal/65">Placed {fmt(selected.placed_at)}</p>
+              <p className="mt-1 text-sm text-ink-muted">Placed {fmt(selected.placed_at)}</p>
             </div>
             <p className="font-subheading text-2xl font-semibold text-charcoal">{formatPrice(selected.total)}</p>
           </div>
@@ -176,7 +176,7 @@ export default function OrderTracker() {
               <div>
                 <p className="text-charcoal">
                   {selected.shipping_provider ?? 'Courier'}
-                  {selected.tracking_number && <span className="text-charcoal/70"> · AWB {selected.tracking_number}</span>}
+                  {selected.tracking_number && <span className="text-ink-soft"> · AWB {selected.tracking_number}</span>}
                 </p>
               </div>
               {selected.tracking_url && (
@@ -209,17 +209,17 @@ export default function OrderTracker() {
                     )}
                     <span
                       className={`relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-[11px] ${
-                        done ? 'border-maroon bg-maroon text-white' : 'border-beige bg-white text-charcoal/40'
+                        done ? 'border-maroon bg-maroon text-white' : 'border-beige bg-white text-ink-muted'
                       }`}
                     >
                       {done ? '✓' : i + 1}
                     </span>
                     <div>
-                      <p className={`text-sm font-medium ${done ? 'text-charcoal' : 'text-charcoal/50'}`}>{step.label}</p>
-                      <p className="text-xs text-charcoal/65">
+                      <p className={`text-sm font-medium ${done ? 'text-charcoal' : 'text-ink-muted'}`}>{step.label}</p>
+                      <p className="text-xs text-ink-muted">
                         {note ? fmt(note.created_at) : i === 0 ? fmt(selected.placed_at) : done ? '' : step.hint}
                       </p>
-                      {note?.notes && <p className="mt-1 text-xs italic text-charcoal/75">“{note.notes}”</p>}
+                      {note?.notes && <p className="mt-1 text-xs italic text-ink-soft">“{note.notes}”</p>}
                     </div>
                   </li>
                 );
@@ -228,17 +228,17 @@ export default function OrderTracker() {
           )}
 
           <div className="mt-8 border-t border-beige pt-5">
-            <p className="text-xs uppercase tracking-[0.2em] text-charcoal/60">Items</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Items</p>
             <ul className="mt-3 space-y-2 text-sm text-charcoal">
               {selected.order_items.map((item, i) => (
                 <li key={i} className="flex justify-between gap-3">
                   <span>
                     {item.name}
                     {(item.size || item.color_name) && (
-                      <span className="text-charcoal/60"> · {[item.size, item.color_name].filter(Boolean).join(' / ')}</span>
+                      <span className="text-ink-muted"> · {[item.size, item.color_name].filter(Boolean).join(' / ')}</span>
                     )}
                   </span>
-                  <span className="text-charcoal/70">× {item.quantity}</span>
+                  <span className="text-ink-soft">× {item.quantity}</span>
                 </li>
               ))}
             </ul>

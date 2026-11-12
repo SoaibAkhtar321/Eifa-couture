@@ -33,7 +33,7 @@ function StatusBadge({ isActive }: { isActive: boolean }) {
   return (
     <span
       className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-        isActive ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-charcoal/50'
+        isActive ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-ink-muted'
       }`}
     >
       {isActive ? 'Active' : 'Inactive'}
@@ -145,7 +145,7 @@ export default function CollectionProductsManager({ collectionId }: CollectionPr
       render: (row) => (
         <div>
           <p className="font-medium text-charcoal">{row.product.name}</p>
-          <p className="text-xs text-charcoal/50">{row.product.slug}</p>
+          <p className="text-xs text-ink-muted">{row.product.slug}</p>
         </div>
       ),
     },
@@ -176,7 +176,7 @@ export default function CollectionProductsManager({ collectionId }: CollectionPr
       <div className="rounded-lg border border-charcoal/10 bg-ivory p-6 space-y-4">
         <div>
           <h2 className="text-sm font-medium text-charcoal">Assigned products</h2>
-          <p className="text-xs text-charcoal/50">Products currently in this collection.</p>
+          <p className="text-xs text-ink-muted">Products currently in this collection.</p>
         </div>
 
         <DataTable
@@ -192,7 +192,7 @@ export default function CollectionProductsManager({ collectionId }: CollectionPr
       <div className="rounded-lg border border-charcoal/10 bg-ivory p-6 space-y-4">
         <div>
           <h2 className="text-sm font-medium text-charcoal">Add products</h2>
-          <p className="text-xs text-charcoal/50">Search by name to add a product to this collection.</p>
+          <p className="text-xs text-ink-muted">Search by name to add a product to this collection.</p>
         </div>
 
         <TextField
@@ -206,11 +206,11 @@ export default function CollectionProductsManager({ collectionId }: CollectionPr
 
         <div className="rounded-lg border border-charcoal/10 overflow-hidden">
           {isSearching ? (
-            <div className="p-6 text-center text-sm text-charcoal/50">Searching…</div>
+            <div className="p-6 text-center text-sm text-ink-muted">Searching…</div>
           ) : searchError ? (
             <div className="p-6 text-center text-sm text-red-600">{searchError}</div>
           ) : searchResults.length === 0 ? (
-            <div className="p-6 text-center text-sm text-charcoal/50">
+            <div className="p-6 text-center text-sm text-ink-muted">
               {searchQuery.trim() ? 'No matching products found.' : 'Start typing to search products.'}
             </div>
           ) : (
@@ -220,7 +220,7 @@ export default function CollectionProductsManager({ collectionId }: CollectionPr
                   <ProductThumbnail url={product.primary_image_url} name={product.name} />
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium text-charcoal">{product.name}</p>
-                    <p className="truncate text-xs text-charcoal/50">{product.slug}</p>
+                    <p className="truncate text-xs text-ink-muted">{product.slug}</p>
                   </div>
                   <StatusBadge isActive={product.is_active} />
                   <button

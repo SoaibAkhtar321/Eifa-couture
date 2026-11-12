@@ -32,7 +32,7 @@ export default async function AdminInventoryPage({ searchParams }: InventoryPage
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-3xl text-maroon">Inventory</h1>
-        <p className="text-charcoal/60 mt-1">Track and update stock across every product variant.</p>
+        <p className="text-ink-muted mt-1">Track and update stock across every product variant.</p>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">

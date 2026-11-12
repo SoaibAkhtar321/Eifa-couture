@@ -19,7 +19,7 @@ export default function AccountGateway() {
   if (isLoading) {
     return (
       <div className="border border-beige bg-white p-5 sm:p-7 lg:p-8">
-        <p className="text-sm text-charcoal/50">Loading account…</p>
+        <p className="text-sm text-ink-muted">Loading account…</p>
       </div>
     );
   }
@@ -39,7 +39,7 @@ export default function AccountGateway() {
       <div className="border border-beige bg-white p-5 sm:p-7 lg:p-8">
         <span className="mb-3 block font-body text-[10px] uppercase tracking-[0.28em] text-gold">Sign In</span>
         <h2 className="font-heading text-3xl text-charcoal">Welcome Back</h2>
-        <p className="mt-3 text-sm leading-7 text-charcoal/58">
+        <p className="mt-3 text-sm leading-7 text-ink-muted">
           Sign in to manage orders, wishlist, and saved details.
         </p>
         <Link href="/login" className="btn-luxury btn-luxury-primary mt-7 w-full">Sign In</Link>
@@ -47,7 +47,7 @@ export default function AccountGateway() {
           <Link href="/track-order" className="text-maroon transition-colors hover:text-gold">
             Track order without login
           </Link>
-          <Link href="/contact" className="text-charcoal/50 transition-colors hover:text-maroon">
+          <Link href="/contact" className="text-ink-muted transition-colors hover:text-maroon">
             Need help?
           </Link>
         </div>
@@ -57,7 +57,7 @@ export default function AccountGateway() {
         <div className="border border-beige bg-cream/60 p-5 sm:p-7 lg:p-8">
           <span className="mb-3 block font-body text-[10px] uppercase tracking-[0.28em] text-gold">New Customer</span>
           <h2 className="font-heading text-3xl text-charcoal">Create An Account</h2>
-          <p className="mt-3 text-sm leading-7 text-charcoal/58">
+          <p className="mt-3 text-sm leading-7 text-ink-muted">
             Create an account to save addresses, wishlist items, and manage your handcrafted Chikankari orders.
           </p>
           <Link href="/register" className="btn-luxury btn-luxury-secondary mt-7 w-full">Register</Link>
@@ -67,7 +67,7 @@ export default function AccountGateway() {
           {accountBenefits.map((b) => (
             <article key={b.title} className="border border-beige bg-white p-5 transition-all duration-300 hover:border-gold/50">
               <h3 className="font-heading text-2xl text-charcoal">{b.title}</h3>
-              <p className="mt-3 text-sm leading-7 text-charcoal/58">{b.description}</p>
+              <p className="mt-3 text-sm leading-7 text-ink-muted">{b.description}</p>
             </article>
           ))}
         </div>

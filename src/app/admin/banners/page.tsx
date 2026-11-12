@@ -13,7 +13,7 @@ export default async function AdminBannersPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-3xl text-maroon">Banners</h1>
-          <p className="text-charcoal/60 mt-1">
+          <p className="text-ink-muted mt-1">
             {(banners ?? []).length} banner{(banners ?? []).length === 1 ? '' : 's'}
           </p>
         </div>

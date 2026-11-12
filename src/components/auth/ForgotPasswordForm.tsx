@@ -51,7 +51,7 @@ export default function ForgotPasswordForm() {
       <div className="w-full max-w-md bg-white p-8 border border-beige shadow-sm">
         <div className="text-center mb-8">
           <h1 className="font-heading text-3xl text-charcoal mb-3">Reset Password</h1>
-          <p className="font-body text-sm text-charcoal/60">
+          <p className="font-body text-sm text-ink-muted">
             Enter your email and we&apos;ll send you a link to reset your password.
           </p>
         </div>
@@ -72,7 +72,7 @@ export default function ForgotPasswordForm() {
           <div>
             <label
               htmlFor="email"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/60 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-muted mb-2"
             >
               Email Address
             </label>
@@ -81,7 +81,7 @@ export default function ForgotPasswordForm() {
               id="email"
               name="email"
               placeholder="Enter your email"
-              className="w-full border border-beige bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/30"
+              className="w-full border border-beige bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-ink-muted"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -101,7 +101,7 @@ export default function ForgotPasswordForm() {
         <div className="mt-8 text-center border-t border-beige pt-6">
           <Link
             href="/login"
-            className="font-body text-xs uppercase tracking-wider text-charcoal/50 hover:text-maroon transition-colors"
+            className="font-body text-xs uppercase tracking-wider text-ink-muted hover:text-maroon transition-colors"
           >
             Back to Sign In
           </Link>

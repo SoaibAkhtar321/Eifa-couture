@@ -193,7 +193,7 @@ export default function BannerForm({ banner }: BannerFormProps) {
 
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div className="space-y-2">
-                <p className="text-xs font-medium text-charcoal/70">
+                <p className="text-xs font-medium text-ink-soft">
                   Desktop image <span className="text-maroon">*</span>
                 </p>
                 {values.image_url && (
@@ -219,13 +219,13 @@ export default function BannerForm({ banner }: BannerFormProps) {
               </div>
 
               <div className="space-y-2">
-                <p className="text-xs font-medium text-charcoal/70">Mobile image</p>
+                <p className="text-xs font-medium text-ink-soft">Mobile image</p>
                 {values.mobile_image_url && (
                   <div className="relative aspect-[9/16] max-h-48 overflow-hidden rounded-md border border-charcoal/10">
                     <Image src={values.mobile_image_url} alt="Mobile banner" fill className="object-cover" />
                   </div>
                 )}
-                <label className="block cursor-pointer rounded-md border border-charcoal/20 px-4 py-2 text-center text-sm font-medium text-charcoal/70 transition hover:bg-charcoal/5">
+                <label className="block cursor-pointer rounded-md border border-charcoal/20 px-4 py-2 text-center text-sm font-medium text-ink-soft transition hover:bg-charcoal/5">
                   {uploading === 'mobile' ? 'Uploading…' : values.mobile_image_url ? 'Replace image' : 'Upload image'}
                   <input
                     ref={mobileInputRef}
@@ -239,7 +239,7 @@ export default function BannerForm({ banner }: BannerFormProps) {
                     className="hidden"
                   />
                 </label>
-                <p className="text-xs text-charcoal/50">Optional — falls back to the desktop image if omitted.</p>
+                <p className="text-xs text-ink-muted">Optional — falls back to the desktop image if omitted.</p>
               </div>
             </div>
           </div>

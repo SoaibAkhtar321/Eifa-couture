@@ -18,7 +18,7 @@ export default function AddressCard({ address, onEdit, onDelete, onSetDefault, i
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <h3 className="font-heading text-xl text-charcoal">{address.full_name}</h3>
-          <span className="border border-charcoal/15 px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] text-charcoal/55">
+          <span className="border border-charcoal/15 px-2 py-0.5 text-[10px] uppercase tracking-[0.15em] text-ink-muted">
             {typeLabels[address.type] ?? address.type}
           </span>
           {address.is_default && (
@@ -29,7 +29,7 @@ export default function AddressCard({ address, onEdit, onDelete, onSetDefault, i
         </div>
       </div>
 
-      <p className="mt-3 text-sm leading-6 text-charcoal/70">
+      <p className="mt-3 text-sm leading-6 text-ink-soft">
         {address.address_line1}
         {address.address_line2 ? `, ${address.address_line2}` : ''}
         <br />
@@ -42,11 +42,11 @@ export default function AddressCard({ address, onEdit, onDelete, onSetDefault, i
         <button type="button" onClick={onEdit} disabled={isBusy} className="text-maroon transition-colors hover:text-gold disabled:opacity-50">
           Edit
         </button>
-        <button type="button" onClick={onDelete} disabled={isBusy} className="text-charcoal/60 transition-colors hover:text-red-700 disabled:opacity-50">
+        <button type="button" onClick={onDelete} disabled={isBusy} className="text-ink-muted transition-colors hover:text-red-700 disabled:opacity-50">
           Delete
         </button>
         {!address.is_default && (
-          <button type="button" onClick={onSetDefault} disabled={isBusy} className="text-charcoal/60 transition-colors hover:text-maroon disabled:opacity-50">
+          <button type="button" onClick={onSetDefault} disabled={isBusy} className="text-ink-muted transition-colors hover:text-maroon disabled:opacity-50">
             Set as Default
           </button>
         )}

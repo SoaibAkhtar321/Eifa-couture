@@ -98,14 +98,14 @@ export default function ProductTable({
       render: (row) => (
         <div>
           <p className="font-medium text-charcoal">{row.name}</p>
-          <p className="text-xs text-charcoal/50">{row.slug}</p>
+          <p className="text-xs text-ink-muted">{row.slug}</p>
         </div>
       ),
     },
     {
       key: 'category',
       header: 'Category',
-      render: (row) => row.category_name ?? <span className="text-charcoal/40">—</span>,
+      render: (row) => row.category_name ?? <span className="text-ink-muted">—</span>,
     },
     {
       key: 'price',
@@ -114,7 +114,7 @@ export default function ProductTable({
         <div>
           <p>{formatPrice(row.price)}</p>
           {row.compare_at_price ? (
-            <p className="text-xs text-charcoal/40 line-through">{formatPrice(row.compare_at_price)}</p>
+            <p className="text-xs text-ink-muted line-through">{formatPrice(row.compare_at_price)}</p>
           ) : null}
         </div>
       ),
@@ -194,7 +194,7 @@ export default function ProductTable({
           />
         </div>
 
-        <label className="flex items-center gap-2 pb-2.5 text-sm text-charcoal/70">
+        <label className="flex items-center gap-2 pb-2.5 text-sm text-ink-soft">
           <input
             type="checkbox"
             checked={currentParams.featured === '1'}
@@ -204,7 +204,7 @@ export default function ProductTable({
           Featured only
         </label>
 
-        <label className="flex items-center gap-2 pb-2.5 text-sm text-charcoal/70">
+        <label className="flex items-center gap-2 pb-2.5 text-sm text-ink-soft">
           <input
             type="checkbox"
             checked={currentParams.lowStock === '1'}
@@ -226,7 +226,7 @@ export default function ProductTable({
       />
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-charcoal/60">
+        <div className="flex items-center justify-between text-sm text-ink-muted">
           <p>
             Page {page} of {totalPages}
           </p>

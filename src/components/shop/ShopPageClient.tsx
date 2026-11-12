@@ -485,7 +485,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
             <h1 className="font-heading text-4xl font-medium leading-tight text-charcoal sm:text-5xl lg:text-6xl">
               {pageTitle}
             </h1>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-charcoal/75 sm:text-base sm:leading-8">
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-ink-soft sm:text-base sm:leading-8">
               {pageDescription}
             </p>
           </motion.div>
@@ -657,7 +657,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
             <h3 className="mt-3 font-heading text-2xl text-charcoal sm:text-4xl">
               Try a different search
             </h3>
-            <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-charcoal/75">
+            <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-ink-soft">
               We could not find a piece matching your current filters. Explore
               all collections or search by fabric, category, or embroidery style.
             </p>
@@ -697,7 +697,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
                   type="button"
                   onClick={() => setIsMobileFiltersOpen(false)}
                   aria-label="Close filters"
-                  className="tap-feedback flex h-9 w-9 items-center justify-center rounded-full border border-beige text-charcoal/65 hover:border-gold hover:text-maroon focus-visible:border-gold focus-visible:text-maroon"
+                  className="tap-feedback flex h-9 w-9 items-center justify-center rounded-full border border-beige text-ink-muted hover:border-gold hover:text-maroon focus-visible:border-gold focus-visible:text-maroon"
                 >
                   ✕
                 </button>

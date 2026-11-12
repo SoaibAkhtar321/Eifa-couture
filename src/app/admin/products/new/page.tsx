@@ -25,7 +25,7 @@ export default async function NewProductPage() {
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-3xl text-maroon">Add product</h1>
-        <p className="text-charcoal/60 mt-1">
+        <p className="text-ink-muted mt-1">
           Create the product first, then add variants and images on the next screen.
         </p>
       </div>

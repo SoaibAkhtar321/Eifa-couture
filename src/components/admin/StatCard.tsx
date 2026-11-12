@@ -14,7 +14,7 @@ export default function StatCard({ label, value, tone = 'default' }: StatCardPro
         tone === 'warning' ? 'border-gold/40 bg-gold/5' : 'border-charcoal/10'
       )}
     >
-      <p className="text-xs uppercase tracking-wide text-charcoal/50">{label}</p>
+      <p className="text-xs uppercase tracking-wide text-ink-muted">{label}</p>
       <p className="mt-2 font-heading text-2xl text-maroon">{value}</p>
     </div>
   );

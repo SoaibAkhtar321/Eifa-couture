@@ -19,7 +19,7 @@ interface OrderStatusBreakdownProps {
 
 export default function OrderStatusBreakdown({ breakdown }: OrderStatusBreakdownProps) {
   if (breakdown.length === 0) {
-    return <p className="text-sm text-charcoal/50">No orders in this range.</p>;
+    return <p className="text-sm text-ink-muted">No orders in this range.</p>;
   }
 
   const total = breakdown.reduce((sum, b) => sum + b.count, 0);
@@ -35,8 +35,8 @@ export default function OrderStatusBreakdown({ breakdown }: OrderStatusBreakdown
         return (
           <div key={row.status}>
             <div className="flex items-center justify-between text-sm mb-1">
-              <span className="text-charcoal/70">{STATUS_LABELS[row.status] ?? row.status}</span>
-              <span className="text-charcoal/50">
+              <span className="text-ink-soft">{STATUS_LABELS[row.status] ?? row.status}</span>
+              <span className="text-ink-muted">
                 {row.count} · {pct}%
               </span>
             </div>

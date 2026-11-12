@@ -124,7 +124,7 @@ function ProductAccordion({ product }: { product: Product }) {
                 {section.title}
               </span>
               <span
-                className={`text-lg text-charcoal/60 transition-transform duration-300 ${
+                className={`text-lg text-ink-muted transition-transform duration-300 ${
                   isOpen ? 'rotate-45' : 'rotate-0'
                 }`}
               >
@@ -137,7 +137,7 @@ function ProductAccordion({ product }: { product: Product }) {
               }`}
             >
               <div className="overflow-hidden">
-                <p className="pb-5 text-sm leading-7 text-charcoal/65">{section.content}</p>
+                <p className="pb-5 text-sm leading-7 text-ink-muted">{section.content}</p>
               </div>
             </div>
           </div>
@@ -411,7 +411,7 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <span className="font-subheading text-3xl text-maroon">{priceLabel}</span>
         {!showFromPrice && product.compareAtPrice && (
-          <span className="text-base text-charcoal/40 line-through">{formatPrice(product.compareAtPrice)}</span>
+          <span className="text-base text-ink-muted line-through">{formatPrice(product.compareAtPrice)}</span>
         )}
         {!showFromPrice && discount > 0 && (
           <span className="bg-maroon px-2 py-1 text-[9px] font-medium uppercase tracking-[0.2em] text-white">
@@ -421,20 +421,20 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
       </div>
 
       {!showFromPrice && savings > 0 && (
-        <p className="mt-2 text-xs font-medium text-charcoal/55">
+        <p className="mt-2 text-xs font-medium text-ink-muted">
           You save {formatPrice(savings)}
         </p>
       )}
 
-      <p className="mt-5 text-sm leading-7 text-charcoal/65">{product.shortDescription}</p>
+      <p className="mt-5 text-sm leading-7 text-ink-muted">{product.shortDescription}</p>
 
       <div className="mt-8 border-y border-beige py-7">
         {product.productType !== 'simple' && (
         <>
           <div>
             <div className="mb-3 flex items-center justify-between">
-              <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-charcoal/70">Select Size</p>
-              <button type="button" className="text-[10px] uppercase tracking-wider text-charcoal/50 underline underline-offset-4 transition-colors duration-300 hover:text-maroon">
+              <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-ink-soft">Select Size</p>
+              <button type="button" className="text-[10px] uppercase tracking-wider text-ink-muted underline underline-offset-4 transition-colors duration-300 hover:text-maroon">
                 Size Guide
               </button>
             </div>
@@ -459,7 +459,7 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
           </div>
 
           <div className="mt-7">
-            <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.24em] text-charcoal/70">
+            <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.24em] text-ink-soft">
               Colour: <span className="text-maroon ml-1">{selectedColor}</span>
             </p>
             <div className="flex flex-wrap gap-3">
@@ -486,7 +486,7 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
 
         <div className="mt-7">
           <div className="mb-3 flex items-center justify-between">
-            <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-charcoal/70">Quantity</p>
+            <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-ink-soft">Quantity</p>
             {hasStock && selectedStock <= LOW_STOCK_THRESHOLD && (
               <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-maroon">
                 Only {selectedStock} left
@@ -494,11 +494,11 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
             )}
           </div>
           <div className="flex h-12 w-32 items-center justify-between border border-beige bg-white">
-            <button type="button" onClick={() => setQuantity((c) => Math.max(1, c - 1))} disabled={quantity <= 1} className="h-full w-10 text-xl text-charcoal/70 transition-colors duration-300 hover:text-maroon disabled:opacity-30">
+            <button type="button" onClick={() => setQuantity((c) => Math.max(1, c - 1))} disabled={quantity <= 1} className="h-full w-10 text-xl text-ink-soft transition-colors duration-300 hover:text-maroon disabled:opacity-30">
               −
             </button>
             <span className="text-sm font-medium text-charcoal">{quantity}</span>
-            <button type="button" onClick={() => setQuantity((c) => Math.min(maxQuantity, c + 1))} disabled={quantity >= maxQuantity || !hasStock} className="h-full w-10 text-xl text-charcoal/70 transition-colors duration-300 hover:text-maroon disabled:opacity-30">
+            <button type="button" onClick={() => setQuantity((c) => Math.min(maxQuantity, c + 1))} disabled={quantity >= maxQuantity || !hasStock} className="h-full w-10 text-xl text-ink-soft transition-colors duration-300 hover:text-maroon disabled:opacity-30">
               +
             </button>
           </div>

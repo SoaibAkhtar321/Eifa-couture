@@ -19,14 +19,14 @@ function FieldWrapper({ label, htmlFor, error, hint, required, children }: Field
         {required && <span className="text-maroon ml-0.5">*</span>}
       </label>
       {children}
-      {hint && !error && <p className="text-xs text-charcoal/50">{hint}</p>}
+      {hint && !error && <p className="text-xs text-ink-muted">{hint}</p>}
       {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 }
 
 const baseFieldClass =
-  'w-full rounded-md border border-charcoal/15 bg-ivory px-3 py-2 text-sm text-charcoal placeholder:text-charcoal/30 focus:outline-none focus:ring-2 focus:ring-maroon/30 focus:border-maroon transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
+  'w-full rounded-md border border-charcoal/15 bg-ivory px-3 py-2 text-sm text-charcoal placeholder:text-ink-muted focus:outline-none focus:ring-2 focus:ring-maroon/30 focus:border-maroon transition-colors disabled:opacity-50 disabled:cursor-not-allowed';
 
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -155,7 +155,7 @@ export function ToggleField({ label, checked, onChange, hint, id, disabled }: To
         <label htmlFor={fieldId} className="block text-sm font-medium text-charcoal">
           {label}
         </label>
-        {hint && <p className="text-xs text-charcoal/50">{hint}</p>}
+        {hint && <p className="text-xs text-ink-muted">{hint}</p>}
       </div>
       <button
         id={fieldId}

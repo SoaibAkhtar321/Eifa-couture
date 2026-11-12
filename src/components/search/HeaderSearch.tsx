@@ -473,14 +473,14 @@ export default function HeaderSearch() {
         }`}
       >
         <span className="flex min-w-0 items-center gap-3">
-          <span className="shrink-0 text-charcoal/35">
+          <span className="shrink-0 text-ink-muted">
             <SuggestionIcon type={item.type} />
           </span>
           <span className="min-w-0">
             <span className="block truncate text-sm text-charcoal">
               <HighlightedText text={label} query={searchText || query} />
             </span>
-            <span className="mt-0.5 block text-[10px] uppercase tracking-[0.18em] text-charcoal/35">
+            <span className="mt-0.5 block text-[10px] uppercase tracking-[0.18em] text-ink-muted">
               {meta}
             </span>
           </span>
@@ -540,7 +540,7 @@ export default function HeaderSearch() {
           <h3 className="mt-1 line-clamp-1 font-heading text-xl text-charcoal">
             <HighlightedText text={item.product.name} query={searchText} />
           </h3>
-          <p className="mt-1 line-clamp-1 text-xs text-charcoal/50">
+          <p className="mt-1 line-clamp-1 text-xs text-ink-muted">
             {item.product.shortDescription}
           </p>
           <p className="mt-2 text-sm font-medium text-maroon">
@@ -566,7 +566,7 @@ export default function HeaderSearch() {
             window.requestAnimationFrame(() => inputRef.current?.focus());
           }
         }}
-        className="tap-feedback flex h-10 w-10 items-center justify-center text-charcoal/55 hover:text-maroon sm:h-11 sm:w-11"
+        className="tap-feedback flex h-10 w-10 items-center justify-center text-ink-muted hover:text-maroon sm:h-11 sm:w-11"
         aria-label="Toggle search"
         aria-expanded={isOpen}
       >
@@ -609,7 +609,7 @@ export default function HeaderSearch() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   aria-hidden="true"
-                  className="shrink-0 text-charcoal/40"
+                  className="shrink-0 text-ink-muted"
                 >
                   <circle cx="11" cy="11" r="8" />
                   <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -629,7 +629,7 @@ export default function HeaderSearch() {
                   }}
                   onKeyDown={handleKeyDown}
                   placeholder="Search kurtas, sarees, bags..."
-                  className="w-full min-w-0 bg-transparent text-sm text-charcoal outline-none placeholder:text-charcoal/35"
+                  className="w-full min-w-0 bg-transparent text-sm text-charcoal outline-none placeholder:text-ink-muted"
                   autoFocus
                   role="combobox"
                   aria-expanded={activeItems.length > 0}
@@ -648,7 +648,7 @@ export default function HeaderSearch() {
                       setQuery('');
                       setHighlightedIndex(-1);
                     }}
-                    className="tap-feedback flex h-6 w-6 shrink-0 items-center justify-center text-lg leading-none text-charcoal/35 hover:text-maroon"
+                    className="tap-feedback flex h-6 w-6 shrink-0 items-center justify-center text-lg leading-none text-ink-muted hover:text-maroon"
                     aria-label="Clear search"
                   >
                     x
@@ -659,7 +659,7 @@ export default function HeaderSearch() {
               <button
                 type="button"
                 onClick={closeSearch}
-                className="tap-feedback shrink-0 px-1 font-body text-[11px] uppercase tracking-[0.16em] text-charcoal/55 hover:text-maroon min-h-[44px]"
+                className="tap-feedback shrink-0 px-1 font-body text-[11px] uppercase tracking-[0.16em] text-ink-muted hover:text-maroon min-h-[44px]"
               >
                 Cancel
               </button>
@@ -681,7 +681,7 @@ export default function HeaderSearch() {
                     <button
                       type="button"
                       onClick={handleClearRecent}
-                      className="font-body text-[10px] uppercase tracking-[0.16em] text-charcoal/40 hover:text-maroon"
+                      className="font-body text-[10px] uppercase tracking-[0.16em] text-ink-muted hover:text-maroon"
                     >
                       Clear Recent
                     </button>
@@ -757,7 +757,7 @@ export default function HeaderSearch() {
                 <h3 className="font-heading text-2xl text-charcoal">
                   No products found
                 </h3>
-                <p className="mt-2 text-sm leading-6 text-charcoal/55">
+                <p className="mt-2 text-sm leading-6 text-ink-muted">
                   Try searching kurta, saree, dupatta, bridal, men, or bags.
                 </p>
                 <Link

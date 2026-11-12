@@ -99,7 +99,7 @@ export default function EditProfileForm() {
         Profile Information
       </span>
       <h2 className="font-heading text-2xl text-charcoal">Edit Profile</h2>
-      <p className="mt-2 text-sm leading-6 text-charcoal/55">
+      <p className="mt-2 text-sm leading-6 text-ink-muted">
         Keep your details up to date for a smoother checkout and delivery experience.
       </p>
 
@@ -118,7 +118,7 @@ export default function EditProfileForm() {
         <div>
           <label
             htmlFor="fullName"
-            className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
+            className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-soft mb-2"
           >
             Full Name
           </label>
@@ -127,7 +127,7 @@ export default function EditProfileForm() {
             id="fullName"
             name="fullName"
             placeholder="Enter your full name"
-            className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
+            className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-ink-muted"
             value={fullName}
             onChange={(e) => {
               setFullName(e.target.value);
@@ -141,7 +141,7 @@ export default function EditProfileForm() {
         <div>
           <label
             htmlFor="email"
-            className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
+            className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-soft mb-2"
           >
             Email Address
           </label>
@@ -149,7 +149,7 @@ export default function EditProfileForm() {
             type="email"
             id="email"
             name="email"
-            className="w-full border border-charcoal/15 bg-cream/60 px-4 py-3 font-body text-sm text-charcoal/60 outline-none cursor-not-allowed"
+            className="w-full border border-charcoal/15 bg-cream/60 px-4 py-3 font-body text-sm text-ink-muted outline-none cursor-not-allowed"
             value={user?.email || ''}
             disabled
             readOnly
@@ -159,7 +159,7 @@ export default function EditProfileForm() {
         <div>
           <label
             htmlFor="phone"
-            className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
+            className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-soft mb-2"
           >
             Phone Number
           </label>
@@ -168,7 +168,7 @@ export default function EditProfileForm() {
             id="phone"
             name="phone"
             placeholder="10-digit mobile number"
-            className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
+            className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-ink-muted"
             value={phone}
             onChange={(e) => {
               setPhone(e.target.value);
@@ -182,7 +182,7 @@ export default function EditProfileForm() {
         <div>
           <label
             htmlFor="gender"
-            className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
+            className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-soft mb-2"
           >
             Gender
           </label>
@@ -207,7 +207,7 @@ export default function EditProfileForm() {
         <div>
           <label
             htmlFor="dateOfBirth"
-            className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
+            className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-soft mb-2"
           >
             Date of Birth
           </label>

@@ -19,7 +19,7 @@ export default function AccountQuickActions() {
           className="border border-beige bg-white p-5 transition-all duration-300 hover:border-gold/50"
         >
           <h3 className="font-heading text-xl text-charcoal">{action.label}</h3>
-          <p className="mt-2 text-sm leading-6 text-charcoal/55">{action.desc}</p>
+          <p className="mt-2 text-sm leading-6 text-ink-muted">{action.desc}</p>
         </Link>
       ))}
     </div>

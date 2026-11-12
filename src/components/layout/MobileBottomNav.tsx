@@ -40,7 +40,7 @@ export default function MobileBottomNav() {
 
   const itemClass = (active: boolean) =>
     `relative flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] tracking-wide transition-colors ${
-      active ? 'text-maroon' : 'text-charcoal/75'
+      active ? 'text-maroon' : 'text-ink-soft'
     }`;
 
   return (

@@ -15,7 +15,7 @@ export default function FinanceExportButtons({ rangeQuery }: FinanceExportButton
         <a
           key={exp.type}
           href={`/api/admin/finance/export/${exp.type}?${rangeQuery}`}
-          className="px-3 py-1.5 text-sm rounded-md border border-charcoal/15 text-charcoal/70 hover:border-maroon hover:text-maroon transition-colors"
+          className="px-3 py-1.5 text-sm rounded-md border border-charcoal/15 text-ink-soft hover:border-maroon hover:text-maroon transition-colors"
         >
           {exp.label}
         </a>

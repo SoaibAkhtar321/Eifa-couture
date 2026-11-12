@@ -41,7 +41,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-3xl text-maroon">{product.name}</h1>
-        <p className="text-charcoal/60 mt-1">Edit product details, variants, and images.</p>
+        <p className="text-ink-muted mt-1">Edit product details, variants, and images.</p>
       </div>
 
       <ProductForm product={product} categories={categories} fabrics={fabrics} />

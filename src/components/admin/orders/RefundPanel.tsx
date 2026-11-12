@@ -132,7 +132,7 @@ export default function RefundPanel({
             type="button"
             onClick={openForm}
             disabled={!canRefund}
-            className="rounded-md border border-maroon px-3 py-1.5 text-xs font-medium text-maroon transition-colors hover:bg-maroon hover:text-ivory disabled:cursor-not-allowed disabled:border-charcoal/20 disabled:text-charcoal/40 disabled:hover:bg-transparent"
+            className="rounded-md border border-maroon px-3 py-1.5 text-xs font-medium text-maroon transition-colors hover:bg-maroon hover:text-ivory disabled:cursor-not-allowed disabled:border-charcoal/20 disabled:text-ink-muted disabled:hover:bg-transparent"
           >
             Issue Refund
           </button>
@@ -140,7 +140,7 @@ export default function RefundPanel({
       </div>
 
       {!canRefund && !isFormOpen && (
-        <p className="mt-2 text-xs text-charcoal/50">
+        <p className="mt-2 text-xs text-ink-muted">
           {paymentProvider !== 'razorpay'
             ? 'This order was not paid via Razorpay.'
             : paymentStatus !== 'paid' && paymentStatus !== 'partially_refunded'
@@ -206,7 +206,7 @@ export default function RefundPanel({
               type="button"
               onClick={() => setIsFormOpen(false)}
               disabled={isSubmitting}
-              className="rounded-md border border-charcoal/15 px-4 py-2 text-xs font-medium text-charcoal/70 transition-colors hover:bg-charcoal/5"
+              className="rounded-md border border-charcoal/15 px-4 py-2 text-xs font-medium text-ink-soft transition-colors hover:bg-charcoal/5"
             >
               Cancel
             </button>
@@ -221,9 +221,9 @@ export default function RefundPanel({
               <div>
                 <p className="text-charcoal">
                   {formatPrice(refund.amount)}
-                  {refund.reason && <span className="text-charcoal/50"> — {refund.reason}</span>}
+                  {refund.reason && <span className="text-ink-muted"> — {refund.reason}</span>}
                 </p>
-                <p className="mt-0.5 text-xs text-charcoal/50">
+                <p className="mt-0.5 text-xs text-ink-muted">
                   {formatDate(refund.processedAt ?? refund.createdAt, 'long')}
                   {refund.razorpayRefundId && <> · {refund.razorpayRefundId}</>}
                 </p>

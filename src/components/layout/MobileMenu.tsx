@@ -152,7 +152,7 @@ export default function MobileMenu() {
               <button
                 type="button"
                 onClick={closeMobileMenu}
-                className="flex h-11 w-11 items-center justify-center rounded-full border border-beige bg-white text-2xl text-charcoal/75 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white min-h-[44px] min-w-[44px] cursor-pointer"
+                className="flex h-11 w-11 items-center justify-center rounded-full border border-beige bg-white text-2xl text-ink-soft transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white min-h-[44px] min-w-[44px] cursor-pointer"
                 aria-label="Close menu"
               >
                 ×
@@ -190,7 +190,7 @@ export default function MobileMenu() {
                         key={link.href}
                         href={link.href}
                         onClick={handleLinkClick}
-                        className="min-h-[44px] flex items-center justify-between py-2.5 font-subheading text-[18px] tracking-wide text-charcoal/68 transition-colors duration-300 hover:text-maroon"
+                        className="min-h-[44px] flex items-center justify-between py-2.5 font-subheading text-[18px] tracking-wide text-ink-soft transition-colors duration-300 hover:text-maroon"
                       >
                         <span>{link.label}</span>
                         <span className="text-sm text-gold">→</span>
@@ -219,7 +219,7 @@ export default function MobileMenu() {
                         key={link.href}
                         href={link.href}
                         onClick={handleLinkClick}
-                        className="min-h-[44px] flex items-center justify-between py-2.5 font-subheading text-[18px] tracking-wide text-charcoal/62 transition-colors duration-300 hover:text-maroon"
+                        className="min-h-[44px] flex items-center justify-between py-2.5 font-subheading text-[18px] tracking-wide text-ink-muted transition-colors duration-300 hover:text-maroon"
                       >
                         <span>{link.label}</span>
                         <span className="text-sm text-gold">→</span>
@@ -238,7 +238,7 @@ export default function MobileMenu() {
                     href={social.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="min-h-[44px] flex items-center justify-center border border-beige bg-white px-3 py-3 text-center text-[10px] font-medium uppercase tracking-[0.18em] text-charcoal/75 transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
+                    className="min-h-[44px] flex items-center justify-center border border-beige bg-white px-3 py-3 text-center text-[10px] font-medium uppercase tracking-[0.18em] text-ink-soft transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
                   >
                     {social.name}
                   </a>

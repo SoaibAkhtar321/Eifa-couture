@@ -64,7 +64,7 @@ export default function ShippingPanel({ orderId }: { orderId: string }) {
   return (
     <section className="rounded-lg border border-charcoal/10 bg-ivory p-6">
       <h2 className="font-heading text-lg text-maroon">Shipping & tracking</h2>
-      <p className="mt-1 text-xs text-charcoal/60">
+      <p className="mt-1 text-xs text-ink-muted">
         Add the courier details when you hand the parcel over, then set the status to “Shipped”.
       </p>
       <form onSubmit={save} className="mt-4 space-y-3">
@@ -78,13 +78,13 @@ export default function ShippingPanel({ orderId }: { orderId: string }) {
         >
           {saving ? 'Saving…' : 'Save tracking'}
         </button>
-        {message && <p className="text-xs text-charcoal/70">{message}</p>}
+        {message && <p className="text-xs text-ink-soft">{message}</p>}
       </form>
       {data && (
         <dl className="mt-4 grid grid-cols-2 gap-2 border-t border-charcoal/10 pt-4 text-xs">
-          <dt className="text-charcoal/60">Shipped</dt>
+          <dt className="text-ink-muted">Shipped</dt>
           <dd>{fmt(data.shipped_at)}</dd>
-          <dt className="text-charcoal/60">Delivered</dt>
+          <dt className="text-ink-muted">Delivered</dt>
           <dd>{fmt(data.delivered_at)}</dd>
         </dl>
       )}

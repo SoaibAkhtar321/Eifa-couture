@@ -44,7 +44,7 @@ export default function ProductDetailsClient({
         <div className="luxury-container py-4 sm:py-5">
           <nav
             aria-label="Breadcrumb"
-            className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-charcoal/45 sm:text-[11px]"
+            className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-muted sm:text-[11px]"
           >
             <Link href="/" className="transition-colors duration-300 hover:text-maroon">
               Home
@@ -54,7 +54,7 @@ export default function ProductDetailsClient({
               Shop
             </Link>
             <span>/</span>
-            <span className="line-clamp-1 text-charcoal/70">
+            <span className="line-clamp-1 text-ink-soft">
               {product.name || 'Product Details'}
             </span>
           </nav>

@@ -24,7 +24,7 @@ export default async function EditCouponPage({ params }: EditCouponPageProps) {
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-3xl text-maroon">{(coupon as DbCoupon).code}</h1>
-        <p className="text-charcoal/60 mt-1">Edit coupon details.</p>
+        <p className="text-ink-muted mt-1">Edit coupon details.</p>
       </div>
 
       <CouponForm coupon={coupon as DbCoupon} />

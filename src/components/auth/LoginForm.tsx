@@ -81,7 +81,7 @@ export default function LoginForm() {
       <div className="w-full max-w-md bg-white p-8 border border-beige shadow-sm">
         <div className="text-center mb-8">
           <h1 className="font-heading text-3xl text-charcoal mb-3">Welcome Back</h1>
-          <p className="font-body text-sm text-charcoal/70">
+          <p className="font-body text-sm text-ink-soft">
             Sign in to access your wishlist and track orders.
           </p>
         </div>
@@ -97,7 +97,7 @@ export default function LoginForm() {
         {/* ── Divider ── */}
         <div className="relative flex py-4 items-center mb-4">
           <div className="flex-grow border-t border-beige"></div>
-          <span className="flex-shrink mx-4 font-body text-[10px] uppercase tracking-[0.2em] text-charcoal/45">
+          <span className="flex-shrink mx-4 font-body text-[10px] uppercase tracking-[0.2em] text-ink-muted">
             Or Use Email
           </span>
           <div className="flex-grow border-t border-beige"></div>
@@ -114,7 +114,7 @@ export default function LoginForm() {
           <div>
             <label
               htmlFor="email"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-soft mb-2"
             >
               Email Address
             </label>
@@ -123,7 +123,7 @@ export default function LoginForm() {
               id="email"
               name="email"
               placeholder="Enter your email"
-              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
+              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-ink-muted"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -135,13 +135,13 @@ export default function LoginForm() {
             <div className="flex items-center justify-between mb-2">
               <label
                 htmlFor="password"
-                className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75"
+                className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-soft"
               >
                 Password
               </label>
               <Link
                 href="/forgot-password"
-                className="font-body text-[9px] uppercase tracking-wider text-charcoal/55 hover:text-maroon transition-colors"
+                className="font-body text-[9px] uppercase tracking-wider text-ink-muted hover:text-maroon transition-colors"
               >
                 Forgot?
               </Link>
@@ -151,7 +151,7 @@ export default function LoginForm() {
               id="password"
               name="password"
               placeholder="Enter your password"
-              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
+              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-ink-muted"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
@@ -169,7 +169,7 @@ export default function LoginForm() {
         </form>
 
         <div className="mt-8 text-center border-t border-beige pt-6">
-          <p className="font-body text-xs text-charcoal/60 mb-4">
+          <p className="font-body text-xs text-ink-muted mb-4">
             Don&apos;t have an account yet?
           </p>
           <Link href={registerHref} className="btn-luxury btn-luxury-secondary w-full">

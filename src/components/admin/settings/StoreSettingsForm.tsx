@@ -207,7 +207,7 @@ export default function StoreSettingsForm({ settings }: StoreSettingsFormProps) 
             <h2 className="text-sm font-medium text-charcoal">Logo &amp; favicon</h2>
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               <div className="space-y-2">
-                <p className="text-xs font-medium text-charcoal/70">Logo</p>
+                <p className="text-xs font-medium text-ink-soft">Logo</p>
                 {values.logo_url && (
                   <div className="relative h-20 w-40 overflow-hidden rounded-md border border-charcoal/10 bg-cream">
                     <Image src={values.logo_url} alt="Store logo" fill className="object-contain p-2" />
@@ -231,7 +231,7 @@ export default function StoreSettingsForm({ settings }: StoreSettingsFormProps) 
               </div>
 
               <div className="space-y-2">
-                <p className="text-xs font-medium text-charcoal/70">Favicon</p>
+                <p className="text-xs font-medium text-ink-soft">Favicon</p>
                 {values.favicon_url && (
                   <div className="relative h-10 w-10 overflow-hidden rounded-md border border-charcoal/10 bg-cream">
                     <Image src={values.favicon_url} alt="Favicon" fill className="object-contain p-1" />

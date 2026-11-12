@@ -30,7 +30,7 @@ export default async function EditCollectionPage({ params }: EditCollectionPageP
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-3xl text-maroon">{(collection as DbCollection).name}</h1>
-        <p className="text-charcoal/60 mt-1">Edit collection details.</p>
+        <p className="text-ink-muted mt-1">Edit collection details.</p>
       </div>
 
       <CollectionForm collection={collection as DbCollection} />

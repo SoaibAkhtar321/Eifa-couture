@@ -35,7 +35,7 @@ export default async function AdminOrdersPage({ searchParams }: OrdersPageProps)
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-3xl text-maroon">Orders</h1>
-        <p className="text-charcoal/60 mt-1">
+        <p className="text-ink-muted mt-1">
           {result ? `${result.totalCount.toLocaleString('en-IN')} order${result.totalCount === 1 ? '' : 's'}` : ''}
         </p>
       </div>

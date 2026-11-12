@@ -7,7 +7,7 @@ export default function NewCollectionPage() {
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-3xl text-maroon">Add collection</h1>
-        <p className="text-charcoal/60 mt-1">
+        <p className="text-ink-muted mt-1">
           Collections are editorial groupings of products — e.g. seasonal or campaign edits.
         </p>
       </div>

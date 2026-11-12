@@ -161,7 +161,7 @@ export default function InventoryTable({ rows, totalCount, page, pageSize, curre
           </div>
           <div>
             <p className="font-medium text-charcoal">{row.product_name}</p>
-            <p className="text-xs text-charcoal/50">{row.sku}</p>
+            <p className="text-xs text-ink-muted">{row.sku}</p>
           </div>
         </div>
       ),
@@ -170,7 +170,7 @@ export default function InventoryTable({ rows, totalCount, page, pageSize, curre
       key: 'variant',
       header: 'Variant',
       render: (row) => (
-        <span className="text-charcoal/80">
+        <span className="text-ink-soft">
           {row.size} / {row.color_name}
         </span>
       ),
@@ -178,12 +178,12 @@ export default function InventoryTable({ rows, totalCount, page, pageSize, curre
     {
       key: 'reserved',
       header: 'Reserved',
-      render: (row) => <span className="text-charcoal/60">{row.reserved}</span>,
+      render: (row) => <span className="text-ink-muted">{row.reserved}</span>,
     },
     {
       key: 'threshold',
       header: 'Low stock at',
-      render: (row) => <span className="text-charcoal/60">{row.low_stock_at}</span>,
+      render: (row) => <span className="text-ink-muted">{row.low_stock_at}</span>,
     },
     {
       key: 'status',
@@ -265,7 +265,7 @@ export default function InventoryTable({ rows, totalCount, page, pageSize, curre
       )}
 
       <div className="flex flex-wrap items-center gap-3 rounded-lg border border-charcoal/10 bg-beige/40 p-4">
-        <label className="flex items-center gap-2 text-sm text-charcoal/70">
+        <label className="flex items-center gap-2 text-sm text-ink-soft">
           <input
             type="checkbox"
             checked={rows.length > 0 && selectedIds.size === rows.length}
@@ -307,7 +307,7 @@ export default function InventoryTable({ rows, totalCount, page, pageSize, curre
       />
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-charcoal/60">
+        <div className="flex items-center justify-between text-sm text-ink-muted">
           <p>
             Page {page} of {totalPages}
           </p>

@@ -302,13 +302,13 @@ export default function SearchPage() {
           <div className="luxury-container py-4 sm:py-5">
             <nav
               aria-label="Breadcrumb"
-              className="mb-3 hidden items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-charcoal/40 sm:flex"
+              className="mb-3 hidden items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-muted sm:flex"
             >
               <Link href="/" className="hover:text-maroon">
                 Home
               </Link>
               <span>/</span>
-              <span className="text-charcoal/65">Search</span>
+              <span className="text-ink-muted">Search</span>
             </nav>
 
             <label className="relative block">
@@ -323,7 +323,7 @@ export default function SearchPage() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
                 aria-hidden="true"
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-charcoal/35"
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-muted"
               >
                 <circle cx="11" cy="11" r="8" />
                 <line x1="21" y1="21" x2="16.65" y2="16.65" />
@@ -365,7 +365,7 @@ export default function SearchPage() {
                       <button
                         type="button"
                         onClick={handleClearRecent}
-                        className="text-[11px] font-medium uppercase tracking-[0.18em] text-charcoal/40 transition-colors hover:text-maroon"
+                        className="text-[11px] font-medium uppercase tracking-[0.18em] text-ink-muted transition-colors hover:text-maroon"
                       >
                         Clear
                       </button>
@@ -377,7 +377,7 @@ export default function SearchPage() {
                           key={term}
                           type="button"
                           onClick={() => handleRecentSearchClick(term)}
-                          className="border border-beige bg-cream px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-charcoal/60 transition-colors hover:border-maroon hover:text-maroon"
+                          className="border border-beige bg-cream px-3 py-2 text-[11px] uppercase tracking-[0.16em] text-ink-muted transition-colors hover:border-maroon hover:text-maroon"
                         >
                           {term}
                         </button>
@@ -391,7 +391,7 @@ export default function SearchPage() {
                     Start Searching
                   </h2>
 
-                  <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-charcoal/55">
+                  <p className="mx-auto mt-3 max-w-sm text-sm leading-7 text-ink-muted">
                     Try searching for kurta, saree, dupatta, bridal, men,
                     cotton, georgette, or crochet bags.
                   </p>
@@ -409,7 +409,7 @@ export default function SearchPage() {
                   No Products Found
                 </h2>
 
-                <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-charcoal/55">
+                <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-ink-muted">
                   We could not find a product for “{query}”. Try another
                   keyword or explore the full collection.
                 </p>
@@ -425,7 +425,7 @@ export default function SearchPage() {
               <>
                 {/* Result count + compact Sort / Filter row — Amazon/Myntra pattern */}
                 <div className="mb-4 flex items-center justify-between gap-3">
-                  <p className="font-body text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                  <p className="font-body text-xs uppercase tracking-[0.18em] text-ink-muted">
                     <span className="font-medium text-charcoal">
                       {filteredProducts.length}
                     </span>{' '}
@@ -477,7 +477,7 @@ export default function SearchPage() {
                                 className={`block w-full px-4 py-2.5 text-left text-xs uppercase tracking-[0.1em] transition-colors ${
                                   sortBy === option.value
                                     ? 'bg-cream text-maroon'
-                                    : 'text-charcoal/70 hover:bg-cream/60'
+                                    : 'text-ink-soft hover:bg-cream/60'
                                 }`}
                               >
                                 {option.label}
@@ -595,7 +595,7 @@ export default function SearchPage() {
                       Try different filters
                     </h3>
 
-                    <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-charcoal/60">
+                    <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-ink-muted">
                       No results match the current filters for “{query}”.
                       Clear filters to see all matching pieces.
                     </p>
@@ -637,7 +637,7 @@ export default function SearchPage() {
                               <HighlightedText text={product.name} query={query} />
                             </h3>
 
-                            <p className="mt-2 line-clamp-2 text-sm leading-6 text-charcoal/60">
+                            <p className="mt-2 line-clamp-2 text-sm leading-6 text-ink-muted">
                               {product.shortDescription}
                             </p>
 
@@ -649,7 +649,7 @@ export default function SearchPage() {
                               </span>
 
                               {product.compareAtPrice && (
-                                <span className="text-xs text-charcoal/40 line-through">
+                                <span className="text-xs text-ink-muted line-through">
                                   {formatPrice(product.compareAtPrice)}
                                 </span>
                               )}
@@ -689,7 +689,7 @@ export default function SearchPage() {
                 <h4 className="font-heading text-xl text-charcoal">Sort &amp; Filter</h4>
                 <button
                   onClick={() => setIsFilterSheetOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-beige text-charcoal/50 hover:text-maroon"
+                  className="flex h-8 w-8 items-center justify-center rounded-full border border-beige text-ink-muted hover:text-maroon"
                   aria-label="Close"
                 >
                   ✕

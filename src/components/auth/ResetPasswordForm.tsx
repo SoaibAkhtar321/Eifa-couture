@@ -56,7 +56,7 @@ export default function ResetPasswordForm() {
       <div className="w-full max-w-md bg-white p-8 border border-beige shadow-sm">
         <div className="text-center mb-8">
           <h1 className="font-heading text-3xl text-charcoal mb-3">Set New Password</h1>
-          <p className="font-body text-sm text-charcoal/60">
+          <p className="font-body text-sm text-ink-muted">
             Choose a new password for your account.
           </p>
         </div>
@@ -77,7 +77,7 @@ export default function ResetPasswordForm() {
           <div>
             <label
               htmlFor="password"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/60 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-muted mb-2"
             >
               New Password
             </label>
@@ -86,7 +86,7 @@ export default function ResetPasswordForm() {
               id="password"
               name="password"
               placeholder="At least 8 characters"
-              className="w-full border border-beige bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/30"
+              className="w-full border border-beige bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-ink-muted"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
@@ -97,7 +97,7 @@ export default function ResetPasswordForm() {
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/60 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-muted mb-2"
             >
               Confirm New Password
             </label>
@@ -106,7 +106,7 @@ export default function ResetPasswordForm() {
               id="confirmPassword"
               name="confirmPassword"
               placeholder="Re-enter your new password"
-              className="w-full border border-beige bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/30"
+              className="w-full border border-beige bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-ink-muted"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               autoComplete="new-password"

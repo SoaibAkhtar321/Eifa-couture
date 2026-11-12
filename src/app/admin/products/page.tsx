@@ -53,7 +53,7 @@ export default async function AdminProductsPage({ searchParams }: ProductsPagePr
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-3xl text-maroon">Products</h1>
-          <p className="text-charcoal/60 mt-1">
+          <p className="text-ink-muted mt-1">
             {result ? `${result.totalCount.toLocaleString('en-IN')} product${result.totalCount === 1 ? '' : 's'}` : ''}
           </p>
         </div>

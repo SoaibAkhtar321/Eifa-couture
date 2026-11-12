@@ -81,7 +81,7 @@ export default function StackedCollections() {
               Curated for every occasion
             </h2>
           </div>
-          <nav aria-label="Collections" className="hidden flex-col gap-2 text-xs uppercase tracking-[0.2em] text-charcoal/70 md:flex">
+          <nav aria-label="Collections" className="hidden flex-col gap-2 text-xs uppercase tracking-[0.2em] text-ink-soft md:flex">
             {CARDS.map((card) => (
               <a key={card.id} href={`#collection-${card.id}`} className="transition-colors hover:text-maroon">
                 <span className="mr-3 text-gold-dark">{card.index}</span>
@@ -121,7 +121,7 @@ export default function StackedCollections() {
                   <div className={`${card.panel} flex flex-col justify-center px-6 py-8 md:px-12 lg:px-16 ${light ? 'text-white' : 'text-charcoal'}`}>
                     <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.28em] md:text-xs">
                       <span className={light ? 'text-gold-light' : 'text-maroon'}>{card.eyebrow}</span>
-                      <span className={light ? 'text-white/70' : 'text-charcoal/60'}>
+                      <span className={light ? 'text-white/70' : 'text-ink-muted'}>
                         {card.index} / {String(CARDS.length).padStart(2, '0')}
                       </span>
                     </div>
@@ -132,7 +132,7 @@ export default function StackedCollections() {
                     <p className={`mt-2 font-subheading text-xl italic md:text-2xl ${light ? 'text-gold-light' : 'text-maroon'}`}>
                       {card.tagline}
                     </p>
-                    <p className={`mt-4 max-w-md text-sm leading-7 md:text-base ${light ? 'text-white/85' : 'text-charcoal/80'}`}>
+                    <p className={`mt-4 max-w-md text-sm leading-7 md:text-base ${light ? 'text-white/85' : 'text-ink-soft'}`}>
                       {card.text}
                     </p>
 
@@ -141,7 +141,7 @@ export default function StackedCollections() {
                         <li
                           key={chip}
                           className={`rounded-full border px-3 py-1 text-[10px] uppercase tracking-[0.16em] md:text-[11px] ${
-                            light ? 'border-white/30 text-white/90' : 'border-charcoal/25 text-charcoal/80'
+                            light ? 'border-white/30 text-white/90' : 'border-charcoal/25 text-ink-soft'
                           }`}
                         >
                           {chip}

@@ -36,7 +36,7 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
     key: 'action',
     header: 'Action',
     render: (row) => (
-      <span className="text-charcoal/80">
+      <span className="text-ink-soft">
         {actionLabel(row)} <span className="text-charcoal">{row.entityLabel}</span>
       </span>
     ),
@@ -44,13 +44,13 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
   {
     key: 'detail',
     header: 'Detail',
-    render: (row) => <span className="text-charcoal/60">{row.detail ?? '—'}</span>,
+    render: (row) => <span className="text-ink-muted">{row.detail ?? '—'}</span>,
   },
   {
     key: 'entityType',
     header: 'Module',
     render: (row) => (
-      <span className="rounded-full bg-beige/70 px-2.5 py-1 text-xs uppercase tracking-wide text-charcoal/60">
+      <span className="rounded-full bg-beige/70 px-2.5 py-1 text-xs uppercase tracking-wide text-ink-muted">
         {row.entityType}
       </span>
     ),
@@ -58,7 +58,7 @@ const columns: DataTableColumn<AuditLogEntry>[] = [
   {
     key: 'createdAt',
     header: 'When',
-    render: (row) => <span className="text-charcoal/60">{formatTimestamp(row.createdAt)}</span>,
+    render: (row) => <span className="text-ink-muted">{formatTimestamp(row.createdAt)}</span>,
   },
 ];
 

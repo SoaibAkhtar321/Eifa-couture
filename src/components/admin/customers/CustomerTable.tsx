@@ -75,7 +75,7 @@ export default function CustomerTable({
     {
       key: 'phone',
       header: 'Phone',
-      render: (row) => row.phone ?? <span className="text-charcoal/40">—</span>,
+      render: (row) => row.phone ?? <span className="text-ink-muted">—</span>,
     },
     {
       key: 'registered',
@@ -98,7 +98,7 @@ export default function CustomerTable({
       render: (row) => (
         <span
           className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-            row.isActive ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-charcoal/50'
+            row.isActive ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-ink-muted'
           }`}
         >
           {row.isActive ? 'Active' : 'Inactive'}
@@ -149,7 +149,7 @@ export default function CustomerTable({
       />
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-charcoal/60">
+        <div className="flex items-center justify-between text-sm text-ink-muted">
           <p>
             Page {page} of {totalPages}
           </p>

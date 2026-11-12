@@ -19,7 +19,7 @@ export default function NotFoundPage() {
                 This piece seems to be missing
               </h2>
 
-              <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-charcoal/58 sm:text-base sm:leading-8">
+              <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-ink-muted sm:text-base sm:leading-8">
                 The page you are looking for may have been moved, removed, or
                 the link may be incorrect. Explore our handcrafted collection
                 instead.

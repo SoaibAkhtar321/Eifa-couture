@@ -7,10 +7,10 @@ export default function AddressesPage() {
   return (
     <main className="bg-ivory">
       <section className="luxury-container py-10 sm:py-14 lg:py-20">
-        <nav aria-label="Breadcrumb" className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-charcoal/45 sm:text-[11px]">
+        <nav aria-label="Breadcrumb" className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-muted sm:text-[11px]">
           <Link href="/account" className="hover:text-maroon">Account</Link>
           <span>/</span>
-          <span className="text-charcoal/70">Saved Addresses</span>
+          <span className="text-ink-soft">Saved Addresses</span>
         </nav>
 
         <div className="flex flex-wrap items-center justify-between gap-4">

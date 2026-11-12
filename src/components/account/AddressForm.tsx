@@ -67,7 +67,7 @@ export default function AddressForm({
   return (
     <div className="space-y-6 border border-beige bg-white p-6 sm:p-8">
       <label className="block">
-        <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+        <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
           Full Name
         </span>
         <input
@@ -86,7 +86,7 @@ export default function AddressForm({
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+        <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
           Phone Number
         </span>
         <input
@@ -105,7 +105,7 @@ export default function AddressForm({
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+        <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
           Address Line 1
         </span>
         <input
@@ -124,7 +124,7 @@ export default function AddressForm({
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+        <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
           Address Line 2 (Optional)
         </span>
         <input
@@ -139,7 +139,7 @@ export default function AddressForm({
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <label className="block">
-          <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+          <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
             City
           </span>
           <input
@@ -158,7 +158,7 @@ export default function AddressForm({
         </label>
 
         <label className="block">
-          <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+          <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
             State
           </span>
           <input
@@ -178,7 +178,7 @@ export default function AddressForm({
       </div>
 
       <label className="block">
-        <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+        <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
           PIN Code
         </span>
         <input
@@ -205,7 +205,7 @@ export default function AddressForm({
             onChange={handleChange}
             className="h-4 w-4 accent-maroon"
           />
-          <span className="text-sm text-charcoal/70">Set as default delivery address</span>
+          <span className="text-sm text-ink-soft">Set as default delivery address</span>
         </label>
       )}
 
@@ -215,7 +215,7 @@ export default function AddressForm({
             type="button"
             onClick={onCancel}
             disabled={isSubmitting}
-            className="px-6 py-3 text-[11px] font-medium uppercase tracking-[0.2em] text-charcoal/60 transition-colors hover:text-maroon disabled:opacity-50"
+            className="px-6 py-3 text-[11px] font-medium uppercase tracking-[0.2em] text-ink-muted transition-colors hover:text-maroon disabled:opacity-50"
           >
             Cancel
           </button>

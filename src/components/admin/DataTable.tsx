@@ -36,7 +36,7 @@ export default function DataTable<T>({
 
   if (rows.length === 0) {
     return (
-      <div className="rounded-lg border border-charcoal/10 bg-ivory p-10 text-center text-sm text-charcoal/50">
+      <div className="rounded-lg border border-charcoal/10 bg-ivory p-10 text-center text-sm text-ink-muted">
         {emptyMessage}
       </div>
     );
@@ -50,7 +50,7 @@ export default function DataTable<T>({
             {columns.map((column) => (
               <th
                 key={column.key}
-                className="text-left font-medium text-charcoal/60 uppercase tracking-wide text-xs px-4 py-3"
+                className="text-left font-medium text-ink-muted uppercase tracking-wide text-xs px-4 py-3"
               >
                 {column.header}
               </th>

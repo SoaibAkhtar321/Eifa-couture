@@ -431,7 +431,7 @@ export default function CheckoutPage() {
           <div className="luxury-container py-5 sm:py-6">
             <nav
               aria-label="Breadcrumb"
-              className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-charcoal/45 sm:text-[11px]"
+              className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-muted sm:text-[11px]"
             >
               <Link href="/" className="hover:text-maroon">
                 Home
@@ -445,7 +445,7 @@ export default function CheckoutPage() {
 
               <span>/</span>
 
-              <span className="text-charcoal/70">Checkout</span>
+              <span className="text-ink-soft">Checkout</span>
             </nav>
 
             <div className="max-w-2xl">
@@ -457,7 +457,7 @@ export default function CheckoutPage() {
                 Complete Your Order
               </h1>
 
-              <p className="mt-4 max-w-xl text-sm leading-7 text-charcoal/55 sm:text-base">
+              <p className="mt-4 max-w-xl text-sm leading-7 text-ink-muted sm:text-base">
                 Confirm your contact details and delivery address, then pay securely via
                 Razorpay — cards, UPI, netbanking, and wallets are all supported.
               </p>
@@ -473,7 +473,7 @@ export default function CheckoutPage() {
                   Your bag is empty
                 </h2>
 
-                <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-charcoal/55">
+                <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-ink-muted">
                   Add handcrafted Chikankari pieces to your bag before checkout.
                 </p>
 
@@ -490,7 +490,7 @@ export default function CheckoutPage() {
                   Sign In To Continue
                 </h2>
 
-                <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-charcoal/55">
+                <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-ink-muted">
                   Please sign in to your account so we can confirm and save your order.
                 </p>
 
@@ -519,7 +519,7 @@ export default function CheckoutPage() {
                   </div>
 
                   <label className="block">
-                    <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                    <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
                       Email Address
                     </span>
 
@@ -549,7 +549,7 @@ export default function CheckoutPage() {
                   </div>
 
                   {isLoadingAddresses ? (
-                    <p className="text-sm text-charcoal/55">Loading your saved addresses…</p>
+                    <p className="text-sm text-ink-muted">Loading your saved addresses…</p>
                   ) : addressesError ? (
                     <p className="text-sm text-red-600">{addressesError}</p>
                   ) : isAddingAddress ? (
@@ -569,7 +569,7 @@ export default function CheckoutPage() {
                       />
 
                       {addresses.length === 0 && (
-                        <p className="text-xs text-charcoal/45">
+                        <p className="text-xs text-ink-muted">
                           This will be saved to your account so future checkouts are faster.
                         </p>
                       )}
@@ -609,7 +609,7 @@ export default function CheckoutPage() {
                                 )}
                               </div>
 
-                              <p className="mt-1 text-sm leading-6 text-charcoal/60">
+                              <p className="mt-1 text-sm leading-6 text-ink-muted">
                                 {address.address_line1}
                                 {address.address_line2 ? `, ${address.address_line2}` : ''}
                                 <br />
@@ -635,7 +635,7 @@ export default function CheckoutPage() {
                   )}
 
                   <div className="border border-beige bg-cream/55 p-4">
-                    <p className="text-sm leading-7 text-charcoal/60">
+                    <p className="text-sm leading-7 text-ink-muted">
                       {placedOrder
                         ? `Order ${placedOrder.order_number} is reserved. Complete payment securely via Razorpay to confirm it.`
                         : 'Payment is processed securely by Razorpay — cards, UPI, netbanking, and wallets accepted. You will not be charged until you approve the payment.'}
@@ -663,7 +663,7 @@ export default function CheckoutPage() {
                       Order Summary
                     </h2>
 
-                    <span className="text-xs uppercase tracking-[0.18em] text-charcoal/45">
+                    <span className="text-xs uppercase tracking-[0.18em] text-ink-muted">
                       {itemCount} items
                     </span>
                   </div>
@@ -690,11 +690,11 @@ export default function CheckoutPage() {
                               {item.product.name}
                             </h3>
 
-                            <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-charcoal/45">
+                            <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-ink-muted">
                               {item.selectedSize} / {item.selectedColor}
                             </p>
 
-                            <p className="mt-2 text-sm text-charcoal/60">
+                            <p className="mt-2 text-sm text-ink-muted">
                               Qty: {item.quantity}
                             </p>
                           </div>
@@ -708,12 +708,12 @@ export default function CheckoutPage() {
                   </div>
 
                   <div className="mt-5 space-y-3 border-t border-beige pt-5">
-                    <div className="flex items-center justify-between text-sm text-charcoal/60">
+                    <div className="flex items-center justify-between text-sm text-ink-muted">
                       <span>Subtotal</span>
                       <span>{formatPrice(displaySubtotal)}</span>
                     </div>
 
-                    <div className="flex items-center justify-between text-sm text-charcoal/60">
+                    <div className="flex items-center justify-between text-sm text-ink-muted">
                       <span>Shipping</span>
                       <span>
                         {shippingCharge === 0
@@ -723,7 +723,7 @@ export default function CheckoutPage() {
                     </div>
 
                     <div className="flex items-center justify-between border-t border-beige pt-4">
-                      <span className="font-body text-xs uppercase tracking-[0.2em] text-charcoal/55">
+                      <span className="font-body text-xs uppercase tracking-[0.2em] text-ink-muted">
                         Total
                       </span>
 

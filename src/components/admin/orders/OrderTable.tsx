@@ -28,7 +28,7 @@ const STATUS_FILTER_OPTIONS = [{ value: '', label: 'All statuses' }, ...ORDER_ST
 const PAYMENT_FILTER_OPTIONS = [{ value: '', label: 'All payments' }, ...PAYMENT_STATUS_OPTIONS];
 
 const STATUS_BADGE_CLASSES: Record<string, string> = {
-  pending: 'bg-charcoal/10 text-charcoal/60',
+  pending: 'bg-charcoal/10 text-ink-muted',
   confirmed: 'bg-blue-100 text-blue-800',
   processing: 'bg-blue-100 text-blue-800',
   shipped: 'bg-amber-100 text-amber-800',
@@ -40,7 +40,7 @@ const STATUS_BADGE_CLASSES: Record<string, string> = {
 };
 
 const PAYMENT_BADGE_CLASSES: Record<string, string> = {
-  pending: 'bg-charcoal/10 text-charcoal/60',
+  pending: 'bg-charcoal/10 text-ink-muted',
   paid: 'bg-green-100 text-green-800',
   failed: 'bg-red-100 text-red-800',
   partially_refunded: 'bg-amber-100 text-amber-800',
@@ -89,7 +89,7 @@ export default function OrderTable({ rows, totalCount, page, pageSize, currentPa
       render: (row) => (
         <div>
           <p className="text-charcoal">{row.customerName}</p>
-          <p className="text-xs text-charcoal/50">{row.customerEmail}</p>
+          <p className="text-xs text-ink-muted">{row.customerEmail}</p>
         </div>
       ),
     },
@@ -111,7 +111,7 @@ export default function OrderTable({ rows, totalCount, page, pageSize, currentPa
     {
       key: 'payment_method',
       header: 'Method',
-      render: (row) => <span className="capitalize text-charcoal/70">{row.paymentMethod}</span>,
+      render: (row) => <span className="capitalize text-ink-soft">{row.paymentMethod}</span>,
     },
     {
       key: 'payment_status',
@@ -119,7 +119,7 @@ export default function OrderTable({ rows, totalCount, page, pageSize, currentPa
       render: (row) => (
         <span
           className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
-            PAYMENT_BADGE_CLASSES[row.paymentStatus] ?? 'bg-charcoal/10 text-charcoal/50'
+            PAYMENT_BADGE_CLASSES[row.paymentStatus] ?? 'bg-charcoal/10 text-ink-muted'
           }`}
         >
           {row.paymentStatus}
@@ -132,7 +132,7 @@ export default function OrderTable({ rows, totalCount, page, pageSize, currentPa
       render: (row) => (
         <span
           className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
-            STATUS_BADGE_CLASSES[row.status] ?? 'bg-charcoal/10 text-charcoal/50'
+            STATUS_BADGE_CLASSES[row.status] ?? 'bg-charcoal/10 text-ink-muted'
           }`}
         >
           {row.status.replace(/_/g, ' ')}
@@ -210,7 +210,7 @@ export default function OrderTable({ rows, totalCount, page, pageSize, currentPa
       />
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm text-charcoal/60">
+        <div className="flex items-center justify-between text-sm text-ink-muted">
           <p>
             Page {page} of {totalPages}
           </p>

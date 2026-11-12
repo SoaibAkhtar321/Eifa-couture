@@ -47,7 +47,7 @@ export default function FinanceRangeSwitch({ active, customStart, customEnd }: F
             onClick={() => applyPreset(option.value)}
             className={cn(
               'px-3 py-1.5 text-sm rounded transition-colors',
-              active === option.value ? 'bg-maroon text-cream' : 'text-charcoal/60 hover:text-maroon'
+              active === option.value ? 'bg-maroon text-cream' : 'text-ink-muted hover:text-maroon'
             )}
           >
             {option.label}
@@ -63,7 +63,7 @@ export default function FinanceRangeSwitch({ active, customStart, customEnd }: F
             onChange={(e) => setStart(e.target.value)}
             className="rounded-md border border-charcoal/15 bg-cream px-2 py-1 text-sm"
           />
-          <span className="text-charcoal/40 text-sm">to</span>
+          <span className="text-ink-muted text-sm">to</span>
           <input
             type="date"
             value={end}

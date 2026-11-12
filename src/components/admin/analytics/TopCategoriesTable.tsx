@@ -7,7 +7,7 @@ interface TopCategoriesTableProps {
 
 export default function TopCategoriesTable({ categories }: TopCategoriesTableProps) {
   if (categories.length === 0) {
-    return <p className="text-sm text-charcoal/50">No paid orders in this range yet.</p>;
+    return <p className="text-sm text-ink-muted">No paid orders in this range yet.</p>;
   }
 
   const maxRevenue = Math.max(...categories.map((c) => c.revenue));
@@ -17,8 +17,8 @@ export default function TopCategoriesTable({ categories }: TopCategoriesTablePro
       {categories.map((c) => (
         <div key={c.categoryId ?? c.name}>
           <div className="flex items-center justify-between text-sm mb-1">
-            <span className="text-charcoal/70">{c.name}</span>
-            <span className="text-charcoal/50">{formatPrice(c.revenue)}</span>
+            <span className="text-ink-soft">{c.name}</span>
+            <span className="text-ink-muted">{formatPrice(c.revenue)}</span>
           </div>
           <div className="h-2 rounded-full bg-charcoal/5">
             <div

@@ -35,7 +35,7 @@ export default function AdminHeader({
       </button>
 
       <div className="hidden lg:block">
-        <p className="text-sm text-charcoal/50">Welcome back,</p>
+        <p className="text-sm text-ink-muted">Welcome back,</p>
         <p className="font-heading text-lg text-maroon">{admin.displayName}</p>
       </div>
 
@@ -51,7 +51,7 @@ export default function AdminHeader({
         <button
           type="button"
           onClick={handleSignOut}
-          className="text-sm text-charcoal/60 hover:text-maroon transition-colors"
+          className="text-sm text-ink-muted hover:text-maroon transition-colors"
         >
           Sign out
         </button>

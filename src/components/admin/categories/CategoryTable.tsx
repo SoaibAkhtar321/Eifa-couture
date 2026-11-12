@@ -44,14 +44,14 @@ export default function CategoryTable({ rows, error }: CategoryTableProps) {
       render: (row) => (
         <div>
           <p className="font-medium text-charcoal">{row.name}</p>
-          <p className="text-xs text-charcoal/50">{row.slug}</p>
+          <p className="text-xs text-ink-muted">{row.slug}</p>
         </div>
       ),
     },
     {
       key: 'parent',
       header: 'Parent',
-      render: (row) => (row.parent_id ? nameById.get(row.parent_id) ?? '—' : <span className="text-charcoal/40">—</span>),
+      render: (row) => (row.parent_id ? nameById.get(row.parent_id) ?? '—' : <span className="text-ink-muted">—</span>),
     },
     {
       key: 'sort_order',
@@ -64,7 +64,7 @@ export default function CategoryTable({ rows, error }: CategoryTableProps) {
       render: (row) => (
         <span
           className={`rounded-full px-2.5 py-1 text-xs font-medium ${
-            row.is_active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-charcoal/50'
+            row.is_active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-ink-muted'
           }`}
         >
           {row.is_active ? 'Active' : 'Inactive'}

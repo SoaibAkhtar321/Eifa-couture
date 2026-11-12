@@ -63,7 +63,7 @@ export default function AddressList() {
   if (isAuthLoading || (isLoading && !loadError)) {
     return (
       <div className="border border-beige bg-white p-8 text-center">
-        <p className="text-sm text-charcoal/50">Loading addresses…</p>
+        <p className="text-sm text-ink-muted">Loading addresses…</p>
       </div>
     );
   }
@@ -152,7 +152,7 @@ export default function AddressList() {
 
       {addresses.length === 0 && view.mode === 'list' ? (
         <div className="border border-beige bg-white p-8 text-center">
-          <p className="text-sm text-charcoal/55">No saved addresses yet.</p>
+          <p className="text-sm text-ink-muted">No saved addresses yet.</p>
         </div>
       ) : (
         view.mode === 'list' && (

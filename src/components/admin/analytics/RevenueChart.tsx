@@ -30,7 +30,7 @@ export default function RevenueChart({ series }: RevenueChartProps) {
   }, [series]);
 
   if (series.length === 0) {
-    return <p className="text-sm text-charcoal/50">No revenue data for this range.</p>;
+    return <p className="text-sm text-ink-muted">No revenue data for this range.</p>;
   }
 
   const linePath = points.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
@@ -41,9 +41,9 @@ export default function RevenueChart({ series }: RevenueChartProps) {
     <div className="relative">
       {active && (
         <div className="absolute top-0 right-0 rounded-md border border-charcoal/10 bg-cream px-3 py-2 text-xs shadow-sm">
-          <p className="text-charcoal/50">{active.date}</p>
+          <p className="text-ink-muted">{active.date}</p>
           <p className="font-heading text-maroon">{formatPrice(active.revenue)}</p>
-          <p className="text-charcoal/50">
+          <p className="text-ink-muted">
             {active.orders} order{active.orders === 1 ? '' : 's'}
           </p>
         </div>
@@ -90,7 +90,7 @@ export default function RevenueChart({ series }: RevenueChartProps) {
         )}
       </svg>
 
-      <div className="flex justify-between text-[11px] text-charcoal/40 mt-1">
+      <div className="flex justify-between text-[11px] text-ink-muted mt-1">
         <span>{points[0]?.date}</span>
         <span>Peak day: {formatPrice(maxRevenue)}</span>
         <span>{points[points.length - 1]?.date}</span>

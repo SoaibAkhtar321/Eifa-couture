@@ -13,7 +13,7 @@ interface CustomerDetailPageProps {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  pending: 'bg-charcoal/10 text-charcoal/70',
+  pending: 'bg-charcoal/10 text-ink-soft',
   confirmed: 'bg-gold/15 text-gold',
   processing: 'bg-gold/15 text-gold',
   shipped: 'bg-maroon/10 text-maroon',
@@ -21,7 +21,7 @@ const STATUS_BADGE: Record<string, string> = {
   delivered: 'bg-green-100 text-green-700',
   cancelled: 'bg-red-100 text-red-600',
   returned: 'bg-red-100 text-red-600',
-  refunded: 'bg-charcoal/10 text-charcoal/50',
+  refunded: 'bg-charcoal/10 text-ink-muted',
 };
 
 export default async function AdminCustomerDetailPage({ params }: CustomerDetailPageProps) {
@@ -39,15 +39,15 @@ export default async function AdminCustomerDetailPage({ params }: CustomerDetail
     <div className="space-y-8">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <Link href="/admin/customers" className="text-sm text-charcoal/50 hover:text-maroon">
+          <Link href="/admin/customers" className="text-sm text-ink-muted hover:text-maroon">
             ← Customers
           </Link>
           <h1 className="font-heading text-3xl text-maroon mt-1">{customer.displayName || 'Unnamed customer'}</h1>
-          <p className="text-charcoal/60 mt-1">Registered {formatDate(customer.createdAt, 'long')}</p>
+          <p className="text-ink-muted mt-1">Registered {formatDate(customer.createdAt, 'long')}</p>
         </div>
         <span
           className={`rounded-full px-3 py-1.5 text-xs font-medium ${
-            customer.isActive ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-charcoal/50'
+            customer.isActive ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-ink-muted'
           }`}
         >
           {customer.isActive ? 'Active' : 'Inactive'}
@@ -65,7 +65,7 @@ export default async function AdminCustomerDetailPage({ params }: CustomerDetail
           <section className="rounded-lg border border-charcoal/10 bg-ivory p-5">
             <h2 className="font-heading text-lg text-maroon mb-4">Recent orders</h2>
             {customer.recentOrders.length === 0 ? (
-              <p className="text-sm text-charcoal/50">No orders placed yet.</p>
+              <p className="text-sm text-ink-muted">No orders placed yet.</p>
             ) : (
               <div className="divide-y divide-charcoal/5">
                 {customer.recentOrders.map((order) => (
@@ -76,12 +76,12 @@ export default async function AdminCustomerDetailPage({ params }: CustomerDetail
                   >
                     <div>
                       <p className="font-medium text-charcoal">{order.orderNumber}</p>
-                      <p className="text-xs text-charcoal/50">{formatDate(order.placedAt, 'short')}</p>
+                      <p className="text-xs text-ink-muted">{formatDate(order.placedAt, 'short')}</p>
                     </div>
                     <div className="flex items-center gap-3">
                       <span
                         className={`rounded-full px-2.5 py-1 text-xs font-medium capitalize ${
-                          STATUS_BADGE[order.status] ?? 'bg-charcoal/10 text-charcoal/70'
+                          STATUS_BADGE[order.status] ?? 'bg-charcoal/10 text-ink-soft'
                         }`}
                       >
                         {order.status.replace(/_/g, ' ')}
@@ -100,11 +100,11 @@ export default async function AdminCustomerDetailPage({ params }: CustomerDetail
             <h2 className="font-heading text-lg text-maroon mb-3">Contact information</h2>
             <div className="space-y-1.5 text-sm">
               <div className="flex justify-between gap-4">
-                <span className="text-charcoal/60">Phone</span>
+                <span className="text-ink-muted">Phone</span>
                 <span className="text-charcoal text-right">{customer.phone ?? '—'}</span>
               </div>
               <div className="flex justify-between gap-4">
-                <span className="text-charcoal/60">Email</span>
+                <span className="text-ink-muted">Email</span>
                 <span className="text-charcoal text-right break-all">{customer.email ?? '—'}</span>
               </div>
             </div>
@@ -113,7 +113,7 @@ export default async function AdminCustomerDetailPage({ params }: CustomerDetail
           <section className="rounded-lg border border-charcoal/10 bg-ivory p-5">
             <h2 className="font-heading text-lg text-maroon mb-3">Saved addresses</h2>
             {customer.addresses.length === 0 ? (
-              <p className="text-sm text-charcoal/50">No saved addresses.</p>
+              <p className="text-sm text-ink-muted">No saved addresses.</p>
             ) : (
               <div className="space-y-4">
                 {customer.addresses.map((address) => (
@@ -127,8 +127,8 @@ export default async function AdminCustomerDetailPage({ params }: CustomerDetail
                       )}
                     </div>
                     <p className="text-sm text-charcoal">{address.full_name}</p>
-                    <p className="text-sm text-charcoal/70">{address.phone}</p>
-                    <p className="text-sm text-charcoal/80 leading-relaxed mt-1">
+                    <p className="text-sm text-ink-soft">{address.phone}</p>
+                    <p className="text-sm text-ink-soft leading-relaxed mt-1">
                       {address.address_line1}
                       {address.address_line2 ? `, ${address.address_line2}` : ''}
                       <br />

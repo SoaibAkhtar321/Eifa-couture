@@ -152,7 +152,7 @@ export default function WhyChooseUsSection() {
 
           <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
 
-          <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-charcoal/70 md:text-base md:leading-8">
+          <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-ink-soft md:text-base md:leading-8">
             A luxury shopping experience built around craftsmanship, quality,
             comfort, and careful delivery.
           </p>
@@ -174,7 +174,7 @@ export default function WhyChooseUsSection() {
                 {usp.title}
               </h3>
 
-              <p className="font-body text-sm leading-relaxed text-charcoal/75">
+              <p className="font-body text-sm leading-relaxed text-ink-soft">
                 {usp.description}
               </p>
             </article>

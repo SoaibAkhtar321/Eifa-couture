@@ -7,7 +7,7 @@ interface PaymentMethodBreakdownProps {
 
 export default function PaymentMethodBreakdown({ rows }: PaymentMethodBreakdownProps) {
   if (rows.length === 0) {
-    return <p className="text-sm text-charcoal/50">No successful payments in this range.</p>;
+    return <p className="text-sm text-ink-muted">No successful payments in this range.</p>;
   }
 
   const max = Math.max(...rows.map((r) => r.count));
@@ -17,8 +17,8 @@ export default function PaymentMethodBreakdown({ rows }: PaymentMethodBreakdownP
       {rows.map((row) => (
         <div key={row.method}>
           <div className="flex items-center justify-between text-sm mb-1">
-            <span className="text-charcoal/70">{PAYMENT_METHOD_LABELS[row.method]}</span>
-            <span className="text-charcoal/50">
+            <span className="text-ink-soft">{PAYMENT_METHOD_LABELS[row.method]}</span>
+            <span className="text-ink-muted">
               {row.count} · {row.percentage}% · {formatPrice(row.revenue)}
             </span>
           </div>

@@ -53,8 +53,8 @@ const PAYMENT_BADGE_STYLES: Record<PaymentUiState, string> = {
   pending: 'bg-gold/15 text-gold',
   successful: 'bg-green-100 text-green-700',
   failed: 'bg-red-100 text-red-600',
-  cancelled: 'bg-charcoal/10 text-charcoal/70',
-  refunded: 'bg-charcoal/10 text-charcoal/70',
+  cancelled: 'bg-charcoal/10 text-ink-soft',
+  refunded: 'bg-charcoal/10 text-ink-soft',
   partially_refunded: 'bg-amber-100 text-amber-800',
 };
 
@@ -136,21 +136,21 @@ export default function OrdersPage() {
   return (
     <main className="bg-ivory">
       <section className="luxury-container py-10 sm:py-14 lg:py-20">
-        <nav aria-label="Breadcrumb" className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-charcoal/45 sm:text-[11px]">
+        <nav aria-label="Breadcrumb" className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-muted sm:text-[11px]">
           <Link href="/account" className="hover:text-maroon">Account</Link>
           <span>/</span>
-          <span className="text-charcoal/70">Orders</span>
+          <span className="text-ink-soft">Orders</span>
         </nav>
 
         <h1 className="font-heading text-4xl text-charcoal sm:text-5xl">My Orders</h1>
 
         {isAuthLoading || (isLoading && !loadError) ? (
           <div className="mt-8 border border-beige bg-white p-8 text-center">
-            <p className="text-sm text-charcoal/55">Loading your orders…</p>
+            <p className="text-sm text-ink-muted">Loading your orders…</p>
           </div>
         ) : !user ? (
           <div className="mt-8 border border-beige bg-white p-8 text-center">
-            <p className="text-sm text-charcoal/55">Please sign in to view your orders.</p>
+            <p className="text-sm text-ink-muted">Please sign in to view your orders.</p>
             <Link href="/login" className="btn-luxury btn-luxury-primary mt-6 inline-flex">Sign In</Link>
           </div>
         ) : loadError ? (
@@ -159,7 +159,7 @@ export default function OrdersPage() {
           </div>
         ) : orders.length === 0 ? (
           <div className="mt-8 border border-beige bg-white p-8 text-center">
-            <p className="text-sm text-charcoal/55">You haven&apos;t placed any orders yet.</p>
+            <p className="text-sm text-ink-muted">You haven&apos;t placed any orders yet.</p>
             <Link href="/shop" className="btn-luxury btn-luxury-primary mt-6 inline-flex">Start Shopping</Link>
           </div>
         ) : (
@@ -178,7 +178,7 @@ export default function OrdersPage() {
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <p className="font-heading text-lg text-charcoal">Order #{order.orderNumber}</p>
-                      <p className="text-sm text-charcoal/55">
+                      <p className="text-sm text-ink-muted">
                         {formatDate(order.placedAt)} · {order.itemCount} {order.itemCount === 1 ? 'item' : 'items'}
                       </p>
                     </div>
@@ -189,29 +189,29 @@ export default function OrdersPage() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-x-6 gap-y-1 text-xs text-charcoal/55 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="mt-4 grid gap-x-6 gap-y-1 text-xs text-ink-muted sm:grid-cols-2 lg:grid-cols-4">
                     <p>
-                      <span className="text-charcoal/40">Payment Method: </span>
+                      <span className="text-ink-muted">Payment Method: </span>
                       {PAYMENT_METHOD_LABELS[order.paymentProvider]}
                     </p>
 
                     {order.paymentVerifiedAt && (
                       <p>
-                        <span className="text-charcoal/40">Paid On: </span>
+                        <span className="text-ink-muted">Paid On: </span>
                         {formatDateTime(order.paymentVerifiedAt)}
                       </p>
                     )}
 
                     {order.razorpayOrderId && (
                       <p className="truncate" title={order.razorpayOrderId}>
-                        <span className="text-charcoal/40">Razorpay Order ID: </span>
+                        <span className="text-ink-muted">Razorpay Order ID: </span>
                         {order.razorpayOrderId}
                       </p>
                     )}
 
                     {order.razorpayPaymentId && (
                       <p className="truncate" title={order.razorpayPaymentId}>
-                        <span className="text-charcoal/40">Razorpay Payment ID: </span>
+                        <span className="text-ink-muted">Razorpay Payment ID: </span>
                         {order.razorpayPaymentId}
                       </p>
                     )}
@@ -220,17 +220,17 @@ export default function OrdersPage() {
                   {order.refunds.length > 0 && (
                     <div className="mt-4 space-y-1.5 border-t border-beige pt-4">
                       {order.refunds.map((refund, index) => (
-                        <p key={index} className="text-xs text-charcoal/60">
-                          <span className="text-charcoal/40">Refunded {formatPrice(refund.amount)} on </span>
+                        <p key={index} className="text-xs text-ink-muted">
+                          <span className="text-ink-muted">Refunded {formatPrice(refund.amount)} on </span>
                           {formatDate(refund.refundedAt)}
-                          {refund.reason && <span className="text-charcoal/40"> — {refund.reason}</span>}
+                          {refund.reason && <span className="text-ink-muted"> — {refund.reason}</span>}
                         </p>
                       ))}
                     </div>
                   )}
 
                   <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
-                    <span className="text-sm text-charcoal/70">{formatPrice(order.total)}</span>
+                    <span className="text-sm text-ink-soft">{formatPrice(order.total)}</span>
 
                     <div className="flex flex-wrap gap-3">
                       {needsRetry && (

@@ -26,7 +26,7 @@ export default async function AdminCategoriesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-heading text-3xl text-maroon">Categories</h1>
-          <p className="text-charcoal/60 mt-1">
+          <p className="text-ink-muted mt-1">
             {categories.length} categor{categories.length === 1 ? 'y' : 'ies'}
           </p>
         </div>

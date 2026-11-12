@@ -29,7 +29,7 @@ export default function BannerPreview({ title, subtitle, imageUrl, mobileImageUr
           type="button"
           onClick={() => setViewport('desktop')}
           className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
-            viewport === 'desktop' ? 'bg-maroon text-ivory' : 'bg-charcoal/10 text-charcoal/60 hover:bg-charcoal/15'
+            viewport === 'desktop' ? 'bg-maroon text-ivory' : 'bg-charcoal/10 text-ink-muted hover:bg-charcoal/15'
           }`}
         >
           Desktop
@@ -38,7 +38,7 @@ export default function BannerPreview({ title, subtitle, imageUrl, mobileImageUr
           type="button"
           onClick={() => setViewport('mobile')}
           className={`rounded-md px-3 py-1.5 text-xs font-medium transition ${
-            viewport === 'mobile' ? 'bg-maroon text-ivory' : 'bg-charcoal/10 text-charcoal/60 hover:bg-charcoal/15'
+            viewport === 'mobile' ? 'bg-maroon text-ivory' : 'bg-charcoal/10 text-ink-muted hover:bg-charcoal/15'
           }`}
         >
           Mobile

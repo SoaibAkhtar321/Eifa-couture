@@ -226,7 +226,7 @@ export default function VariantForm({ productId, variant, onSaved, onCancel }: V
               type="button"
               onClick={onCancel}
               disabled={isSaving}
-              className="rounded-md px-4 py-2 text-sm font-medium text-charcoal/60 hover:bg-charcoal/5"
+              className="rounded-md px-4 py-2 text-sm font-medium text-ink-muted hover:bg-charcoal/5"
             >
               Cancel
             </button>

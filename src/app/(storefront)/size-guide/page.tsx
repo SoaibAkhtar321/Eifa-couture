@@ -58,7 +58,7 @@ export default function SizeGuidePage() {
           <div className="luxury-container py-6 sm:py-8 lg:py-12">
             <nav
               aria-label="Breadcrumb"
-              className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-charcoal/45 sm:text-[11px]"
+              className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-muted sm:text-[11px]"
             >
               <Link href="/" className="hover:text-maroon">
                 Home
@@ -66,7 +66,7 @@ export default function SizeGuidePage() {
 
               <span>/</span>
 
-              <span className="text-charcoal/70">Size Guide</span>
+              <span className="text-ink-soft">Size Guide</span>
             </nav>
 
             <div className="max-w-2xl">
@@ -78,7 +78,7 @@ export default function SizeGuidePage() {
                 Size Guide
               </h1>
 
-              <p className="mt-4 max-w-xl text-sm leading-7 text-charcoal/55 sm:text-base">
+              <p className="mt-4 max-w-xl text-sm leading-7 text-ink-muted sm:text-base">
                 Use this guide to choose the right size for kurtas, sets, and
                 occasion wear. Measurements are approximate and shown in inches.
               </p>
@@ -102,16 +102,16 @@ export default function SizeGuidePage() {
                   <table className="w-full min-w-[520px] border-collapse text-left">
                     <thead>
                       <tr className="border-b border-beige bg-cream/60">
-                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-ink-muted">
                           Size
                         </th>
-                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-ink-muted">
                           Bust
                         </th>
-                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-ink-muted">
                           Waist
                         </th>
-                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-ink-muted">
                           Hip
                         </th>
                       </tr>
@@ -123,13 +123,13 @@ export default function SizeGuidePage() {
                           <td className="px-4 py-4 font-heading text-xl text-maroon">
                             {row.size}
                           </td>
-                          <td className="px-4 py-4 text-sm text-charcoal/65">
+                          <td className="px-4 py-4 text-sm text-ink-muted">
                             {row.bust}
                           </td>
-                          <td className="px-4 py-4 text-sm text-charcoal/65">
+                          <td className="px-4 py-4 text-sm text-ink-muted">
                             {row.waist}
                           </td>
-                          <td className="px-4 py-4 text-sm text-charcoal/65">
+                          <td className="px-4 py-4 text-sm text-ink-muted">
                             {row.hip}
                           </td>
                         </tr>
@@ -152,16 +152,16 @@ export default function SizeGuidePage() {
                   <table className="w-full min-w-[520px] border-collapse text-left">
                     <thead>
                       <tr className="border-b border-beige bg-cream/60">
-                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-ink-muted">
                           Size
                         </th>
-                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-ink-muted">
                           Chest
                         </th>
-                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-ink-muted">
                           Shoulder
                         </th>
-                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-charcoal/55">
+                        <th className="px-4 py-3 text-xs uppercase tracking-[0.18em] text-ink-muted">
                           Length
                         </th>
                       </tr>
@@ -173,13 +173,13 @@ export default function SizeGuidePage() {
                           <td className="px-4 py-4 font-heading text-xl text-maroon">
                             {row.size}
                           </td>
-                          <td className="px-4 py-4 text-sm text-charcoal/65">
+                          <td className="px-4 py-4 text-sm text-ink-muted">
                             {row.chest}
                           </td>
-                          <td className="px-4 py-4 text-sm text-charcoal/65">
+                          <td className="px-4 py-4 text-sm text-ink-muted">
                             {row.shoulder}
                           </td>
-                          <td className="px-4 py-4 text-sm text-charcoal/65">
+                          <td className="px-4 py-4 text-sm text-ink-muted">
                             {row.length}
                           </td>
                         </tr>
@@ -200,7 +200,7 @@ export default function SizeGuidePage() {
                     {tip.title}
                   </h3>
 
-                  <p className="mt-3 text-sm leading-7 text-charcoal/58">
+                  <p className="mt-3 text-sm leading-7 text-ink-muted">
                     {tip.description}
                   </p>
                 </article>

@@ -105,7 +105,7 @@ export default function RegisterForm() {
       <div className="w-full max-w-md bg-white p-8 border border-beige shadow-sm">
         <div className="text-center mb-8">
           <h1 className="font-heading text-3xl text-charcoal mb-3">Create Account</h1>
-          <p className="font-body text-sm text-charcoal/70">
+          <p className="font-body text-sm text-ink-soft">
             Join us to save your wishlist, track orders, and checkout faster.
           </p>
         </div>
@@ -122,7 +122,7 @@ export default function RegisterForm() {
         {/* ── Divider ── */}
         <div className="relative flex py-4 items-center mb-4">
           <div className="flex-grow border-t border-beige"></div>
-          <span className="flex-shrink mx-4 font-body text-[10px] uppercase tracking-[0.2em] text-charcoal/45">
+          <span className="flex-shrink mx-4 font-body text-[10px] uppercase tracking-[0.2em] text-ink-muted">
             Or Use Email
           </span>
           <div className="flex-grow border-t border-beige"></div>
@@ -139,7 +139,7 @@ export default function RegisterForm() {
           <div>
             <label
               htmlFor="fullName"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-soft mb-2"
             >
               Full Name
             </label>
@@ -148,7 +148,7 @@ export default function RegisterForm() {
               id="fullName"
               name="fullName"
               placeholder="Enter your full name"
-              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
+              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-ink-muted"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               autoComplete="name"
@@ -159,7 +159,7 @@ export default function RegisterForm() {
           <div>
             <label
               htmlFor="email"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-soft mb-2"
             >
               Email Address
             </label>
@@ -168,7 +168,7 @@ export default function RegisterForm() {
               id="email"
               name="email"
               placeholder="Enter your email"
-              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
+              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-ink-muted"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
@@ -179,7 +179,7 @@ export default function RegisterForm() {
           <div>
             <label
               htmlFor="password"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-soft mb-2"
             >
               Password
             </label>
@@ -188,7 +188,7 @@ export default function RegisterForm() {
               id="password"
               name="password"
               placeholder="At least 8 characters"
-              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
+              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-ink-muted"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
@@ -199,7 +199,7 @@ export default function RegisterForm() {
           <div>
             <label
               htmlFor="confirmPassword"
-              className="block font-body text-[10px] uppercase tracking-[0.15em] text-charcoal/75 mb-2"
+              className="block font-body text-[10px] uppercase tracking-[0.15em] text-ink-soft mb-2"
             >
               Confirm Password
             </label>
@@ -208,7 +208,7 @@ export default function RegisterForm() {
               id="confirmPassword"
               name="confirmPassword"
               placeholder="Re-enter your password"
-              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-charcoal/45"
+              className="w-full border border-charcoal/15 bg-ivory px-4 py-3 font-body text-sm text-charcoal outline-none transition-colors focus:border-gold placeholder:text-ink-muted"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               autoComplete="new-password"
@@ -226,7 +226,7 @@ export default function RegisterForm() {
         </form>
 
         <div className="mt-8 text-center border-t border-beige pt-6">
-          <p className="font-body text-xs text-charcoal/60 mb-4">
+          <p className="font-body text-xs text-ink-muted mb-4">
             Already have an account?
           </p>
           <Link href={loginHref} className="btn-luxury btn-luxury-secondary w-full">

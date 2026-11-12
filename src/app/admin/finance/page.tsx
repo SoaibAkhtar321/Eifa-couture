@@ -45,7 +45,7 @@ export default async function AdminFinancePage({ searchParams }: FinancePageProp
       <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl text-maroon">Finance</h1>
-          <p className="text-charcoal/60 mt-1">
+          <p className="text-ink-muted mt-1">
             Revenue, payments, and refunds
             {' — '}
             {range.start.slice(0, 10)} to {range.end.slice(0, 10)}

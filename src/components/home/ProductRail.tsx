@@ -65,7 +65,7 @@ function ProductCard({ product, badge }: { product: Product; badge: Badge }) {
               {product.hasPriceRange ? `From ${formatPrice(product.minPrice)}` : formatPrice(product.minPrice)}
             </span>
             {product.compareAtPrice && product.compareAtPrice > product.minPrice && (
-              <span className="text-[11px] text-charcoal/55 line-through md:text-sm">
+              <span className="text-[11px] text-ink-muted line-through md:text-sm">
                 {formatPrice(product.compareAtPrice)}
               </span>
             )}
@@ -103,7 +103,7 @@ export default function ProductRail({
               {title}
             </h2>
             {subtitle && (
-              <p className="mt-2 max-w-xl font-subheading text-base italic text-charcoal/75 md:text-lg">{subtitle}</p>
+              <p className="mt-2 max-w-xl font-subheading text-base italic text-ink-soft md:text-lg">{subtitle}</p>
             )}
           </div>
           <Link

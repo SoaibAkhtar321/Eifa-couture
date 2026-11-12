@@ -130,14 +130,14 @@ export default function CartDrawer() {
                   Shopping Bag
                 </h2>
 
-                <span className="font-body text-xs tracking-wide text-charcoal/40">
+                <span className="font-body text-xs tracking-wide text-ink-muted">
                   ({itemCount})
                 </span>
               </div>
 
               <button
                 onClick={closeCart}
-                className="tap-feedback -mr-2 flex h-10 w-10 items-center justify-center text-charcoal/50 hover:text-charcoal"
+                className="tap-feedback -mr-2 flex h-10 w-10 items-center justify-center text-ink-muted hover:text-charcoal"
                 aria-label="Close shopping bag"
                 type="button"
               >
@@ -161,7 +161,7 @@ export default function CartDrawer() {
             {items.length > 0 && (
               <div className="border-b border-beige/50 bg-cream/50 px-5 py-3 sm:px-6">
                 {freeShippingDelta > 0 ? (
-                  <p className="text-center font-subheading text-[13px] tracking-wide text-charcoal/70">
+                  <p className="text-center font-subheading text-[13px] tracking-wide text-ink-soft">
                     Add{' '}
                     <span className="font-medium text-maroon">
                       {formatPrice(freeShippingDelta)}
@@ -214,7 +214,7 @@ export default function CartDrawer() {
                     Your bag is empty
                   </h3>
 
-                  <p className="mb-8 max-w-[280px] font-subheading text-sm leading-6 tracking-wide text-charcoal/50">
+                  <p className="mb-8 max-w-[280px] font-subheading text-sm leading-6 tracking-wide text-ink-muted">
                     Discover handcrafted Chikankari pieces made for timeless
                     elegance.
                   </p>
@@ -309,7 +309,7 @@ export default function CartDrawer() {
                                 </h4>
                               </Link>
 
-                              <div className="mb-3 flex flex-wrap items-center gap-2 font-body text-[11px] uppercase tracking-wider text-charcoal/50">
+                              <div className="mb-3 flex flex-wrap items-center gap-2 font-body text-[11px] uppercase tracking-wider text-ink-muted">
                                 <span>{item.selectedSize}</span>
                                 <span className="text-beige">|</span>
                                 <span>{item.selectedColor}</span>
@@ -323,7 +323,7 @@ export default function CartDrawer() {
                                 <div className="flex items-center border border-beige">
                                   <button
                                     onClick={handleDecreaseQuantity}
-                                    className="tap-feedback flex h-9 w-9 items-center justify-center text-charcoal/50 hover:bg-cream hover:text-charcoal"
+                                    className="tap-feedback flex h-9 w-9 items-center justify-center text-ink-muted hover:bg-cream hover:text-charcoal"
                                     aria-label={`Decrease quantity of ${item.product.name}`}
                                     type="button"
                                   >
@@ -337,7 +337,7 @@ export default function CartDrawer() {
                                   <button
                                     onClick={handleIncreaseQuantity}
                                     disabled={isAtStockLimit}
-                                    className="tap-feedback flex h-9 w-9 items-center justify-center text-charcoal/50 hover:bg-cream hover:text-charcoal disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+                                    className="tap-feedback flex h-9 w-9 items-center justify-center text-ink-muted hover:bg-cream hover:text-charcoal disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
                                     aria-label={
                                       isAtStockLimit
                                         ? `Maximum available stock reached for ${item.product.name}`
@@ -371,7 +371,7 @@ export default function CartDrawer() {
                                   item.selectedColor
                                 )
                               }
-                              className="tap-feedback self-start p-2 -m-1 text-2xl leading-none text-charcoal/30 hover:text-maroon"
+                              className="tap-feedback self-start p-2 -m-1 text-2xl leading-none text-ink-muted hover:text-maroon"
                               aria-label={`Remove ${item.product.name} from bag`}
                               type="button"
                             >
@@ -390,7 +390,7 @@ export default function CartDrawer() {
               <div className="border-t border-beige bg-ivory">
                 <div className="px-5 py-4 sm:px-6">
                   <div className="mb-1 flex items-center justify-between">
-                    <span className="font-body text-xs uppercase tracking-[0.14em] text-charcoal/50">
+                    <span className="font-body text-xs uppercase tracking-[0.14em] text-ink-muted">
                       Subtotal
                     </span>
 
@@ -399,7 +399,7 @@ export default function CartDrawer() {
                     </span>
                   </div>
 
-                  <p className="font-subheading text-[12px] tracking-wide text-charcoal/40">
+                  <p className="font-subheading text-[12px] tracking-wide text-ink-muted">
                     Taxes and shipping will be calculated at checkout.
                   </p>
                 </div>

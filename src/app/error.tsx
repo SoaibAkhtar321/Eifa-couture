@@ -35,7 +35,7 @@ export default function GlobalError({
               This piece needs a moment
             </h2>
 
-            <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-charcoal/58 sm:text-base sm:leading-8">
+            <p className="mx-auto mt-5 max-w-xl text-sm leading-7 text-ink-muted sm:text-base sm:leading-8">
               We hit an unexpected error loading this page. Please try again —
               if it keeps happening, come back to the homepage and continue
               browsing the collection.

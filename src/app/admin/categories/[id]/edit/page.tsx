@@ -38,7 +38,7 @@ export default async function EditCategoryPage({ params }: EditCategoryPageProps
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-3xl text-maroon">{(category as DbCategory).name}</h1>
-        <p className="text-charcoal/60 mt-1">Edit category details.</p>
+        <p className="text-ink-muted mt-1">Edit category details.</p>
       </div>
 
       <CategoryForm category={category as DbCategory} categories={categories} />

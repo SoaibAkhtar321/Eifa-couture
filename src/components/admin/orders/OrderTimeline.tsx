@@ -47,10 +47,10 @@ export default function OrderTimeline({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-baseline justify-between gap-3">
                     <span className="text-charcoal">{getHistoryEventLabel(entry)}</span>
-                    <span className="shrink-0 text-xs text-charcoal/50">{formatDate(entry.createdAt, 'long')}</span>
+                    <span className="shrink-0 text-xs text-ink-muted">{formatDate(entry.createdAt, 'long')}</span>
                   </div>
-                  <p className="text-xs text-charcoal/50">{getHistoryActorLabel(entry)}</p>
-                  {entry.notes && <p className="mt-1 text-xs text-charcoal/70 italic">&ldquo;{entry.notes}&rdquo;</p>}
+                  <p className="text-xs text-ink-muted">{getHistoryActorLabel(entry)}</p>
+                  {entry.notes && <p className="mt-1 text-xs text-ink-soft italic">&ldquo;{entry.notes}&rdquo;</p>}
                 </div>
               </li>
             );
@@ -71,14 +71,14 @@ export default function OrderTimeline({
         <li className="flex items-center gap-3 text-sm">
           <span className="h-2 w-2 rounded-full bg-maroon" />
           <span className="text-charcoal">Order placed</span>
-          <span className="ml-auto text-xs text-charcoal/50">{formatDate(placedAt, 'long')}</span>
+          <span className="ml-auto text-xs text-ink-muted">{formatDate(placedAt, 'long')}</span>
         </li>
 
         {isTerminalException ? (
           <li className="flex items-center gap-3 text-sm">
             <span className="h-2 w-2 rounded-full bg-red-500" />
             <span className="text-charcoal">{TERMINAL_LABEL[status]}</span>
-            <span className="ml-auto text-xs text-charcoal/50">{formatDate(updatedAt, 'long')}</span>
+            <span className="ml-auto text-xs text-ink-muted">{formatDate(updatedAt, 'long')}</span>
           </li>
         ) : (
           FLOW.slice(1).map((step, i) => {
@@ -86,11 +86,11 @@ export default function OrderTimeline({
             return (
               <li key={step} className="flex items-center gap-3 text-sm">
                 <span className={`h-2 w-2 rounded-full ${reached ? 'bg-maroon' : 'bg-charcoal/15'}`} />
-                <span className={reached ? 'text-charcoal capitalize' : 'text-charcoal/40 capitalize'}>
+                <span className={reached ? 'text-charcoal capitalize' : 'text-ink-muted capitalize'}>
                   {step.replace(/_/g, ' ')}
                 </span>
                 {reached && step === status && (
-                  <span className="ml-auto text-xs text-charcoal/50">{formatDate(updatedAt, 'long')}</span>
+                  <span className="ml-auto text-xs text-ink-muted">{formatDate(updatedAt, 'long')}</span>
                 )}
               </li>
             );

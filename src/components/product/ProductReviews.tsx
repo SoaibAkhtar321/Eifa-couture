@@ -138,10 +138,10 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
                 <>
                   <div className="flex items-end gap-3">
                     <span className="font-heading text-6xl leading-none text-maroon">{summary.averageRating}</span>
-                    <span className="pb-2 text-sm uppercase tracking-[0.2em] text-charcoal/45">/ 5</span>
+                    <span className="pb-2 text-sm uppercase tracking-[0.2em] text-ink-muted">/ 5</span>
                   </div>
                   <p className="mt-3 text-2xl leading-none text-gold">{getStars(summary.averageRating)}</p>
-                  <p className="mt-4 text-sm leading-7 text-charcoal/58">
+                  <p className="mt-4 text-sm leading-7 text-ink-muted">
                     Based on {summary.reviewCount} {summary.reviewCount === 1 ? 'review' : 'reviews'}.
                   </p>
                 </>
@@ -149,14 +149,14 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
                 <>
                   <p className="text-2xl leading-none text-gold">☆☆☆☆☆</p>
                   <h3 className="mt-4 font-heading text-3xl text-charcoal">No reviews yet</h3>
-                  <p className="mt-3 text-sm leading-7 text-charcoal/58">Be the first to review this piece.</p>
+                  <p className="mt-3 text-sm leading-7 text-ink-muted">Be the first to review this piece.</p>
                 </>
               )}
             </div>
 
             {isAuthenticated && canReview === null ? null : isAuthenticated && !canReview ? (
               <div className="mt-6 border border-beige bg-white p-5 text-center sm:p-6">
-                <p className="text-sm leading-7 text-charcoal/75">
+                <p className="text-sm leading-7 text-ink-soft">
                   Reviews are written by customers who have received this piece. Once your order is delivered, you can
                   share your experience here.
                 </p>
@@ -168,7 +168,7 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
                 </h3>
 
                 <fieldset className="mt-5">
-                  <legend className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">Your Rating</legend>
+                  <legend className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">Your Rating</legend>
                   <div className="flex gap-2">
                     {[1, 2, 3, 4, 5].map((value) => (
                       <button
@@ -186,7 +186,7 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
                 </fieldset>
 
                 <label className="mt-5 block">
-                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">Review Title</span>
+                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">Review Title</span>
                   <input
                     type="text"
                     value={title}
@@ -198,7 +198,7 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
                 </label>
 
                 <label className="mt-5 block">
-                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-charcoal/55">Your Review</span>
+                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">Your Review</span>
                   <textarea
                     rows={5}
                     value={comment}
@@ -217,7 +217,7 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
               </form>
             ) : (
               <div className="mt-6 border border-beige bg-white p-5 text-center sm:p-6">
-                <p className="text-sm text-charcoal/60">Bought this piece? Sign in to write a review once it’s delivered.</p>
+                <p className="text-sm text-ink-muted">Bought this piece? Sign in to write a review once it’s delivered.</p>
                 <Link
                   href={`/login?next=${encodeURIComponent(`/product/${product.slug}`)}`}
                   className="btn-luxury btn-luxury-secondary mt-4 inline-flex"
@@ -234,11 +234,11 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
 
             {reviews === null ? (
               <div className="border border-beige bg-white p-6 text-center">
-                <p className="text-sm text-charcoal/55">Loading reviews…</p>
+                <p className="text-sm text-ink-muted">Loading reviews…</p>
               </div>
             ) : reviews.length === 0 ? (
               <div className="border border-beige bg-white p-8 text-center">
-                <p className="mx-auto max-w-sm text-sm leading-7 text-charcoal/55">
+                <p className="mx-auto max-w-sm text-sm leading-7 text-ink-muted">
                   Once customers review this product, their feedback will appear here.
                 </p>
               </div>
@@ -254,7 +254,7 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
                         {review.title && <h4 className="mt-3 font-heading text-2xl text-charcoal">{review.title}</h4>}
                       </div>
                       <div className="text-left sm:text-right">
-                        <p className="text-xs uppercase tracking-[0.18em] text-charcoal/45">
+                        <p className="text-xs uppercase tracking-[0.18em] text-ink-muted">
                           {formatReviewDate(review.created_at)}
                         </p>
                         <p className="mt-2 text-[11px] uppercase tracking-[0.16em] text-maroon">
@@ -262,7 +262,7 @@ export default function ProductReviews({ product }: ProductReviewsProps) {
                         </p>
                       </div>
                     </div>
-                    {review.comment && <p className="mt-4 text-sm leading-7 text-charcoal/60">{review.comment}</p>}
+                    {review.comment && <p className="mt-4 text-sm leading-7 text-ink-muted">{review.comment}</p>}
                   </article>
                 ))}
               </div>

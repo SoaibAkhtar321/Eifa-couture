@@ -17,13 +17,13 @@ export default function AccountPage() {
         <div className="luxury-container py-6 sm:py-8 lg:py-12">
           <nav
             aria-label="Breadcrumb"
-            className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-charcoal/45 sm:text-[11px]"
+            className="mb-5 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-muted sm:text-[11px]"
           >
             <Link href="/" className="hover:text-maroon">
               Home
             </Link>
             <span>/</span>
-            <span className="text-charcoal/70">Account</span>
+            <span className="text-ink-soft">Account</span>
           </nav>
 
           <div className="max-w-2xl">
@@ -35,7 +35,7 @@ export default function AccountPage() {
               My Account
             </h1>
 
-            <p className="mt-4 max-w-xl text-sm leading-7 text-charcoal/55 sm:text-base">
+            <p className="mt-4 max-w-xl text-sm leading-7 text-ink-muted sm:text-base">
               Manage orders, wishlist, saved details, and your Eifa Couture
               profile in one place.
             </p>

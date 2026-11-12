@@ -63,7 +63,7 @@ export default function BannerTable({ rows, error }: BannerTableProps) {
           </div>
           <div>
             <p className="font-medium text-charcoal">{row.title}</p>
-            {row.subtitle && <p className="text-xs text-charcoal/50 line-clamp-1">{row.subtitle}</p>}
+            {row.subtitle && <p className="text-xs text-ink-muted line-clamp-1">{row.subtitle}</p>}
           </div>
         </div>
       ),
@@ -78,12 +78,12 @@ export default function BannerTable({ rows, error }: BannerTableProps) {
       header: 'Schedule',
       render: (row) =>
         row.starts_at || row.ends_at ? (
-          <span className="text-xs text-charcoal/60">
+          <span className="text-xs text-ink-muted">
             {row.starts_at ? new Date(row.starts_at).toLocaleDateString('en-IN') : 'Now'} –{' '}
             {row.ends_at ? new Date(row.ends_at).toLocaleDateString('en-IN') : 'Ongoing'}
           </span>
         ) : (
-          <span className="text-xs text-charcoal/40">Always on</span>
+          <span className="text-xs text-ink-muted">Always on</span>
         ),
     },
     {
@@ -98,7 +98,7 @@ export default function BannerTable({ rows, error }: BannerTableProps) {
             void handleToggleActive(row);
           }}
           className={`rounded-full px-2.5 py-1 text-xs font-medium transition disabled:opacity-50 ${
-            row.is_active ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-charcoal/10 text-charcoal/50 hover:bg-charcoal/15'
+            row.is_active ? 'bg-green-100 text-green-800 hover:bg-green-200' : 'bg-charcoal/10 text-ink-muted hover:bg-charcoal/15'
           }`}
         >
           {pendingToggleId === row.id ? '…' : row.is_active ? 'Active' : 'Inactive'}

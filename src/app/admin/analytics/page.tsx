@@ -31,7 +31,7 @@ export default async function AdminAnalyticsPage({ searchParams }: AnalyticsPage
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="font-heading text-3xl text-maroon">Analytics</h1>
-          <p className="text-charcoal/60 mt-1">Revenue, orders, and top performers over time.</p>
+          <p className="text-ink-muted mt-1">Revenue, orders, and top performers over time.</p>
         </div>
         <AnalyticsRangeSwitch active={rangeDays} />
       </div>

@@ -46,7 +46,7 @@ export default async function AdminDashboardPage() {
     <div className="space-y-8">
       <div>
         <h1 className="font-heading text-3xl text-maroon">Dashboard</h1>
-        <p className="text-charcoal/60 mt-1">An overview of your store, right now.</p>
+        <p className="text-ink-muted mt-1">An overview of your store, right now.</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -65,7 +65,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       <div className="rounded-lg border border-charcoal/10 bg-ivory p-6">
-        <p className="text-sm text-charcoal/50">
+        <p className="text-sm text-ink-muted">
           Product, order, and customer management modules are coming next — this dashboard will
           gain trend charts and recent-activity feeds as those modules land.
         </p>

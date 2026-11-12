@@ -187,7 +187,7 @@ export default function ShopProductCard({
           </h3>
         </Link>
 
-        <p className="mt-1 line-clamp-2 hidden text-sm leading-6 text-charcoal/75 sm:mt-2 sm:block">
+        <p className="mt-1 line-clamp-2 hidden text-sm leading-6 text-ink-soft sm:mt-2 sm:block">
           {product.shortDescription}
         </p>
 
@@ -197,7 +197,7 @@ export default function ShopProductCard({
           </span>
 
           {product.compareAtPrice && (
-            <span className="text-[11px] text-charcoal/55 line-through sm:text-xs">
+            <span className="text-[11px] text-ink-muted line-through sm:text-xs">
               {formatPrice(product.compareAtPrice)}
             </span>
           )}
@@ -214,7 +214,7 @@ export default function ShopProductCard({
           ))}
 
           {product.colors.length > 4 && (
-            <span className="text-[10px] uppercase tracking-[0.16em] text-charcoal/60">
+            <span className="text-[10px] uppercase tracking-[0.16em] text-ink-muted">
               +{product.colors.length - 4}
             </span>
           )}
