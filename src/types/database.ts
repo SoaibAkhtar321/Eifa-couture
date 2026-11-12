@@ -356,6 +356,9 @@ export interface DbBanner {
   mobile_image_url: string | null;
   link_url: string | null;
   cta_label: string | null;
+  video_url: string | null;
+  secondary_cta_label: string | null;
+  secondary_link_url: string | null;
   sort_order: number;
   is_active: boolean;
   starts_at: string | null;

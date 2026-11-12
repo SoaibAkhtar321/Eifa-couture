@@ -18,6 +18,7 @@ const contentSecurityPolicy = [
   "object-src 'none'",
   "frame-ancestors 'self'",
   `img-src 'self' data: blob: https://picsum.photos https://images.unsplash.com https://images.pexels.com https://cdn.shopify.com https://${supabaseHostname}`,
+  `media-src 'self' https://${supabaseHostname}`,
   `connect-src 'self' https://${supabaseHostname} wss://${supabaseHostname}`,
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
   "style-src 'self' 'unsafe-inline'",

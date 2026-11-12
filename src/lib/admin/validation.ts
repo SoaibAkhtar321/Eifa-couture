@@ -193,6 +193,18 @@ export const homepageSectionFormSchema = z.object({
 
 export type HomepageSectionFormValues = z.infer<typeof homepageSectionFormSchema>;
 
+// Banner links may be a full https:// URL or a site page such as /shop?collection=new-arrivals.
+const bannerLink = z
+  .string()
+  .trim()
+  .refine(
+    (value) => (value.startsWith('/') && !value.startsWith('//')) || /^https?:\/\/\S+$/i.test(value),
+    'Enter a full link (https://…) or a page like /shop'
+  )
+  .nullable()
+  .or(z.literal('').transform(() => null))
+  .default(null);
+
 export const bannerFormSchema = z
   .object({
     title: z.string().trim().min(1, 'Title is required').max(200, 'Title is too long'),
@@ -205,13 +217,7 @@ export const bannerFormSchema = z
       .nullable()
       .or(z.literal('').transform(() => null))
       .default(null),
-    link_url: z
-      .string()
-      .trim()
-      .url('Enter a valid URL')
-      .nullable()
-      .or(z.literal('').transform(() => null))
-      .default(null),
+    link_url: bannerLink,
     cta_label: z
       .string()
       .trim()
@@ -219,6 +225,21 @@ export const bannerFormSchema = z
       .nullable()
       .or(z.literal('').transform(() => null))
       .default(null),
+    video_url: z
+      .string()
+      .trim()
+      .url('Enter a valid https:// video link')
+      .nullable()
+      .or(z.literal('').transform(() => null))
+      .default(null),
+    secondary_cta_label: z
+      .string()
+      .trim()
+      .max(40, 'Keep it under 40 characters')
+      .nullable()
+      .or(z.literal('').transform(() => null))
+      .default(null),
+    secondary_link_url: bannerLink,
     sort_order: z.coerce.number().int('Must be a whole number').default(0),
     is_active: z.boolean().default(true),
     starts_at: z.string().trim().default(''),

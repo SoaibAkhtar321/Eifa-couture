@@ -22,6 +22,9 @@ const emptyValues: BannerFormValues = {
   mobile_image_url: null,
   link_url: null,
   cta_label: null,
+  video_url: null,
+  secondary_cta_label: null,
+  secondary_link_url: null,
   sort_order: 0,
   is_active: true,
   starts_at: '',
@@ -62,6 +65,9 @@ export default function BannerForm({ banner }: BannerFormProps) {
           mobile_image_url: banner.mobile_image_url,
           link_url: banner.link_url,
           cta_label: banner.cta_label,
+          video_url: banner.video_url,
+          secondary_cta_label: banner.secondary_cta_label,
+          secondary_link_url: banner.secondary_link_url,
           sort_order: banner.sort_order,
           is_active: banner.is_active,
           starts_at: isoToDatetimeLocal(banner.starts_at),
@@ -125,6 +131,9 @@ export default function BannerForm({ banner }: BannerFormProps) {
       mobile_image_url: result.data.mobile_image_url,
       link_url: result.data.link_url,
       cta_label: result.data.cta_label,
+      video_url: result.data.video_url,
+      secondary_cta_label: result.data.secondary_cta_label,
+      secondary_link_url: result.data.secondary_link_url,
       sort_order: result.data.sort_order,
       is_active: result.data.is_active,
       starts_at: datetimeLocalToIso(result.data.starts_at),
@@ -161,6 +170,7 @@ export default function BannerForm({ banner }: BannerFormProps) {
               value={values.title}
               onChange={(e) => setField('title', e.target.value)}
               error={fieldErrors.title}
+              hint="Homepage headline. Tip: type | to start the gold second line, e.g. Lucknow’s heritage, | woven in silk."
               required
             />
             <TextareaField
@@ -172,18 +182,32 @@ export default function BannerForm({ banner }: BannerFormProps) {
             />
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <TextField
-                label="CTA label"
+                label="Main button text"
                 value={values.cta_label ?? ''}
                 onChange={(e) => setField('cta_label', e.target.value || null)}
                 error={fieldErrors.cta_label}
-                hint="e.g. Shop Now"
+                hint="Default: Shop New Arrivals"
               />
               <TextField
-                label="Link URL"
+                label="Main button link"
                 value={values.link_url ?? ''}
                 onChange={(e) => setField('link_url', e.target.value || null)}
                 error={fieldErrors.link_url}
-                hint="Where the banner links to"
+                hint="A page like /shop or a full https:// link"
+              />
+              <TextField
+                label="Second button text"
+                value={values.secondary_cta_label ?? ''}
+                onChange={(e) => setField('secondary_cta_label', e.target.value || null)}
+                error={fieldErrors.secondary_cta_label}
+                hint="Default: Explore Collections"
+              />
+              <TextField
+                label="Second button link"
+                value={values.secondary_link_url ?? ''}
+                onChange={(e) => setField('secondary_link_url', e.target.value || null)}
+                error={fieldErrors.secondary_link_url}
+                hint="A page like /shop or a full https:// link"
               />
             </div>
           </div>
@@ -242,6 +266,14 @@ export default function BannerForm({ banner }: BannerFormProps) {
                 <p className="text-xs text-ink-muted">Optional — falls back to the desktop image if omitted.</p>
               </div>
             </div>
+
+            <TextField
+              label="Background video link (optional)"
+              value={values.video_url ?? ''}
+              onChange={(e) => setField('video_url', e.target.value || null)}
+              error={fieldErrors.video_url}
+              hint="Short MP4 hosted on your Supabase storage. The desktop image shows until it loads, and for visitors who prefer reduced motion."
+            />
           </div>
 
           <div className="space-y-3">
@@ -263,7 +295,7 @@ export default function BannerForm({ banner }: BannerFormProps) {
               value={values.sort_order}
               onChange={(e) => setField('sort_order', Number(e.target.value))}
               error={fieldErrors.sort_order}
-              hint="Lower numbers appear first"
+              hint="Lower numbers appear first. The first active banner is the homepage hero."
             />
             <DateTimeField
               label="Starts at"

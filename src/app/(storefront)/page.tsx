@@ -19,6 +19,7 @@ import {
 } from '@/components/home/HomeSectionSkeletons';
 import { getActiveHomepageSectionMap } from '@/lib/data/homepage-sections';
 import { fetchActiveCategories } from '@/lib/data/categories';
+import { getActiveHeroBanner } from '@/lib/data/banners';
 import { createClient } from '@/lib/supabase/server';
 import type { HomepageSectionKey } from '@/types/database';
 
@@ -30,9 +31,10 @@ export const metadata: Metadata = {
 
 export default async function HomePage() {
   const supabase = await createClient();
-  const [sectionMap, categories] = await Promise.all([
+  const [sectionMap, categories, heroBanner] = await Promise.all([
     getActiveHomepageSectionMap(),
     fetchActiveCategories(supabase),
+    getActiveHeroBanner(),
   ]);
 
   // Renders in admin-configured `sort_order`; a missing/deleted config
@@ -100,7 +102,7 @@ export default async function HomePage() {
 
   return (
     <main>
-        <HeroSection />
+        <HeroSection banner={heroBanner} />
 
         {/* Each data-driven section gets its own Suspense boundary so the
             page streams progressively instead of waiting for every
