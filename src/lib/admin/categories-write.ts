@@ -11,7 +11,7 @@
 
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
 import { generateSlug } from '@/lib/utils';
-import type { DbCategory } from '@/types/database';
+import type { DbCategory, ProductAudience } from '@/types/database';
 
 export async function isCategorySlugTaken(slug: string, excludeCategoryId?: string): Promise<boolean> {
   const supabase = createBrowserClient();
@@ -44,6 +44,7 @@ export interface CategoryInput {
   description: string;
   image_url: string | null;
   parent_id: string | null;
+  audience: ProductAudience | null;
   sort_order: number;
   is_active: boolean;
 }

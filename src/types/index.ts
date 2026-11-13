@@ -3,6 +3,8 @@
    Complete ecommerce type system
    ============================================ */
 
+import type { Audience } from '@/lib/catalog';
+
 // ── SEO ──
 export interface SEOMeta {
   title: string;
@@ -29,6 +31,8 @@ export interface Product {
    *  back to `images` (the product-level gallery) in that case. */
   imagesByColor: Record<string, string[]>;
   category: string;
+  /** Exactly one audience per product (null only for legacy rows not yet assigned). */
+  audience: Audience | null;
   subcategory: string;
   sizes: string[];
   colors: ProductColor[];
@@ -91,6 +95,7 @@ export interface Category {
   description: string;
   image: string;
   parentId: string | null;
+  audience: Audience | null;
   isActive: boolean;
   order: number;
 }

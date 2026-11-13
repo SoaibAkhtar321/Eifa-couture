@@ -80,6 +80,7 @@ export interface DbCategory {
   description: string;
   image_url: string | null;
   parent_id: string | null;
+  audience: ProductAudience | null;
   sort_order: number;
   is_active: boolean;
   deleted_at: string | null;
@@ -116,6 +117,9 @@ export interface DbFabric {
 
 export type ProductType = "simple" | "variant";
 
+/** Which storefront section a product / category belongs to. */
+export type ProductAudience = "women" | "men" | "accessories";
+
 export interface DbProduct {
   id: string;
   name: string;
@@ -126,6 +130,7 @@ export interface DbProduct {
   compare_at_price: number | null;
   category_id: string | null;
   fabric_id: string | null;
+  audience: ProductAudience | null;
   tags: string[];
   is_featured: boolean;
   is_best_seller: boolean;

@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { TextField, TextareaField, SelectField, NumberField, ToggleField } from '@/components/admin/FormField';
 import { categoryFormSchema, type CategoryFormValues } from '@/lib/admin/validation';
 import { createCategory, updateCategory, generateUniqueCategorySlug, type CategoryInput } from '@/lib/admin/categories-write';
+import { AUDIENCE_OPTIONS } from '@/lib/catalog';
 import { generateSlug } from '@/lib/utils';
 import type { DbCategory } from '@/types/database';
 
@@ -20,6 +21,7 @@ const emptyValues: CategoryFormValues = {
   description: '',
   image_url: null,
   parent_id: null,
+  audience: null,
   sort_order: 0,
   is_active: true,
 };
@@ -36,6 +38,7 @@ export default function CategoryForm({ category, categories }: CategoryFormProps
           description: category.description,
           image_url: category.image_url,
           parent_id: category.parent_id,
+          audience: category.audience,
           sort_order: category.sort_order,
           is_active: category.is_active,
         }
@@ -158,10 +161,25 @@ export default function CategoryForm({ category, categories }: CategoryFormProps
         <div className="space-y-6">
           <div className="rounded-lg border border-charcoal/10 bg-ivory p-6 space-y-4">
             <SelectField
+              label="Who is this category for?"
+              placeholder="Select Women, Men or Accessories"
+              value={values.audience ?? ''}
+              onChange={(e) => setField('audience', (e.target.value || null) as CategoryFormValues['audience'])}
+              error={fieldErrors.audience}
+              options={AUDIENCE_OPTIONS}
+              hint="Products in this category only show in this section of the store"
+              required
+            />
+            <SelectField
               label="Parent category"
               placeholder="None (top level)"
               value={values.parent_id ?? ''}
-              onChange={(e) => setField('parent_id', e.target.value || null)}
+              onChange={(e) => {
+                const parentId = e.target.value || null;
+                setField('parent_id', parentId);
+                const parent = categories.find((c) => c.id === parentId);
+                if (parent?.audience) setField('audience', parent.audience);
+              }}
               error={fieldErrors.parent_id}
               options={parentOptions.map((c) => ({ value: c.id, label: c.name }))}
             />

@@ -15,6 +15,7 @@
 import { getCategoryPlaceholder } from '@/lib/utils';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
+import type { Audience } from '@/lib/catalog';
 import { SIZES } from '@/lib/constants';
 import type { Product, ProductColor, ProductVariant } from '@/types';
 import type {
@@ -154,6 +155,7 @@ export function mapProductRow(row: ProductRow): Product {
     images: images.length > 0 ? images : [getCategoryPlaceholder(categorySlug)],
     imagesByColor,
     category: categorySlug,
+    audience: row.audience ?? null,
     subcategory: '',
     sizes: sortSizes(activeVariants.map((v) => v.size)),
     colors: Array.from(colorMap.values()),
@@ -234,7 +236,12 @@ type ProductFlag = 'is_featured' | 'is_best_seller' | 'is_new_arrival';
 async function fetchProductList(
   supabase: SupabaseClient,
   limit: number,
-  options: { flag?: ProductFlag; categoryIds?: string[]; orderBy?: 'created_at' | 'rating_avg' } = {}
+  options: {
+    flag?: ProductFlag;
+    categoryIds?: string[];
+    audience?: Audience;
+    orderBy?: 'created_at' | 'rating_avg';
+  } = {}
 ): Promise<Product[]> {
   let query = supabase
     .from('products')
@@ -244,6 +251,8 @@ async function fetchProductList(
 
   if (options.flag) query = query.eq(options.flag, true);
   if (options.categoryIds) query = query.in('category_id', options.categoryIds);
+  // Strict: the product's OWN audience must match — never inferred from the category name.
+  if (options.audience) query = query.eq('audience', options.audience);
   if (options.orderBy === 'rating_avg') query = query.order('rating_avg', { ascending: false });
 
   const { data, error } = await query.order('created_at', { ascending: false }).limit(limit);
@@ -266,27 +275,33 @@ export function fetchNewArrivals(supabase: SupabaseClient, limit = 6) {
   return fetchProductList(supabase, limit, { flag: 'is_new_arrival' });
 }
 
-export async function fetchProductsInCategories(
+/**
+ * Newest products of ONE audience (women / men / accessories), optionally
+ * narrowed to specific categories. Filtered server-side on `products.audience`.
+ */
+export async function fetchProductsByAudience(
   supabase: SupabaseClient,
-  categoryIds: string[],
-  limit = 8
+  audience: Audience,
+  limit = 8,
+  categoryIds?: string[]
 ): Promise<Product[]> {
-  if (categoryIds.length === 0) return [];
-  return fetchProductList(supabase, limit, { categoryIds });
+  if (categoryIds && categoryIds.length === 0) return [];
+  return fetchProductList(supabase, limit, { audience, categoryIds });
 }
 
 /**
  * Related products for a product detail page: other active products in
  * the same category first (queried directly by `category_id`, not by
- * scanning the whole catalog), falling back to any other active
- * products if the category has none. Two small, indexed queries at
- * most — never pulls the full product catalog just to find 4 items.
+ * scanning the whole catalog), falling back to other products of the
+ * SAME audience. Never crosses audiences (a saree never recommends a
+ * men's kurta). Two small, indexed queries at most.
  */
 export async function fetchRelatedProducts(
   supabase: SupabaseClient,
   productId: string,
   categorySlug: string,
-  limit = 4
+  limit = 4,
+  audience: Audience | null = null
 ): Promise<Product[]> {
   const { data: categoryRow } = await supabase
     .from('categories')
@@ -310,12 +325,15 @@ export async function fetchRelatedProducts(
     }
   }
 
-  // Fallback: the category lookup failed or had no other active
-  // products — show any other active products instead of nothing.
+  // Fallback: same audience only. A product without an audience gets no
+  // cross-audience suggestions rather than a wrong one.
+  if (!audience) return [];
+
   const { data: fallbackData, error: fallbackError } = await supabase
     .from('products')
     .select(PRODUCT_SELECT)
     .eq('is_active', true)
+    .eq('audience', audience)
     .is('deleted_at', null)
     .neq('id', productId)
     .order('created_at', { ascending: false })

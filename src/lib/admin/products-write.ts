@@ -19,7 +19,7 @@
 
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
 import { generateSlug } from '@/lib/utils';
-import type { DbProduct, DbProductVariant } from '@/types/database';
+import type { DbProduct, DbProductVariant, ProductAudience } from '@/types/database';
 
 /* ---------- Slug / SKU uniqueness (browser reads, called from forms) ---------- */
 
@@ -90,6 +90,7 @@ export interface ProductInput {
   price: number;
   compare_at_price: number | null;
   category_id: string | null;
+  audience: ProductAudience | null;
   fabric_id: string | null;
   tags: string[];
   is_featured: boolean;

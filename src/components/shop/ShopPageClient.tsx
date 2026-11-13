@@ -13,7 +13,7 @@ import {
   sortProducts,
   type PriceFilter,
 } from '@/lib/search';
-import { AUDIENCE_LABELS, expandCategorySlugs, getAudienceSlugs, isAudience } from '@/lib/catalog';
+import { AUDIENCE_LABELS, expandCategorySlugs, isAudience } from '@/lib/catalog';
 import type { Category, Product, SortOption } from '@/types';
 
 const PRODUCTS_PER_PAGE = 8;
@@ -265,15 +265,24 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
   const effectiveCategory =
     collectionFromUrl === 'all' ? categoryFromUrl : 'all';
 
-  // A category filter includes its sub-categories; an audience filter
-  // (women/men) resolves to whichever admin categories match it.
+  // A category filter includes its sub-categories. The audience filter is
+  // applied separately and strictly on `product.audience` (see below).
   const allowedCategorySlugs = useMemo(() => {
     if (effectiveCategory !== 'all') {
       return expandCategorySlugs(activeCategories, [effectiveCategory]);
     }
-    if (audienceFromUrl) return getAudienceSlugs(activeCategories, audienceFromUrl);
     return null;
-  }, [activeCategories, audienceFromUrl, effectiveCategory]);
+  }, [activeCategories, effectiveCategory]);
+
+  // When browsing one audience (Women / Men / Accessories) only that
+  // audience's categories are offered as chips.
+  const visibleCategories = useMemo(
+    () =>
+      audienceFromUrl
+        ? activeCategories.filter((category) => category.audience === audienceFromUrl)
+        : activeCategories,
+    [activeCategories, audienceFromUrl]
+  );
 
   const activeProducts = useMemo(
     () => products.filter((product) => product.isActive),
@@ -307,6 +316,9 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
       const matchesCategory =
         !allowedCategorySlugs || allowedCategorySlugs.has(product.category);
 
+      // Strict: a product belongs to exactly one audience.
+      const matchesAudience = !audienceFromUrl || product.audience === audienceFromUrl;
+
       const matchesCollection =
         collectionFromUrl === 'all' ||
         (collectionFromUrl === 'new-arrivals' && product.isNewArrival) ||
@@ -324,6 +336,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
 
       return (
         matchesCategory &&
+        matchesAudience &&
         matchesCollection &&
         matchesSearch &&
         matchesSize &&
@@ -337,6 +350,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
   }, [
     activeProducts,
     allowedCategorySlugs,
+    audienceFromUrl,
     availability,
     collectionFromUrl,
     searchQuery,
@@ -425,11 +439,11 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
     collection?: CollectionFilter;
   }) => {
     const nextParams = new URLSearchParams(searchParams.toString());
-    nextParams.delete('audience');
 
     if (params.category !== undefined) {
       if (params.category === 'all') {
         nextParams.delete('category');
+        nextParams.delete('audience');
       } else {
         nextParams.set('category', params.category);
       }
@@ -443,6 +457,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
         nextParams.set('collection', params.collection);
       }
       nextParams.delete('category');
+      nextParams.delete('audience');
     }
 
     const queryString = nextParams.toString();
@@ -562,7 +577,7 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
               Best Sellers
             </button>
 
-            {activeCategories.map((category) => {
+            {visibleCategories.map((category) => {
               const isCategoryActive =
                 effectiveCategory === category.slug &&
                 collectionFromUrl === 'all';

@@ -1,16 +1,16 @@
 import ProductRail from '@/components/home/ProductRail';
 import { createClient } from '@/lib/supabase/server';
-import { fetchProductsInCategories } from '@/lib/data/products';
-import { getAudienceSlugs, type Audience } from '@/lib/catalog';
-import type { Category } from '@/types';
+import { fetchProductsByAudience } from '@/lib/data/products';
+import type { Audience } from '@/lib/catalog';
 
-const COPY: Record<Audience, { eyebrow: string; title: string; text: string; image: string; tone: 'ivory' | 'cream' }> = {
+const COPY: Record<Audience, { eyebrow: string; title: string; text: string; image: string; tone: 'ivory' | 'cream'; railTitle: string }> = {
   women: {
     eyebrow: 'For Her',
     title: "Women's Collection",
     text: 'Sarees, kurta sets and suits — hand-embroidered by Lucknow’s master karigars.',
     image: '/images/collections/women.png',
     tone: 'ivory',
+    railTitle: 'Latest for Her',
   },
   men: {
     eyebrow: 'For Him',
@@ -18,21 +18,27 @@ const COPY: Record<Audience, { eyebrow: string; title: string; text: string; ima
     text: 'Chikankari kurtas in cotton, silk and linen for festive days and every day.',
     image: '/images/collections/men.png',
     tone: 'cream',
+    railTitle: 'Latest for Him',
+  },
+  accessories: {
+    eyebrow: 'Finishing Touches',
+    title: 'Accessories',
+    text: 'Silk bags, potlis, clutches and dupattas to complete the look.',
+    image: '',
+    tone: 'ivory',
+    railTitle: 'Latest Accessories',
   },
 };
 
 interface Props {
   audience: Audience;
-  categories: Category[];
   limit?: number;
 }
 
-export default async function AudienceSection({ audience, categories, limit = 8 }: Props) {
-  const slugs = getAudienceSlugs(categories, audience);
-  const categoryIds = categories.filter((c) => slugs.has(c.slug)).map((c) => c.id);
-
+export default async function AudienceSection({ audience, limit = 8 }: Props) {
   const supabase = await createClient();
-  const products = await fetchProductsInCategories(supabase, categoryIds, limit);
+  // Strict, server-side: only products whose own audience matches.
+  const products = await fetchProductsByAudience(supabase, audience, limit);
   const copy = COPY[audience];
   const href = `/shop?audience=${audience}`;
 
@@ -42,7 +48,7 @@ export default async function AudienceSection({ audience, categories, limit = 8 
     <ProductRail
       id={`${audience}-products-heading`}
       eyebrow={copy.eyebrow}
-      title={`Latest for ${audience === 'women' ? 'Her' : 'Him'}`}
+      title={copy.railTitle}
       products={products}
       viewAllHref={href}
       viewAllLabel="View all"

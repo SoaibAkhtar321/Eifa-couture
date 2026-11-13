@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { TextField, TextareaField, SelectField, NumberField, ToggleField } from '@/components/admin/FormField';
 import { productFormSchema, type ProductFormValues } from '@/lib/admin/validation';
 import { createProduct, updateProduct, generateUniqueSlug, type ProductInput } from '@/lib/admin/products-write';
+import { AUDIENCE_OPTIONS } from '@/lib/catalog';
 import { generateSlug } from '@/lib/utils';
 import VariantTable from './VariantTable';
 import ImageManager from './ImageManager';
@@ -26,6 +27,7 @@ const emptyValues: ProductFormValues = {
   price: 0,
   compare_at_price: null,
   category_id: null,
+  audience: null,
   fabric_id: null,
   tags: [],
   is_featured: false,
@@ -56,6 +58,7 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
           price: product.price,
           compare_at_price: product.compare_at_price,
           category_id: product.category_id,
+          audience: product.audience,
           fabric_id: product.fabric_id,
           tags: product.tags,
           is_featured: product.is_featured,
@@ -87,6 +90,20 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
 
   function setField<K extends keyof ProductFormValues>(key: K, value: ProductFormValues[K]) {
     setValues((prev) => ({ ...prev, [key]: value }));
+  }
+
+  // Category choices only include categories of the chosen audience, so a
+  // product can never be given a category that doesn't belong to it.
+  const categoryOptions = categories
+    .filter((c) => values.audience !== null && c.audience === values.audience)
+    .map((c) => ({ value: c.id, label: c.name }));
+
+  function handleAudienceChange(next: ProductFormValues['audience']) {
+    setValues((prev) => {
+      const currentCategory = categories.find((c) => c.id === prev.category_id);
+      const keepCategory = currentCategory && next !== null && currentCategory.audience === next;
+      return { ...prev, audience: next, category_id: keepCategory ? prev.category_id : null };
+    });
   }
 
   function handleNameChange(name: string) {
@@ -323,12 +340,23 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
               hint="Optional — shown as a strikethrough price"
             />
             <SelectField
+              label="Who is it for?"
+              placeholder="Select Women, Men or Accessories"
+              value={values.audience ?? ''}
+              onChange={(e) => handleAudienceChange((e.target.value || null) as ProductFormValues['audience'])}
+              error={fieldErrors.audience}
+              options={AUDIENCE_OPTIONS}
+              hint="The product only appears in this section of the store"
+              required
+            />
+            <SelectField
               label="Category"
-              placeholder="Select a category"
+              placeholder={values.audience ? 'Select a category' : 'Choose who it is for first'}
               value={values.category_id ?? ''}
               onChange={(e) => setField('category_id', e.target.value || null)}
               error={fieldErrors.category_id}
-              options={categories.map((c) => ({ value: c.id, label: c.name }))}
+              options={categoryOptions}
+              disabled={values.audience === null}
               required
             />
             <SelectField

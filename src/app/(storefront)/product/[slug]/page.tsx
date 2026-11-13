@@ -72,7 +72,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
     supabase,
     product.id,
     product.category,
-    RELATED_PRODUCTS_LIMIT
+    RELATED_PRODUCTS_LIMIT,
+    product.audience
   );
 
   return (

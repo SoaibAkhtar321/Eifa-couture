@@ -114,10 +114,10 @@ export default async function HomePage() {
 
         <StackedCollections />
         <Suspense fallback={<NewArrivalsSkeleton />}>
-          <AudienceSection audience="women" categories={categories} />
+          <AudienceSection audience="women" />
         </Suspense>
         <Suspense fallback={<NewArrivalsSkeleton />}>
-          <AudienceSection audience="men" categories={categories} />
+          <AudienceSection audience="men" />
         </Suspense>
         <Suspense fallback={null}>
           <CategoryRails categories={categories} />

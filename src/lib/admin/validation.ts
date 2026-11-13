@@ -10,6 +10,7 @@
 import { z } from 'zod';
 
 export const productTypeSchema = z.enum(['simple', 'variant']);
+export const audienceSchema = z.enum(['women', 'men', 'accessories']);
 
 export const productFormSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(200, 'Name is too long'),
@@ -28,6 +29,7 @@ export const productFormSchema = z.object({
     .nullable()
     .default(null),
   category_id: z.string().uuid('Select a category').nullable(),
+  audience: audienceSchema.nullable().default(null),
   fabric_id: z.string().uuid().nullable().default(null),
   tags: z.array(z.string().trim().min(1)).default([]),
   is_featured: z.boolean().default(false),
@@ -55,6 +57,12 @@ export const productFormSchema = z.object({
   {
     message: 'SKU is required for a simple product',
     path: ['sku'],
+  }
+).refine(
+  (data) => data.audience !== null,
+  {
+    message: 'Choose who this product is for',
+    path: ['audience'],
   }
 );
 
@@ -96,6 +104,7 @@ export const categoryFormSchema = z.object({
     .or(z.literal('').transform(() => null))
     .default(null),
   parent_id: z.string().uuid().nullable().default(null),
+  audience: audienceSchema.nullable().default(null),
   sort_order: z.coerce.number().int('Must be a whole number').default(0),
   is_active: z.boolean().default(true),
 });

@@ -23,6 +23,7 @@ function mapCategoryRow(row: DbCategory): Category {
       row.image_url ??
       getCategoryPlaceholder(row.slug),
     parentId: row.parent_id,
+    audience: row.audience ?? null,
     isActive: row.is_active,
     order: row.sort_order,
   };
