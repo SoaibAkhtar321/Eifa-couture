@@ -8,7 +8,6 @@ import BestSellersSection from '@/components/home/BestSellersSection';
 import ShopByCategorySection from '@/components/home/ShopByCategorySection';
 import StackedCollections from '@/components/home/StackedCollections';
 import AudienceSection from '@/components/home/AudienceSection';
-import CategoryRails from '@/components/home/CategoryRails';
 import WhyChooseUsSection from '@/components/home/WhyChooseUsSection';
 import HeritageSection from '@/components/home/HeritageSection';
 import {
@@ -18,9 +17,7 @@ import {
   ShopByCategorySkeleton,
 } from '@/components/home/HomeSectionSkeletons';
 import { getActiveHomepageSectionMap } from '@/lib/data/homepage-sections';
-import { fetchActiveCategories } from '@/lib/data/categories';
 import { getActiveHeroBanner } from '@/lib/data/banners';
-import { createClient } from '@/lib/supabase/server';
 import type { HomepageSectionKey } from '@/types/database';
 
 export const metadata: Metadata = {
@@ -30,10 +27,8 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const supabase = await createClient();
-  const [sectionMap, categories, heroBanner] = await Promise.all([
+  const [sectionMap, heroBanner] = await Promise.all([
     getActiveHomepageSectionMap(),
-    fetchActiveCategories(supabase),
     getActiveHeroBanner(),
   ]);
 
@@ -119,8 +114,8 @@ export default async function HomePage() {
         <Suspense fallback={<NewArrivalsSkeleton />}>
           <AudienceSection audience="men" />
         </Suspense>
-        <Suspense fallback={null}>
-          <CategoryRails categories={categories} />
+        <Suspense fallback={<NewArrivalsSkeleton />}>
+          <AudienceSection audience="accessories" />
         </Suspense>
         <WhyChooseUsSection />
         <HeritageSection />

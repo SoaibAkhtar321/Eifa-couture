@@ -1,6 +1,8 @@
 import Image from 'next/image';
 import Link from 'next/link';
 
+import Reveal from '@/components/motion/Reveal';
+
 type Card = {
   id: string;
   index: string;
@@ -57,7 +59,7 @@ const CARDS: Card[] = [
     text: 'Silk potli bags, crochet clutches, embroidered dupattas and stoles — made to complete every Chikankari look.',
     image: '/images/categories/dupattas.png',
     imageAlt: 'Hand-embroidered silk dupattas and accessories',
-    href: '/shop?category=bags-accessories',
+    href: '/shop?audience=accessories',
     cta: 'Explore Accessories',
     chips: ['Silk Bags', 'Potlis', 'Dupattas', 'Stoles'],
     panel: 'bg-[#E9D9BD]',
@@ -74,7 +76,7 @@ export default function StackedCollections() {
   return (
     <section className="bg-ivory py-12 md:py-20" aria-labelledby="collections-heading">
       <div className="luxury-container">
-        <div className="mb-8 flex items-end justify-between gap-6 md:mb-12">
+        <Reveal className="mb-8 flex items-end justify-between gap-6 md:mb-12">
           <div>
             <span className="block text-[10px] uppercase tracking-[0.3em] text-gold-dark md:text-xs">The Collections</span>
             <h2 id="collections-heading" className="mt-2 font-heading text-3xl text-charcoal md:text-5xl">
@@ -89,7 +91,7 @@ export default function StackedCollections() {
               </a>
             ))}
           </nav>
-        </div>
+        </Reveal>
 
         <div className="relative">
           {CARDS.map((card, i) => {

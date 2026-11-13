@@ -1,5 +1,8 @@
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 
+import Reveal from '@/components/motion/Reveal';
+import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
 import ProductImage from '@/components/ui/ProductImage';
 import { formatPrice, getDiscountPercentage } from '@/lib/utils';
 import type { Product } from '@/types';
@@ -15,8 +18,43 @@ interface ProductRailProps {
   viewAllHref: string;
   viewAllLabel: string;
   badge?: Badge;
-  tone?: 'ivory' | 'cream';
+  tone?: Tone;
+  /** When set, the section still renders with this content if there are no products. */
+  emptyState?: ReactNode;
 }
+
+type Tone = 'ivory' | 'cream' | 'parchment' | 'dark';
+
+const TONES: Record<Tone, { section: string; eyebrow: string; title: string; subtitle: string; link: string }> = {
+  ivory: {
+    section: 'bg-ivory',
+    eyebrow: 'text-gold-dark',
+    title: 'text-charcoal',
+    subtitle: 'text-ink-soft',
+    link: 'border-charcoal/30 text-charcoal hover:border-maroon hover:text-maroon',
+  },
+  cream: {
+    section: 'bg-cream',
+    eyebrow: 'text-gold-dark',
+    title: 'text-charcoal',
+    subtitle: 'text-ink-soft',
+    link: 'border-charcoal/30 text-charcoal hover:border-maroon hover:text-maroon',
+  },
+  parchment: {
+    section: 'bg-parchment',
+    eyebrow: 'text-gold-deep',
+    title: 'text-ink',
+    subtitle: 'text-ink-soft',
+    link: 'border-charcoal/30 text-charcoal hover:border-maroon hover:text-maroon',
+  },
+  dark: {
+    section: 'bg-espresso',
+    eyebrow: 'text-gold-light',
+    title: 'text-white',
+    subtitle: 'text-white/85',
+    link: 'border-white/40 text-white hover:border-gold-light hover:text-gold-light',
+  },
+};
 
 function ProductCard({ product, badge }: { product: Product; badge: Badge }) {
   const discount = product.compareAtPrice
@@ -24,7 +62,7 @@ function ProductCard({ product, badge }: { product: Product; badge: Badge }) {
     : 0;
 
   return (
-    <article className="group w-[46vw] shrink-0 snap-start sm:w-[calc((100%-2.5rem)/3)] lg:w-[calc((100%-4.5rem)/4)]">
+    <StaggerItem className="group w-[46vw] shrink-0 snap-start sm:w-[calc((100%-2.5rem)/3)] lg:w-[calc((100%-4.5rem)/4)]">
       <Link href={`/product/${product.slug}`} className="flex h-full flex-col bg-white">
         <div className="relative aspect-[4/5] overflow-hidden bg-beige">
           <ProductImage
@@ -72,7 +110,7 @@ function ProductCard({ product, badge }: { product: Product; badge: Badge }) {
           </div>
         </div>
       </Link>
-    </article>
+    </StaggerItem>
   );
 }
 
@@ -90,38 +128,45 @@ export default function ProductRail({
   viewAllLabel,
   badge = 'discount',
   tone = 'ivory',
+  emptyState,
 }: ProductRailProps) {
-  if (products.length === 0) return null;
+  if (products.length === 0 && !emptyState) return null;
+
+  const t = TONES[tone];
 
   return (
-    <section className={`${tone === 'ivory' ? 'bg-ivory' : 'bg-cream'} py-10 md:py-16 lg:py-20`} aria-labelledby={id}>
+    <section className={`${t.section} py-10 md:py-16 lg:py-20`} aria-labelledby={id}>
       <div className="luxury-container">
-        <div className="mb-6 flex items-end justify-between gap-4 md:mb-10">
+        <Reveal className="mb-6 flex items-end justify-between gap-4 md:mb-10">
           <div>
-            <span className="mb-2 block text-[10px] uppercase tracking-[0.28em] text-gold-dark md:text-xs">{eyebrow}</span>
-            <h2 id={id} className="font-heading text-2xl text-charcoal md:text-4xl lg:text-5xl">
+            <span className={`mb-2 block text-[10px] uppercase tracking-[0.28em] md:text-xs ${t.eyebrow}`}>{eyebrow}</span>
+            <h2 id={id} className={`font-heading text-2xl md:text-4xl lg:text-5xl ${t.title}`}>
               {title}
             </h2>
             {subtitle && (
-              <p className="mt-2 max-w-xl font-subheading text-base italic text-ink-soft md:text-lg">{subtitle}</p>
+              <p className={`mt-2 max-w-xl font-subheading text-base italic md:text-lg ${t.subtitle}`}>{subtitle}</p>
             )}
           </div>
           <Link
             href={viewAllHref}
-            className="shrink-0 border-b border-charcoal/30 pb-0.5 text-[11px] uppercase tracking-[0.16em] text-charcoal transition-colors hover:border-maroon hover:text-maroon md:text-xs"
+            className={`shrink-0 border-b pb-0.5 text-[11px] uppercase tracking-[0.16em] transition-colors md:text-xs ${t.link}`}
           >
             {viewAllLabel}
           </Link>
-        </div>
+        </Reveal>
 
-        <div className={`-mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:gap-5 sm:overflow-visible sm:px-0 lg:gap-6 [&::-webkit-scrollbar]:hidden ${
+        {products.length === 0 ? (
+          emptyState
+        ) : (
+        <StaggerGroup className={`-mx-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-6 pb-2 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:gap-5 sm:overflow-visible sm:px-0 lg:gap-6 [&::-webkit-scrollbar]:hidden ${
             // Few products: centre them instead of leaving a wide empty row
             products.length <= 2 ? 'justify-center' : products.length === 3 ? 'sm:justify-center' : ''
           }`}>
           {products.map((product) => (
             <ProductCard key={product.id} product={product} badge={badge} />
           ))}
-        </div>
+        </StaggerGroup>
+        )}
       </div>
     </section>
   );
