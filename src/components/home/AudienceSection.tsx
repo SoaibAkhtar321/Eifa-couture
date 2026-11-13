@@ -7,6 +7,7 @@ import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
 import { createClient } from '@/lib/supabase/server';
 import { fetchProductsByAudience } from '@/lib/data/products';
 import { getAudienceContent } from '@/lib/audience-content';
+import { getAudiencePanelImage } from '@/lib/data/audience-panels';
 import type { Audience } from '@/lib/catalog';
 
 interface Props {
@@ -23,8 +24,11 @@ interface Props {
  */
 export default async function AudienceSection({ audience, limit = 6 }: Props) {
   const supabase = await createClient();
-  const products = await fetchProductsByAudience(supabase, audience, limit);
-  const content = getAudienceContent(audience);
+  const [products, panelImage] = await Promise.all([
+    fetchProductsByAudience(supabase, audience, limit),
+    getAudiencePanelImage(audience),
+  ]);
+  const content = getAudienceContent(audience, panelImage);
   const headingId = `${audience}-products-heading`;
   const hasProducts = products.length > 0;
 

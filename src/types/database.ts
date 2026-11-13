@@ -414,6 +414,10 @@ export interface DbStoreSettings {
   gstin: string | null;
   logo_url: string | null;
   favicon_url: string | null;
+  /** Phase 7: admin-set lead images for the audience panels (NULL = built-in default). */
+  panel_image_women: string | null;
+  panel_image_men: string | null;
+  panel_image_accessories: string | null;
   social_instagram_url: string | null;
   social_facebook_url: string | null;
   social_pinterest_url: string | null;

@@ -18,6 +18,7 @@ import {
 } from '@/components/home/HomeSectionSkeletons';
 import { getActiveHomepageSectionMap } from '@/lib/data/homepage-sections';
 import { getActiveHeroBanner } from '@/lib/data/banners';
+import { getAudiencePanelImages } from '@/lib/data/audience-panels';
 import type { HomepageSectionKey } from '@/types/database';
 
 export const metadata: Metadata = {
@@ -27,9 +28,10 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [sectionMap, heroBanner] = await Promise.all([
+  const [sectionMap, heroBanner, panelImages] = await Promise.all([
     getActiveHomepageSectionMap(),
     getActiveHeroBanner(),
+    getAudiencePanelImages(),
   ]);
 
   // Renders in admin-configured `sort_order`; a missing/deleted config
@@ -126,7 +128,10 @@ export default async function HomePage() {
 
   return (
     <main>
-      <HeroSection banner={heroBanner} />
+      <HeroSection
+        banner={heroBanner}
+        panelImages={panelImages}
+      />
       <TrustStrip />
 
       {/* Each data-driven section gets its own Suspense boundary so the

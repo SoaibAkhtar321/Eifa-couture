@@ -20,16 +20,24 @@ import { createClient } from '@/lib/supabase/client';
 
 const BUCKET = 'store-assets';
 const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB — logos/favicons are small
+const MAX_PANEL_FILE_SIZE = 5 * 1024 * 1024; // homepage panel photos are larger
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml', 'image/x-icon', 'image/vnd.microsoft.icon'];
 
-export type StoreAssetKind = 'logo' | 'favicon';
+export type StoreAssetKind =
+  | 'logo'
+  | 'favicon'
+  | 'panel-women'
+  | 'panel-men'
+  | 'panel-accessories';
 
-function validateFile(file: File): string | null {
+function validateFile(file: File, kind: StoreAssetKind): string | null {
   if (!ALLOWED_TYPES.includes(file.type)) {
     return `${file.name}: only JPEG, PNG, WebP, SVG, or ICO images are allowed.`;
   }
-  if (file.size > MAX_FILE_SIZE) {
-    return `${file.name}: file is larger than 2MB.`;
+  const isPanel = kind.startsWith('panel-');
+  const limit = isPanel ? MAX_PANEL_FILE_SIZE : MAX_FILE_SIZE;
+  if (file.size > limit) {
+    return `${file.name}: file is larger than ${isPanel ? 5 : 2}MB.`;
   }
   return null;
 }
@@ -43,7 +51,7 @@ export async function uploadStoreAsset(
   file: File,
   kind: StoreAssetKind
 ): Promise<{ url: string | null; error: string | null }> {
-  const validationError = validateFile(file);
+  const validationError = validateFile(file, kind);
   if (validationError) {
     return { url: null, error: validationError };
   }

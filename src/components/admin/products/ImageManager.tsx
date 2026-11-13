@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 
+import ConfirmDialog from '@/components/admin/ui/ConfirmDialog';
 import {
   uploadProductImages,
   deleteProductImage,
@@ -36,6 +37,9 @@ export default function ImageManager({
   const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
   const [draggedId, setDraggedId] = useState<string | null>(null);
+  const [isFileDragging, setIsFileDragging] = useState(false);
+  const [pendingDelete, setPendingDelete] = useState<DbProductImage | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const sortedImages = [...images].sort((a, b) => a.sort_order - b.sort_order);
@@ -66,15 +70,18 @@ export default function ImageManager({
     if (fileInputRef.current) fileInputRef.current.value = '';
   }
 
-  async function handleDelete(image: DbProductImage) {
-    if (!confirm('Delete this image?')) return;
-
-    const { error } = await deleteProductImage(image);
+  async function handleDeleteConfirmed() {
+    if (!pendingDelete) return;
+    setIsDeleting(true);
+    const { error } = await deleteProductImage(pendingDelete);
+    setIsDeleting(false);
     if (error) {
       setErrors([error]);
+      setPendingDelete(null);
       return;
     }
-    onChange(images.filter((img) => img.id !== image.id));
+    onChange(images.filter((img) => img.id !== pendingDelete.id));
+    setPendingDelete(null);
   }
 
   async function handleSetPrimary(imageId: string) {
@@ -122,11 +129,28 @@ export default function ImageManager({
   }
 
   return (
-    <div className="space-y-4">
+    <div
+      className={`space-y-4 rounded-lg ${isFileDragging ? 'outline-dashed outline-2 outline-maroon' : ''}`}
+      onDragOver={(e) => {
+        // only react to files dragged from the computer, not to reordering
+        if (e.dataTransfer.types.includes('Files')) {
+          e.preventDefault();
+          setIsFileDragging(true);
+        }
+      }}
+      onDragLeave={() => setIsFileDragging(false)}
+      onDrop={(e) => {
+        if (e.dataTransfer.files.length > 0) {
+          e.preventDefault();
+          setIsFileDragging(false);
+          void handleFilesSelected(e.dataTransfer.files);
+        }
+      }}
+    >
       <div className="flex items-center justify-between">
         <h3 className="font-heading text-lg text-maroon">{title}</h3>
-        <label className="cursor-pointer rounded-md border border-maroon/30 px-4 py-2 text-sm font-medium text-maroon transition hover:bg-maroon/5">
-          {isUploading ? 'Uploading…' : 'Upload images'}
+        <label className="flex min-h-[44px] cursor-pointer items-center rounded-md border border-maroon/30 px-4 text-sm font-medium text-maroon transition hover:bg-maroon/5">
+          {isUploading ? 'Uploading…' : 'Choose photos'}
           <input
             ref={fileInputRef}
             type="file"
@@ -148,7 +172,7 @@ export default function ImageManager({
       )}
 
       {sortedImages.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-charcoal/20 p-8 text-center text-sm text-ink-muted">
+        <div className="rounded-lg border border-dashed border-charcoal/30 p-8 text-center text-sm text-ink-soft">
           {emptyMessage}
         </div>
       ) : (
@@ -176,24 +200,24 @@ export default function ImageManager({
 
               {image.is_primary && (
                 <span className="absolute left-2 top-2 rounded-full bg-maroon px-2 py-0.5 text-xs font-medium text-ivory">
-                  Primary
+                  Main photo
                 </span>
               )}
 
-              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-charcoal/70 p-1.5 opacity-0 transition-opacity group-hover:opacity-100">
+              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-charcoal/70 p-1.5 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
                 {!image.is_primary && (
                   <button
                     type="button"
                     onClick={() => handleSetPrimary(image.id)}
-                    className="rounded px-2 py-1 text-xs font-medium text-ivory hover:bg-ivory/20"
+                    className="min-h-[44px] rounded px-2 text-xs font-medium text-ivory hover:bg-ivory/20"
                   >
-                    Set primary
+                    Make main photo
                   </button>
                 )}
                 <button
                   type="button"
-                  onClick={() => handleDelete(image)}
-                  className="ml-auto rounded px-2 py-1 text-xs font-medium text-red-300 hover:bg-ivory/20"
+                  onClick={() => setPendingDelete(image)}
+                  className="ml-auto min-h-[44px] rounded px-2 text-xs font-medium text-red-200 hover:bg-ivory/20"
                 >
                   Delete
                 </button>
@@ -203,7 +227,19 @@ export default function ImageManager({
         </div>
       )}
 
-      <p className="text-xs text-ink-muted">Drag to reorder. The first image is used as the thumbnail unless a primary is set.</p>
+      <p className="text-xs text-ink-muted">Drag photos here to add them. Drag a photo onto another to reorder. The main photo is the thumbnail.</p>
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Delete this photo?"
+        message="The photo will be removed from this product."
+        confirmLabel="Yes, delete it"
+        cancelLabel="No, keep it"
+        destructive
+        busy={isDeleting}
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

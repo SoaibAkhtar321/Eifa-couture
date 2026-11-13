@@ -6,6 +6,7 @@ import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
 import ProductCard from '@/components/product/ProductCard';
 import ProductImage from '@/components/ui/ProductImage';
 import { getAudienceContent } from '@/lib/audience-content';
+import { getAudiencePanelImage } from '@/lib/data/audience-panels';
 import { getAudienceRootCategories, type Audience } from '@/lib/catalog';
 import { fetchActiveCategoriesWithImages } from '@/lib/data/categories';
 import { fetchProductsByAudience } from '@/lib/data/products';
@@ -33,11 +34,12 @@ const OTHERS: Record<Audience, { href: string; label: string }[]> = {
  */
 export default async function AudiencePage({ audience }: { audience: Audience }) {
   const supabase = await createClient();
-  const content = getAudienceContent(audience);
-  const [products, allCategories] = await Promise.all([
+  const [products, allCategories, panelImage] = await Promise.all([
     fetchProductsByAudience(supabase, audience, 60),
     fetchActiveCategoriesWithImages(supabase),
+    getAudiencePanelImage(audience),
   ]);
+  const content = getAudienceContent(audience, panelImage);
   const categories = getAudienceRootCategories(allCategories, audience);
 
   return (

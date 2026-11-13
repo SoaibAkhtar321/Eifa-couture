@@ -11,10 +11,13 @@ import type { DbBanner } from '@/types/database';
 export type HeroBanner = Pick<DbBanner, 'title' | 'subtitle' | 'link_url' | 'cta_label'>;
 
 const AUDIENCE_TILES = [
-  { href: '/women', label: 'For Women', sub: 'Sarees & suits', image: '/images/collections/women.png' },
-  { href: '/men', label: 'For Men', sub: 'Kurtas', image: '/images/collections/men.png' },
-  { href: '/accessories', label: 'Accessories', sub: 'Bags & dupattas', image: '/images/categories/dupattas.png' },
+  { key: 'women', href: '/women', label: 'For Women', sub: 'Sarees & suits', image: '/images/collections/women.png' },
+  { key: 'men', href: '/men', label: 'For Men', sub: 'Kurtas', image: '/images/collections/men.png' },
+  { key: 'accessories', href: '/accessories', label: 'Accessories', sub: 'Bags & dupattas', image: '/images/categories/dupattas.png' },
 ] as const;
+
+/** Admin-set panel images (Admin → Homepage); a missing one keeps the default above. */
+export type HeroPanelImages = Partial<Record<'women' | 'men' | 'accessories', string | null>>;
 
 const LOOKS = [
   { src: '/images/hero/hero-1.png', alt: 'Model in a white hand-embroidered Chikankari kurta' },
@@ -42,7 +45,13 @@ const MARQUEE = [
 const ROTATE_MS = 4500;
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-export default function HeroSection({ banner = null }: { banner?: HeroBanner | null }) {
+export default function HeroSection({
+  banner = null,
+  panelImages = {},
+}: {
+  banner?: HeroBanner | null;
+  panelImages?: HeroPanelImages;
+}) {
   const [look, setLook] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
@@ -216,7 +225,7 @@ export default function HeroSection({ banner = null }: { banner?: HeroBanner | n
                   >
                     <span className="relative block h-14 w-full shrink-0 overflow-hidden sm:h-14 sm:w-14">
                       <Image
-                        src={tile.image}
+                        src={panelImages[tile.key]?.trim() || tile.image}
                         alt=""
                         fill
                         sizes="64px"

@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import AdminSidebar from './AdminSidebar';
 import AdminHeader from './AdminHeader';
+import { ToastProvider } from './ui/Toaster';
 import type { AdminSession } from '@/lib/admin/auth';
 
 export default function AdminShell({
@@ -16,6 +17,7 @@ export default function AdminShell({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
+    <ToastProvider>
     <div className="min-h-screen bg-beige">
       <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
@@ -24,10 +26,6 @@ export default function AdminShell({
         <main className="flex-1 p-6 lg:p-8">{children}</main>
       </div>
     </div>
+    </ToastProvider>
   );
 }
-
-
-
-
-

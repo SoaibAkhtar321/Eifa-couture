@@ -26,7 +26,7 @@ export default async function NewProductPage() {
       <div>
         <h1 className="font-heading text-3xl text-maroon">Add product</h1>
         <p className="text-ink-muted mt-1">
-          Create the product first, then add variants and images on the next screen.
+          Fill in the basics, add photos, and the product goes live in the right part of the store.
         </p>
       </div>
 

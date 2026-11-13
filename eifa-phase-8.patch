@@ -1,0 +1,223 @@
+diff --git a/next.config.ts b/next.config.ts
+index e23914f..658ea2d 100644
+--- a/next.config.ts
++++ b/next.config.ts
+@@ -17,13 +17,15 @@ const contentSecurityPolicy = [
+   "base-uri 'self'",
+   "object-src 'none'",
+   "frame-ancestors 'self'",
+-  `img-src 'self' data: blob: https://picsum.photos https://images.unsplash.com https://images.pexels.com https://cdn.shopify.com https://${supabaseHostname}`,
++  `img-src 'self' data: blob: https://picsum.photos https://images.unsplash.com https://images.pexels.com https://cdn.shopify.com https://cdn.razorpay.com https://${supabaseHostname}`,
+   `media-src 'self' https://${supabaseHostname}`,
+-  `connect-src 'self' https://${supabaseHostname} wss://${supabaseHostname}`,
+-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
++  `connect-src 'self' https://${supabaseHostname} wss://${supabaseHostname} https://api.razorpay.com https://lumberjack.razorpay.com`,
++  `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com${isDev ? " 'unsafe-eval'" : ''}`,
++  // Razorpay Checkout renders inside an iframe served from api.razorpay.com.
++  'frame-src https://api.razorpay.com https://checkout.razorpay.com',
+   "style-src 'self' 'unsafe-inline'",
+   "font-src 'self' data:",
+-  "form-action 'self'",
++  "form-action 'self' https://api.razorpay.com",
+ ].join('; ');
+ 
+ const securityHeaders = [
+diff --git a/src/app/(storefront)/search/page.tsx b/src/app/(storefront)/search/page.tsx
+index 273f258..97211a3 100644
+--- a/src/app/(storefront)/search/page.tsx
++++ b/src/app/(storefront)/search/page.tsx
+@@ -689,7 +689,7 @@ export default function SearchPage() {
+                 <h4 className="font-heading text-xl text-charcoal">Sort &amp; Filter</h4>
+                 <button
+                   onClick={() => setIsFilterSheetOpen(false)}
+-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-beige text-ink-muted hover:text-maroon"
++                  className="flex h-11 w-11 items-center justify-center rounded-full border border-beige text-ink-muted hover:text-maroon"
+                   aria-label="Close"
+                 >
+                   ✕
+diff --git a/src/app/robots.ts b/src/app/robots.ts
+new file mode 100644
+index 0000000..f8d7390
+--- /dev/null
++++ b/src/app/robots.ts
+@@ -0,0 +1,32 @@
++import type { MetadataRoute } from 'next';
++
++const SITE_URL = 'https://eifacouture.com';
++
++/**
++ * Keep private, transactional and admin routes out of search results.
++ * Public catalogue pages stay crawlable.
++ */
++export default function robots(): MetadataRoute.Robots {
++  return {
++    rules: [
++      {
++        userAgent: '*',
++        allow: '/',
++        disallow: [
++          '/admin',
++          '/api/',
++          '/account',
++          '/checkout',
++          '/order-confirmation/',
++          '/login',
++          '/register',
++          '/forgot-password',
++          '/reset-password',
++          '/wishlist',
++          '/search',
++        ],
++      },
++    ],
++    sitemap: `${SITE_URL}/sitemap.xml`,
++  };
++}
+diff --git a/src/app/sitemap.ts b/src/app/sitemap.ts
+new file mode 100644
+index 0000000..28457ee
+--- /dev/null
++++ b/src/app/sitemap.ts
+@@ -0,0 +1,42 @@
++import type { MetadataRoute } from 'next';
++import { createClient } from '@/lib/supabase/server';
++import { fetchActiveProducts } from '@/lib/data/products';
++
++const SITE_URL = 'https://eifacouture.com';
++
++const STATIC_PATHS: { path: string; priority: number }[] = [
++  { path: '', priority: 1 },
++  { path: '/shop', priority: 0.9 },
++  { path: '/women', priority: 0.9 },
++  { path: '/men', priority: 0.9 },
++  { path: '/accessories', priority: 0.9 },
++  { path: '/about', priority: 0.5 },
++  { path: '/contact', priority: 0.5 },
++  { path: '/size-guide', priority: 0.4 },
++  { path: '/track-order', priority: 0.3 },
++  { path: '/privacy-policy', priority: 0.2 },
++  { path: '/refund-policy', priority: 0.2 },
++  { path: '/terms', priority: 0.2 },
++];
++
++export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
++  const entries: MetadataRoute.Sitemap = STATIC_PATHS.map(({ path, priority }) => ({
++    url: `${SITE_URL}${path}`,
++    priority,
++  }));
++
++  try {
++    const supabase = await createClient();
++    const products = await fetchActiveProducts(supabase);
++    for (const product of products) {
++      entries.push({
++        url: `${SITE_URL}/product/${product.slug}`,
++        priority: 0.8,
++      });
++    }
++  } catch {
++    // If the catalogue cannot be read, still serve the static pages.
++  }
++
++  return entries;
++}
+diff --git a/src/components/admin/AdminSidebar.tsx b/src/components/admin/AdminSidebar.tsx
+index ea79d5a..1867b6e 100644
+--- a/src/components/admin/AdminSidebar.tsx
++++ b/src/components/admin/AdminSidebar.tsx
+@@ -67,11 +67,11 @@ export default function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onC
+               return (
+                 <div
+                   key={item.href}
+-                  className="flex items-center justify-between px-3 py-2.5 rounded-md text-sm text-cream/40 cursor-not-allowed"
++                  className="flex items-center justify-between px-3 py-2.5 rounded-md text-sm text-cream/70 cursor-not-allowed"
+                   title="Coming soon"
+                 >
+                   <span>{item.label}</span>
+-                  <span className="text-[10px] uppercase tracking-wide border border-cream/20 rounded px-1.5 py-0.5">
++                  <span className="text-[10px] uppercase tracking-wide border border-cream/40 rounded px-1.5 py-0.5">
+                     Soon
+                   </span>
+                 </div>
+@@ -95,7 +95,7 @@ export default function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onC
+         </nav>
+ 
+         <div className="p-4 border-t border-cream/10">
+-          <Link href="/" className="text-xs text-cream/60 hover:text-gold transition-colors">
++          <Link href="/" className="text-xs text-cream/80 hover:text-gold transition-colors">
+             ← Back to storefront
+           </Link>
+         </div>
+diff --git a/src/components/admin/banners/BannerPreview.tsx b/src/components/admin/banners/BannerPreview.tsx
+index 74082b3..31ed356 100644
+--- a/src/components/admin/banners/BannerPreview.tsx
++++ b/src/components/admin/banners/BannerPreview.tsx
+@@ -53,7 +53,7 @@ export default function BannerPreview({ title, subtitle, imageUrl, mobileImageUr
+         {activeImage ? (
+           <Image src={activeImage} alt={title || 'Banner preview'} fill sizes="100vw" className="object-cover" />
+         ) : (
+-          <div className="flex h-full items-center justify-center text-xs text-ivory/40">
++          <div className="flex h-full items-center justify-center text-xs text-ivory/80">
+             Upload an image to preview
+           </div>
+         )}
+diff --git a/src/components/search/HeaderSearch.tsx b/src/components/search/HeaderSearch.tsx
+index 1c7a833..62aaa99 100644
+--- a/src/components/search/HeaderSearch.tsx
++++ b/src/components/search/HeaderSearch.tsx
+@@ -566,7 +566,7 @@ export default function HeaderSearch() {
+             window.requestAnimationFrame(() => inputRef.current?.focus());
+           }
+         }}
+-        className="tap-feedback flex h-10 w-10 items-center justify-center text-ink-muted hover:text-maroon sm:h-11 sm:w-11"
++        className="tap-feedback flex h-11 w-11 items-center justify-center text-ink-muted hover:text-maroon"
+         aria-label="Toggle search"
+         aria-expanded={isOpen}
+       >
+@@ -648,7 +648,7 @@ export default function HeaderSearch() {
+                       setQuery('');
+                       setHighlightedIndex(-1);
+                     }}
+-                    className="tap-feedback flex h-6 w-6 shrink-0 items-center justify-center text-lg leading-none text-ink-muted hover:text-maroon"
++                    className="tap-feedback flex h-11 w-11 shrink-0 items-center justify-center text-lg leading-none text-ink-muted hover:text-maroon"
+                     aria-label="Clear search"
+                   >
+                     x
+diff --git a/src/components/ui/CartDrawer.tsx b/src/components/ui/CartDrawer.tsx
+index 91f5837..3cb4e77 100644
+--- a/src/components/ui/CartDrawer.tsx
++++ b/src/components/ui/CartDrawer.tsx
+@@ -137,7 +137,7 @@ export default function CartDrawer() {
+ 
+               <button
+                 onClick={closeCart}
+-                className="tap-feedback -mr-2 flex h-10 w-10 items-center justify-center text-ink-muted hover:text-charcoal"
++                className="tap-feedback -mr-2 flex h-11 w-11 items-center justify-center text-ink-muted hover:text-charcoal"
+                 aria-label="Close shopping bag"
+                 type="button"
+               >
+@@ -323,21 +323,21 @@ export default function CartDrawer() {
+                                 <div className="flex items-center border border-beige">
+                                   <button
+                                     onClick={handleDecreaseQuantity}
+-                                    className="tap-feedback flex h-9 w-9 items-center justify-center text-ink-muted hover:bg-cream hover:text-charcoal"
++                                    className="tap-feedback flex h-11 w-11 items-center justify-center text-ink-muted hover:bg-cream hover:text-charcoal"
+                                     aria-label={`Decrease quantity of ${item.product.name}`}
+                                     type="button"
+                                   >
+                                     −
+                                   </button>
+ 
+-                                  <span className="flex h-9 w-10 items-center justify-center border-x border-beige font-body text-xs text-charcoal">
++                                  <span className="flex h-11 w-10 items-center justify-center border-x border-beige font-body text-xs text-charcoal">
+                                     {item.quantity}
+                                   </span>
+ 
+                                   <button
+                                     onClick={handleIncreaseQuantity}
+                                     disabled={isAtStockLimit}
+-                                    className="tap-feedback flex h-9 w-9 items-center justify-center text-ink-muted hover:bg-cream hover:text-charcoal disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
++                                    className="tap-feedback flex h-11 w-11 items-center justify-center text-ink-muted hover:bg-cream hover:text-charcoal disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+                                     aria-label={
+                                       isAtStockLimit
+                                         ? `Maximum available stock reached for ${item.product.name}`

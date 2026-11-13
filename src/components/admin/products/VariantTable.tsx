@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 
+import ConfirmDialog from '@/components/admin/ui/ConfirmDialog';
+import { useToast } from '@/components/admin/ui/Toaster';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { formatPrice } from '@/lib/utils';
 import { deleteVariant, updateInventoryQuantity } from '@/lib/admin/products-write';
@@ -34,6 +36,9 @@ export default function VariantTable({
 }: VariantTableProps) {
   const [editingVariant, setEditingVariant] = useState<VariantRow | 'new' | null>(null);
   const [savingStockId, setSavingStockId] = useState<string | null>(null);
+  const toast = useToast();
+  const [pendingDelete, setPendingDelete] = useState<VariantRow | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const duplicateIndices = new Set(
     findDuplicateVariantCombos(variants.map((v) => ({ size: v.size, color_name: v.color_name })))
@@ -67,7 +72,7 @@ export default function VariantTable({
     setSavingStockId(null);
 
     if (error) {
-      alert(`Failed to update stock: ${error}`);
+      toast.error(`Failed to update stock: ${error}`);
       return;
     }
 
@@ -78,15 +83,19 @@ export default function VariantTable({
     );
   }
 
-  async function handleDelete(variant: VariantRow) {
-    if (!confirm(`Delete variant ${variant.size} / ${variant.color_name}?`)) return;
-
-    const { error } = await deleteVariant(variant.id);
+  async function handleDeleteConfirmed() {
+    if (!pendingDelete) return;
+    setIsDeleting(true);
+    const { error } = await deleteVariant(pendingDelete.id);
+    setIsDeleting(false);
     if (error) {
-      alert(`Failed to delete variant: ${error}`);
+      toast.error(`Failed to delete: ${error}`);
+      setPendingDelete(null);
       return;
     }
-    onChange(variants.filter((v) => v.id !== variant.id));
+    onChange(variants.filter((v) => v.id !== pendingDelete.id));
+    setPendingDelete(null);
+    toast.success('Removed.');
   }
 
   function handleSaved(saved: VariantRow) {
@@ -157,14 +166,14 @@ export default function VariantTable({
           <button
             type="button"
             onClick={() => setEditingVariant(row)}
-            className="font-medium text-maroon hover:underline"
+            className="min-h-[44px] px-1 font-medium text-maroon hover:underline"
           >
             Edit
           </button>
           <button
             type="button"
-            onClick={() => handleDelete(row)}
-            className="font-medium text-red-600 hover:underline"
+            onClick={() => setPendingDelete(row)}
+            className="min-h-[44px] px-1 font-medium text-red-700 hover:underline"
           >
             Delete
           </button>
@@ -176,13 +185,13 @@ export default function VariantTable({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="font-heading text-lg text-maroon">Variants</h3>
+        <h3 className="font-heading text-lg text-maroon">Sizes and colours</h3>
         <button
           type="button"
           onClick={() => setEditingVariant('new')}
-          className="rounded-md border border-maroon/30 px-4 py-2 text-sm font-medium text-maroon transition hover:bg-maroon/5"
+          className="min-h-[44px] rounded-md border border-maroon/30 px-4 text-sm font-medium text-maroon transition hover:bg-maroon/5"
         >
-          Add variant
+          Add size / colour
         </button>
       </div>
 
@@ -225,6 +234,22 @@ export default function VariantTable({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Remove this size / colour?"
+        message={
+          pendingDelete
+            ? `${pendingDelete.size} / ${pendingDelete.color_name} will no longer be available to customers.`
+            : ''
+        }
+        confirmLabel="Yes, remove it"
+        cancelLabel="No, keep it"
+        destructive
+        busy={isDeleting}
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setPendingDelete(null)}
+      />
     </div>
   );
 }

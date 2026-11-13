@@ -42,7 +42,18 @@ function resolveAccessoriesImage(): string {
   return DUPATTA_FALLBACK;
 }
 
-export function getAudienceContent(audience: Audience): AudienceContent {
+/**
+ * `imageOverride` is the admin-set panel image (store_settings.panel_image_*);
+ * when null/empty the built-in default image below is used, so the
+ * homepage never shows a broken or blank panel.
+ */
+export function getAudienceContent(audience: Audience, imageOverride?: string | null): AudienceContent {
+  const content = getDefaultAudienceContent(audience);
+  const override = imageOverride?.trim();
+  return override ? { ...content, image: override } : content;
+}
+
+function getDefaultAudienceContent(audience: Audience): AudienceContent {
   switch (audience) {
     case 'women':
       return {
