@@ -93,7 +93,14 @@ export default async function HomePage() {
     ] as { key: HomepageSectionKey; order: number; node: React.ReactNode }[]
   )
     .filter((section) => sectionMap[section.key]?.is_active ?? true)
-    .sort((a, b) => a.order - b.order);
+    // Shop by Category always leads, right under the trust strip, so
+    // shoppers can start browsing at once. The admin can still hide it
+    // with its on/off switch; the rest follow in CMS order.
+    .sort((a, b) => {
+      if (a.key === 'shop_by_category') return -1;
+      if (b.key === 'shop_by_category') return 1;
+      return a.order - b.order;
+    });
 
   // Women / Men / Accessories sit right after the New Arrivals + Featured
   // block (wherever the admin has put those); the remaining managed

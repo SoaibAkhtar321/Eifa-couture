@@ -5,7 +5,7 @@ import Reveal from '@/components/motion/Reveal';
 import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
 import ProductImage from '@/components/ui/ProductImage';
 import { createClient } from '@/lib/supabase/server';
-import { fetchActiveCategories } from '@/lib/data/categories';
+import { fetchActiveCategoriesWithImages } from '@/lib/data/categories';
 
 function getCategoryHref(slug: string) {
   return `/shop?category=${slug}`;
@@ -23,15 +23,27 @@ export default async function ShopByCategorySection({
   subtitle,
 }: ShopByCategorySectionProps = {}) {
   const supabase = await createClient();
-  const allCategories = await fetchActiveCategories(supabase);
+  const allCategories = await fetchActiveCategoriesWithImages(supabase);
   const topLevel = allCategories.filter((category) => !category.parentId);
   const categories = limit ? topLevel.slice(0, limit) : topLevel;
 
   if (categories.length === 0) return null;
 
+  // Size the grid to the number of categories so a short list never
+  // leaves an empty column on desktop.
+  const count = categories.length;
+  const gridCols =
+    count === 1
+      ? 'mx-auto max-w-sm grid-cols-1'
+      : count === 2
+        ? 'mx-auto max-w-3xl grid-cols-2'
+        : count === 3
+          ? 'grid-cols-2 md:grid-cols-3'
+          : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+
   return (
     <section
-      className="bg-beige py-10 sm:py-12 md:py-16 lg:py-24"
+      className="bg-beige py-10 sm:py-12 md:py-14 lg:py-16"
       aria-labelledby="categories-heading"
     >
       <div className="luxury-container">
@@ -45,12 +57,17 @@ export default async function ShopByCategorySection({
           }
         />
 
-        <StaggerGroup className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+        <StaggerGroup className={`grid gap-3 sm:gap-5 lg:gap-6 ${gridCols}`}>
           {categories.map((category, index) => (
-            <StaggerItem key={category.id} className="group">
+            <StaggerItem
+              key={category.id}
+              className={`group ${count === 3 && index === 2 ? 'col-span-2 md:col-span-1' : ''}`}
+            >
               <Link
                 href={getCategoryHref(category.slug)}
-                className="relative block aspect-[4/5] overflow-hidden rounded-2xl bg-charcoal ring-1 ring-gold-deep/30"
+                className={`relative block overflow-hidden rounded-2xl bg-charcoal ring-1 ring-gold-deep/30 ${
+                  count === 3 && index === 2 ? 'aspect-[16/10] md:aspect-[4/5]' : 'aspect-[4/5]'
+                }`}
                 aria-label={`Explore ${category.name}`}
               >
                 <ProductImage
@@ -105,7 +122,7 @@ export default async function ShopByCategorySection({
           ))}
         </StaggerGroup>
 
-        <Reveal className="mt-10 flex justify-center md:mt-12">
+        <Reveal className="mt-8 flex justify-center md:mt-10">
           <Link href="/shop" className="btn-luxury btn-luxury-secondary">
             View All Collections
           </Link>

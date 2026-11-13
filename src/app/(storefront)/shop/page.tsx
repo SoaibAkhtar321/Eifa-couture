@@ -2,43 +2,40 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 
 import ShopPageClient from '@/components/shop/ShopPageClient';
-
-import { createClient } from '@/lib/supabase/server';
 import { fetchActiveCategories } from '@/lib/data/categories';
-import { fetchActiveProducts } from '@/lib/data/products';
+import { fetchShopFacets, fetchShopProducts } from '@/lib/data/shop';
+import { parseShopFilters } from '@/lib/shop-filters';
+import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
   title: 'Shop Collection | Eifa Couture',
-  description:
-    'Explore Eifa Couture’s premium handcrafted Lucknowi Chikankari collection.',
+  description: 'Explore Eifa Couture’s premium handcrafted Lucknowi Chikankari collection.',
+  alternates: { canonical: '/shop' },
 };
 
-export default async function ShopPage() {
+type SearchParams = Record<string, string | string[] | undefined>;
+
+export default async function ShopPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
+  const filters = parseShopFilters(await searchParams);
   const supabase = await createClient();
-  const [categories, products] = await Promise.all([
-    fetchActiveCategories(supabase),
-    fetchActiveProducts(supabase),
+
+  // Filtering, sorting and paging all happen in Supabase; only one page
+  // of products reaches the browser.
+  const categories = await fetchActiveCategories(supabase);
+  const [{ products, total }, facets] = await Promise.all([
+    fetchShopProducts(supabase, filters, categories),
+    fetchShopFacets(supabase, filters.audience),
   ]);
 
   return (
-    <>
-
-      <main>
-        <Suspense
-          fallback={
-            <section className="min-h-screen bg-ivory pt-32">
-              <div className="luxury-container">
-                <p className="text-xs uppercase tracking-[0.28em] text-gold-dark">
-                  Loading collection...
-                </p>
-              </div>
-            </section>
-          }
-        >
-          <ShopPageClient categories={categories} products={products} />
-        </Suspense>
-      </main>
-
-    </>
+    <Suspense fallback={null}>
+      <ShopPageClient
+        categories={categories}
+        products={products}
+        total={total}
+        filters={filters}
+        facets={facets}
+      />
+    </Suspense>
   );
 }

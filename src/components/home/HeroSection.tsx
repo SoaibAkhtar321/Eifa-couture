@@ -11,9 +11,9 @@ import type { DbBanner } from '@/types/database';
 export type HeroBanner = Pick<DbBanner, 'title' | 'subtitle' | 'link_url' | 'cta_label'>;
 
 const AUDIENCE_TILES = [
-  { href: '/shop?audience=women', label: 'For Women', sub: 'Sarees & suits', image: '/images/collections/women.png' },
-  { href: '/shop?audience=men', label: 'For Men', sub: 'Kurtas', image: '/images/collections/men.png' },
-  { href: '/shop?audience=accessories', label: 'Accessories', sub: 'Bags & dupattas', image: '/images/categories/dupattas.png' },
+  { href: '/women', label: 'For Women', sub: 'Sarees & suits', image: '/images/collections/women.png' },
+  { href: '/men', label: 'For Men', sub: 'Kurtas', image: '/images/collections/men.png' },
+  { href: '/accessories', label: 'Accessories', sub: 'Bags & dupattas', image: '/images/categories/dupattas.png' },
 ] as const;
 
 const LOOKS = [

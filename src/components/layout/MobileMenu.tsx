@@ -16,8 +16,9 @@ type MenuLink = { label: string; href: string };
 const quickLinks: MenuLink[] = [
   { label: 'Home', href: '/' },
   { label: 'Shop All', href: '/shop' },
-  { label: 'Women', href: '/shop?audience=women' },
-  { label: 'Men', href: '/shop?audience=men' },
+  { label: 'Women', href: '/women' },
+  { label: 'Men', href: '/men' },
+  { label: 'Accessories', href: '/accessories' },
   { label: 'New Arrivals', href: '/shop?collection=new-arrivals' },
   { label: 'Best Sellers', href: '/shop?collection=best-sellers' },
 ];
