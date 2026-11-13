@@ -566,7 +566,7 @@ export default function HeaderSearch() {
             window.requestAnimationFrame(() => inputRef.current?.focus());
           }
         }}
-        className="tap-feedback flex h-10 w-10 items-center justify-center text-ink-muted hover:text-maroon sm:h-11 sm:w-11"
+        className="tap-feedback flex h-11 w-11 items-center justify-center text-ink-muted hover:text-maroon"
         aria-label="Toggle search"
         aria-expanded={isOpen}
       >
@@ -648,7 +648,7 @@ export default function HeaderSearch() {
                       setQuery('');
                       setHighlightedIndex(-1);
                     }}
-                    className="tap-feedback flex h-6 w-6 shrink-0 items-center justify-center text-lg leading-none text-ink-muted hover:text-maroon"
+                    className="tap-feedback flex h-11 w-11 shrink-0 items-center justify-center text-lg leading-none text-ink-muted hover:text-maroon"
                     aria-label="Clear search"
                   >
                     x

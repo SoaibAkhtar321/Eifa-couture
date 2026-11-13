@@ -53,7 +53,7 @@ export default function BannerPreview({ title, subtitle, imageUrl, mobileImageUr
         {activeImage ? (
           <Image src={activeImage} alt={title || 'Banner preview'} fill sizes="100vw" className="object-cover" />
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-ivory/40">
+          <div className="flex h-full items-center justify-center text-xs text-ivory/80">
             Upload an image to preview
           </div>
         )}

@@ -137,7 +137,7 @@ export default function CartDrawer() {
 
               <button
                 onClick={closeCart}
-                className="tap-feedback -mr-2 flex h-10 w-10 items-center justify-center text-ink-muted hover:text-charcoal"
+                className="tap-feedback -mr-2 flex h-11 w-11 items-center justify-center text-ink-muted hover:text-charcoal"
                 aria-label="Close shopping bag"
                 type="button"
               >
@@ -323,21 +323,21 @@ export default function CartDrawer() {
                                 <div className="flex items-center border border-beige">
                                   <button
                                     onClick={handleDecreaseQuantity}
-                                    className="tap-feedback flex h-9 w-9 items-center justify-center text-ink-muted hover:bg-cream hover:text-charcoal"
+                                    className="tap-feedback flex h-11 w-11 items-center justify-center text-ink-muted hover:bg-cream hover:text-charcoal"
                                     aria-label={`Decrease quantity of ${item.product.name}`}
                                     type="button"
                                   >
                                     −
                                   </button>
 
-                                  <span className="flex h-9 w-10 items-center justify-center border-x border-beige font-body text-xs text-charcoal">
+                                  <span className="flex h-11 w-10 items-center justify-center border-x border-beige font-body text-xs text-charcoal">
                                     {item.quantity}
                                   </span>
 
                                   <button
                                     onClick={handleIncreaseQuantity}
                                     disabled={isAtStockLimit}
-                                    className="tap-feedback flex h-9 w-9 items-center justify-center text-ink-muted hover:bg-cream hover:text-charcoal disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
+                                    className="tap-feedback flex h-11 w-11 items-center justify-center text-ink-muted hover:bg-cream hover:text-charcoal disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:bg-transparent"
                                     aria-label={
                                       isAtStockLimit
                                         ? `Maximum available stock reached for ${item.product.name}`

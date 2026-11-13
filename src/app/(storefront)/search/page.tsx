@@ -689,7 +689,7 @@ export default function SearchPage() {
                 <h4 className="font-heading text-xl text-charcoal">Sort &amp; Filter</h4>
                 <button
                   onClick={() => setIsFilterSheetOpen(false)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full border border-beige text-ink-muted hover:text-maroon"
+                  className="flex h-11 w-11 items-center justify-center rounded-full border border-beige text-ink-muted hover:text-maroon"
                   aria-label="Close"
                 >
                   ✕
