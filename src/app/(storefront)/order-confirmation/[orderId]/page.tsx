@@ -44,7 +44,7 @@ import {
   openRazorpayCheckout,
   verifyRazorpayPayment,
 } from '@/lib/payments';
-import { formatPrice } from '@/lib/utils';
+import { formatPrice, isSupabaseImageUrl } from '@/lib/utils';
 
 
 const DEFAULT_PRODUCT_IMAGE = '/images/categories/kurtas.png';
@@ -512,6 +512,7 @@ export default function OrderConfirmationPage() {
                             alt={item.name}
                             fill
                             sizes="80px"
+                            unoptimized={isSupabaseImageUrl(item.imageUrl)}
                             className="object-cover"
                           />
                         </div>

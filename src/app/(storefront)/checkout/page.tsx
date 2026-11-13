@@ -1,6 +1,6 @@
 'use client';
 
-import { getCategoryPlaceholder } from '@/lib/utils';
+import { getCategoryPlaceholder, isSupabaseImageUrl } from '@/lib/utils';
 import { FormEvent, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -681,6 +681,7 @@ export default function CheckoutPage() {
                               alt={item.product.name}
                               fill
                               sizes="80px"
+                              unoptimized={isSupabaseImageUrl(productImage)}
                               className="object-cover"
                             />
                           </div>

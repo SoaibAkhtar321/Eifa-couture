@@ -50,6 +50,11 @@ const nextConfig: NextConfig = {
   },
 
   images: {
+    // Local dev only: some home/ISP DNS setups (NAT64/DNS64) resolve public
+    // hosts such as Supabase Storage to 64:ff9b:: addresses, which Next
+    // 16's image optimizer rejects as "private ip". Production hosting
+    // (Vercel) is unaffected and keeps the protection on.
+    dangerouslyAllowLocalIP: isDev,
     remotePatterns: [
       {
         protocol: 'https',

@@ -154,7 +154,8 @@ export async function POST(request: NextRequest) {
       internalOrderId: order.id,
       orderNumber: order.order_number,
     });
-  } catch {
+  } catch (razorpayError) {
+    console.error('[create-order] Razorpay order creation failed:', razorpayError);
     return NextResponse.json(
       { error: { message: 'Could not initiate payment. Please try again.' } },
       { status: 502 }
@@ -164,15 +165,45 @@ export async function POST(request: NextRequest) {
   // Service-role write: payment_provider_ref has no client-writable
   // RLS policy by design (see migration 0015 notes), so only trusted
   // server code can set it.
-  const serviceClient = createServiceClient();
-  const { error: updateError } = await serviceClient
+  let serviceClient: ReturnType<typeof createServiceClient>;
+  try {
+    serviceClient = createServiceClient();
+  } catch (configError) {
+    console.error('[create-order] Service client misconfigured:', configError);
+    return NextResponse.json(
+      { error: { message: 'Payment service is not configured. Please contact support.' } },
+      { status: 500 }
+    );
+  }
+
+  const { data: linkedRows, error: updateError } = await serviceClient
     .from('orders')
     .update({ payment_provider_ref: razorpayOrder.razorpayOrderId })
-    .eq('id', order.id);
+    .eq('id', order.id)
+    .select('id');
 
-  if (updateError) {
+  // A zero-row update means the order id matched nothing; treat it as a
+  // failure too, otherwise the customer would pay for an unlinked order.
+  if (updateError || !linkedRows || linkedRows.length === 0) {
+    console.error('[create-order] Failed to link Razorpay order to order row:', {
+      orderId: order.id,
+      razorpayOrderId: razorpayOrder.razorpayOrderId,
+      code: updateError?.code,
+      message: updateError?.message,
+      details: updateError?.details,
+      hint: updateError?.hint,
+      rowsUpdated: linkedRows?.length ?? 0,
+    });
+
+    // Dev-only: surface the real cause in the UI so it is visible without
+    // digging through the terminal. Never exposed in production.
+    const devDetail =
+      process.env.NODE_ENV !== 'production' && updateError
+        ? ` [dev: ${updateError.code ?? 'no-code'} ${updateError.message}]`
+        : '';
+
     return NextResponse.json(
-      { error: { message: 'Could not link payment to order. Please try again.' } },
+      { error: { message: `Could not link payment to order. Please try again.${devDetail}` } },
       { status: 500 }
     );
   }
