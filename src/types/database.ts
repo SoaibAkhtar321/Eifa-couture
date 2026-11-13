@@ -35,6 +35,7 @@ export type ReturnStatus =
   | "received"
   | "refunded"
   | "exchanged";
+export type OrderCancelActor = "customer" | "admin" | "system";
 export type OrderHistoryActorType = "customer" | "admin" | "system" | "webhook";
 export type ShipmentStatus =
   | "label_created"
@@ -264,6 +265,12 @@ export interface DbOrder {
   tracking_url: string | null;
   shipped_at: string | null;
   delivered_at: string | null;
+  /** Latest expected delivery date (YYYY-MM-DD). Set at payment
+   *  settlement or by an admin. See migration 20261114140000. */
+  estimated_delivery_date: string | null;
+  cancelled_at: string | null;
+  cancelled_by: OrderCancelActor | null;
+  cancel_reason: string | null;
   invoice_url: string | null;
   placed_at: string;
   created_at: string;
@@ -334,6 +341,12 @@ export interface DbOrderReturn {
   is_exchange: boolean;
   exchange_variant_id: string | null;
   refund_amount: number | null;
+  order_id: string;
+  quantity: number;
+  details: string | null;
+  image_urls: string[];
+  admin_notes: string | null;
+  exchange_size: string | null;
   requested_at: string;
   resolved_at: string | null;
   updated_at: string;
@@ -380,6 +393,8 @@ export interface DbNotification {
   message: string;
   link_url: string | null;
   is_read: boolean;
+  order_id: string | null;
+  dedupe_key: string | null;
   created_at: string;
 }
 
@@ -430,6 +445,9 @@ export interface DbStoreSettings {
   shipping_flat_rate: number;
   shipping_free_threshold: number | null;
   shipping_processing_days: number;
+  delivery_days_min: number;
+  delivery_days_max: number;
+  return_window_days: number;
   tax_gst_percent: number;
   tax_prices_inclusive: boolean;
   updated_at: string;
