@@ -1,4 +1,5 @@
-import ShopProductCard from '@/components/shop/ShopProductCard';
+import Reveal from '@/components/motion/Reveal';
+import ProductCard from '@/components/product/ProductCard';
 import type { Product } from '@/types';
 
 interface RelatedProductsProps {
@@ -28,7 +29,9 @@ export default function RelatedProducts({ products }: RelatedProductsProps) {
 
         <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4">
           {products.map((product, index) => (
-            <ShopProductCard key={product.id} product={product} index={index} />
+            <Reveal key={product.id} delay={Math.min(index * 0.06, 0.3)}>
+              <ProductCard product={product} />
+            </Reveal>
           ))}
         </div>
       </div>

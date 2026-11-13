@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation';
 import ProductDetailsClient from '@/components/product/ProductDetailsClient';
 
 import { createClient } from '@/lib/supabase/server';
+import { SITE_URL } from '@/lib/constants';
 import { fetchProductBySlug, fetchRelatedProducts } from '@/lib/data/products';
 
 type ProductPageProps = {
@@ -43,6 +44,7 @@ export async function generateMetadata({
     title: product.seo.title,
     description: product.seo.description,
     keywords: product.seo.keywords,
+    alternates: { canonical: `${SITE_URL}/product/${product.slug}` },
     openGraph: {
       title: product.seo.title,
       description: product.seo.description,
@@ -76,8 +78,37 @@ export default async function ProductPage({ params }: ProductPageProps) {
     product.audience
   );
 
+  const inStock = Object.values(product.stock).some((count) => count > 0);
+  const availability = `https://schema.org/${inStock ? 'InStock' : 'OutOfStock'}`;
+  const url = `${SITE_URL}/product/${product.slug}`;
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: product.name,
+    description: product.shortDescription || product.description,
+    image: product.images,
+    sku: product.sku ?? undefined,
+    brand: { '@type': 'Brand', name: 'Eifa Couture' },
+    offers: product.hasPriceRange
+      ? {
+          '@type': 'AggregateOffer',
+          priceCurrency: 'INR',
+          lowPrice: product.minPrice,
+          highPrice: product.maxPrice,
+          offerCount: Math.max(product.variants.length, 1),
+          availability,
+          url,
+        }
+      : { '@type': 'Offer', priceCurrency: 'INR', price: product.minPrice, availability, url },
+  };
+
   return (
     <>
+      {/* Product structured data for search engines. `<` is escaped so the JSON can never close the tag. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
+      />
       <main
         id="product-main-content"
         className="w-full scroll-mt-[72px] sm:scroll-mt-[78px] lg:scroll-mt-[84px]"

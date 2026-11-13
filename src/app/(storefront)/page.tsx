@@ -6,9 +6,9 @@ import FeaturedCollection from '@/components/home/FeaturedCollection';
 import NewArrivalsSection from '@/components/home/NewArrivalsSection';
 import BestSellersSection from '@/components/home/BestSellersSection';
 import ShopByCategorySection from '@/components/home/ShopByCategorySection';
-import StackedCollections from '@/components/home/StackedCollections';
 import AudienceSection from '@/components/home/AudienceSection';
 import WhyChooseUsSection from '@/components/home/WhyChooseUsSection';
+import TrustStrip from '@/components/home/TrustStrip';
 import HeritageSection from '@/components/home/HeritageSection';
 import {
   FeaturedCollectionSkeleton,
@@ -39,7 +39,7 @@ export default async function HomePage() {
     [
       {
         key: 'featured_collection',
-        order: sectionMap.featured_collection?.sort_order ?? 1,
+        order: sectionMap.featured_collection?.sort_order ?? 2,
         node: (
           <Suspense fallback={<FeaturedCollectionSkeleton />}>
             <FeaturedCollection
@@ -53,7 +53,7 @@ export default async function HomePage() {
       },
       {
         key: 'new_arrivals',
-        order: sectionMap.new_arrivals?.sort_order ?? 2,
+        order: sectionMap.new_arrivals?.sort_order ?? 1,
         node: (
           <Suspense fallback={<NewArrivalsSkeleton />}>
             <NewArrivalsSection
@@ -95,31 +95,47 @@ export default async function HomePage() {
     .filter((section) => sectionMap[section.key]?.is_active ?? true)
     .sort((a, b) => a.order - b.order);
 
+  // Women / Men / Accessories sit right after the New Arrivals + Featured
+  // block (wherever the admin has put those); the remaining managed
+  // sections (Best Sellers, Shop by Category) follow in CMS order.
+  const audienceBlock = (
+    <>
+      <Suspense fallback={<NewArrivalsSkeleton />}>
+        <AudienceSection audience="women" />
+      </Suspense>
+      <Suspense fallback={<NewArrivalsSkeleton />}>
+        <AudienceSection audience="men" />
+      </Suspense>
+      <Suspense fallback={<NewArrivalsSkeleton />}>
+        <AudienceSection audience="accessories" />
+      </Suspense>
+    </>
+  );
+  const isTopBlock = (key: string) => key === 'new_arrivals' || key === 'featured_collection';
+  let lastTopIndex = -1;
+  managedSections.forEach((section, index) => {
+    if (isTopBlock(section.key)) lastTopIndex = index;
+  });
+
   return (
     <main>
-        <HeroSection banner={heroBanner} />
+      <HeroSection banner={heroBanner} />
+      <TrustStrip />
 
-        {/* Each data-driven section gets its own Suspense boundary so the
-            page streams progressively instead of waiting for every
-            Supabase query to resolve before showing anything below the
-            hero — independent sections no longer block each other. */}
-        {managedSections.map((section) => (
-          <div key={section.key}>{section.node}</div>
-        ))}
+      {/* Each data-driven section gets its own Suspense boundary so the
+          page streams progressively instead of waiting for every
+          Supabase query to resolve before showing anything below the
+          hero. */}
+      {lastTopIndex === -1 && audienceBlock}
+      {managedSections.map((section, index) => (
+        <div key={section.key}>
+          {section.node}
+          {index === lastTopIndex && audienceBlock}
+        </div>
+      ))}
 
-        <StackedCollections />
-        <Suspense fallback={<NewArrivalsSkeleton />}>
-          <AudienceSection audience="women" />
-        </Suspense>
-        <Suspense fallback={<NewArrivalsSkeleton />}>
-          <AudienceSection audience="men" />
-        </Suspense>
-        <Suspense fallback={<NewArrivalsSkeleton />}>
-          <AudienceSection audience="accessories" />
-        </Suspense>
-        <WhyChooseUsSection />
-        <HeritageSection />
+      <HeritageSection />
+      <WhyChooseUsSection />
     </main>
   );
 }
-

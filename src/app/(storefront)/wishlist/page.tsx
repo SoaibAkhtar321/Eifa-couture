@@ -1,18 +1,14 @@
 'use client';
 
-import { getCategoryPlaceholder } from '@/lib/utils';
 import { useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 
-import Image from 'next/image';
 import Link from 'next/link';
 
 
+import Reveal from '@/components/motion/Reveal';
+import ProductCard from '@/components/product/ProductCard';
 import { createClient } from '@/lib/supabase/client';
 import { fetchProductsByIds } from '@/lib/data/products';
-import { formatPrice, isSupabaseImageUrl, resolveVariantPrice } from '@/lib/utils';
-
-import { useCartStore } from '@/store/cart-store';
-import { useUIStore } from '@/store/ui-store';
 import { useWishlistStore } from '@/store/wishlist-store';
 
 import type { Product } from '@/types';
@@ -28,24 +24,11 @@ function useHasHydrated() {
   );
 }
 
-function getProductImage(product: Product) {
-  const image = product.images?.[0];
-
-  if (!image || image.includes('picsum.photos')) {
-    return getCategoryPlaceholder(product.category);
-  }
-
-  return image;
-}
-
 export default function WishlistPage() {
   const hasHydrated = useHasHydrated();
 
   const wishlistItems = useWishlistStore((state) => state.items);
-  const removeWishlistItem = useWishlistStore((state) => state.removeItem);
 
-  const addItem = useCartStore((state) => state.addItem);
-  const openCart = useUIStore((state) => state.openCart);
 
   const [fetchedProducts, setFetchedProducts] = useState<Product[]>([]);
 
@@ -77,17 +60,6 @@ export default function WishlistPage() {
         (a, b) => (wishlistOrder.get(a.id) ?? 0) - (wishlistOrder.get(b.id) ?? 0)
       );
   }, [fetchedProducts, hasHydrated, wishlistItems]);
-
-  const handleAddToCart = (product: Product) => {
-    const defaultSize = product.sizes[0];
-    const defaultColor = product.colors[0]?.name;
-
-    if (!defaultSize || !defaultColor) return;
-
-    const unitPrice = resolveVariantPrice(product, defaultSize, defaultColor);
-    addItem(product, defaultSize, defaultColor, 1, undefined, unitPrice);
-    openCart();
-  };
 
   return (
     <>
@@ -182,80 +154,11 @@ export default function WishlistPage() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:gap-x-5 sm:gap-y-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
-                  {wishlistProducts.map((product, index) => {
-                    const productImage = getProductImage(product);
-
-                    return (
-                      <article key={product.id} className="group">
-                        <div className="relative overflow-hidden bg-cream">
-                          <Link
-                            href={`/product/${product.slug}`}
-                            aria-label={`View ${product.name}`}
-                            className="block"
-                          >
-                            <div className="relative aspect-[3/4] overflow-hidden">
-                              <Image
-                                src={productImage}
-                                alt={product.name}
-                                fill
-                                priority={index < 2}
-                                unoptimized={isSupabaseImageUrl(productImage)}
-                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
-                                className="object-cover transition-transform duration-700 group-hover:scale-105"
-                              />
-                            </div>
-                          </Link>
-
-                          <button
-                            type="button"
-                            onClick={() => removeWishlistItem(product.id)}
-                            className="tap-feedback absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-ivory/95 text-sm text-maroon shadow-sm hover:bg-maroon hover:text-white sm:right-3 sm:top-3 sm:h-9 sm:w-9"
-                            aria-label={`Remove ${product.name} from wishlist`}
-                          >
-                            ♥
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleAddToCart(product)}
-                            className="tap-feedback absolute inset-x-2 bottom-2 bg-charcoal px-3 py-2.5 text-[9px] font-medium uppercase tracking-[0.16em] text-white hover:bg-maroon sm:inset-x-4 sm:bottom-4 sm:px-4 sm:py-3 sm:text-[11px] sm:tracking-[0.2em]"
-                          >
-                            Add To Bag
-                          </button>
-                        </div>
-
-                        <div className="pt-2 sm:pt-4">
-                          <p className="mb-0.5 text-[9px] font-medium uppercase tracking-[0.18em] text-gold-dark sm:mb-1 sm:text-[10px] sm:tracking-[0.24em]">
-                            {product.fabric}
-                          </p>
-
-                          <Link href={`/product/${product.slug}`}>
-                            <h3 className="product-card-title line-clamp-2 font-heading text-charcoal transition-colors duration-300 hover:text-maroon">
-                              {product.name}
-                            </h3>
-                          </Link>
-
-                          <p className="mt-1 line-clamp-2 hidden text-sm leading-6 text-ink-muted sm:mt-2 sm:block">
-                            {product.shortDescription}
-                          </p>
-
-                          <div className="mt-1.5 flex flex-wrap items-center gap-2 sm:mt-3 sm:gap-3">
-                            <span className="text-xs font-medium text-charcoal sm:text-sm">
-                              {product.hasPriceRange
-                                ? `From ${formatPrice(product.minPrice)}`
-                                : formatPrice(product.minPrice)}
-                            </span>
-
-                            {product.compareAtPrice && (
-                              <span className="text-[11px] text-ink-muted line-through sm:text-xs">
-                                {formatPrice(product.compareAtPrice)}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
+                  {wishlistProducts.map((product, index) => (
+                    <Reveal key={product.id} delay={Math.min(index * 0.06, 0.3)}>
+                      <ProductCard product={product} priority={index < 2} />
+                    </Reveal>
+                  ))}
                 </div>
               </>
             )}

@@ -1,35 +1,27 @@
 'use client';
 
-import { getImageProps } from 'next/image';
+import Image from 'next/image';
 import Link from 'next/link';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion, useScroll, useSpring, useTransform } from 'framer-motion';
 
 import type { DbBanner } from '@/types/database';
 
-/** The banner fields the hero reads (managed in Admin → Banners). */
-export type HeroBanner = Pick<
-  DbBanner,
-  | 'title'
-  | 'subtitle'
-  | 'image_url'
-  | 'mobile_image_url'
-  | 'video_url'
-  | 'link_url'
-  | 'cta_label'
-  | 'secondary_cta_label'
-  | 'secondary_link_url'
->;
+/** Banner fields the hero reads (text and links managed in Admin → Banners). */
+export type HeroBanner = Pick<DbBanner, 'title' | 'subtitle' | 'link_url' | 'cta_label'>;
 
-// Safe defaults, used whenever there is no active banner or a field is empty.
-const DEFAULTS = {
-  headline: ['Lucknow’s heritage,', 'woven in silk.'],
-  tagline:
-    'Hand-embroidered Chikankari sarees, kurtas, dupattas and silk accessories — made by our family atelier’s master karigars since 1998.',
-  image: '/images/hero/hero-1.png',
-  primary: { label: 'Shop New Arrivals', href: '/shop?collection=new-arrivals' },
-  secondary: { label: 'Explore Collections', href: '/shop' },
-};
+const AUDIENCE_TILES = [
+  { href: '/shop?audience=women', label: 'For Women', sub: 'Sarees & suits', image: '/images/collections/women.png' },
+  { href: '/shop?audience=men', label: 'For Men', sub: 'Kurtas', image: '/images/collections/men.png' },
+  { href: '/shop?audience=accessories', label: 'Accessories', sub: 'Bags & dupattas', image: '/images/categories/dupattas.png' },
+] as const;
+
+const LOOKS = [
+  { src: '/images/hero/hero-1.png', alt: 'Model in a white hand-embroidered Chikankari kurta' },
+  { src: '/images/hero/hero-2.png', alt: 'Model in an ivory and gold Chikankari anarkali' },
+  { src: '/images/collections/women.png', alt: 'Model in a maroon silk Chikankari anarkali' },
+  { src: '/images/collections/men.png', alt: 'Model in an ivory Chikankari kurta for men' },
+];
 
 const STATS = [
   { value: '1998', label: 'Family atelier' },
@@ -47,66 +39,31 @@ const MARQUEE = [
   'Made by master karigars',
 ];
 
+const ROTATE_MS = 4500;
 const EASE = [0.22, 1, 0.36, 1] as const;
 
-function CtaLink({ href, className, children }: { href: string; className: string; children: React.ReactNode }) {
-  if (/^https?:\/\//i.test(href)) {
-    return (
-      <a href={href} className={className} rel="noopener noreferrer">
-        {children}
-      </a>
-    );
-  }
-  return (
-    <Link href={href} className={className}>
-      {children}
-    </Link>
-  );
-}
-
 export default function HeroSection({ banner = null }: { banner?: HeroBanner | null }) {
+  const [look, setLook] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
   const reduce = useReducedMotion();
-  const [videoReady, setVideoReady] = useState(false);
 
-  // "Line one | line two" — text after "|" gets the gold italic treatment.
-  const headline = banner?.title?.trim()
-    ? banner.title.split('|').map((line) => line.trim()).filter(Boolean).slice(0, 2)
-    : DEFAULTS.headline;
-  const tagline = banner?.subtitle?.trim() || DEFAULTS.tagline;
-  const primary = {
-    label: banner?.cta_label?.trim() || DEFAULTS.primary.label,
-    href: banner?.link_url?.trim() || DEFAULTS.primary.href,
-  };
-  const secondary = {
-    label: banner?.secondary_cta_label?.trim() || DEFAULTS.secondary.label,
-    href: banner?.secondary_link_url?.trim() || DEFAULTS.secondary.href,
-  };
-  const desktopSrc = banner?.image_url || DEFAULTS.image;
-  const mobileSrc = banner?.mobile_image_url || desktopSrc;
-  const videoSrc = banner?.video_url || null;
-
-  // Art-directed background: a portrait image on phones, landscape from 768px.
-  const bgProps = (src: string) =>
-    getImageProps({
-      src,
-      alt: '',
-      fill: true,
-      priority: true,
-      sizes: '100vw',
-      quality: 75,
-      className: 'object-cover object-[50%_20%]',
-    }).props;
-  const desktopBg = bgProps(desktopSrc);
-  const mobileBg = bgProps(mobileSrc);
+  useEffect(() => {
+    if (reduce) return;
+    const timer = window.setInterval(() => setLook((i) => (i + 1) % LOOKS.length), ROTATE_MS);
+    return () => window.clearInterval(timer);
+  }, [reduce]);
 
   // Scroll-linked motion: progress 0 → 1 while the hero scrolls out of view.
   const { scrollYProgress } = useScroll({ target: sectionRef, offset: ['start start', 'end start'] });
   const progress = useSpring(scrollYProgress, { stiffness: 90, damping: 24, mass: 0.4 });
-  const bgY = useTransform(progress, [0, 1], ['0%', '8%']);
-  const bgScale = useTransform(progress, [0, 1], [1.08, 1.2]);
+
+  const imageY = useTransform(progress, [0, 1], ['0%', '12%']);
+  const imageScale = useTransform(progress, [0, 1], [1, 1.12]);
+  const frameY = useTransform(progress, [0, 1], [0, -40]);
+  const insetY = useTransform(progress, [0, 1], [0, -90]);
   const textY = useTransform(progress, [0, 1], [0, -70]);
   const textOpacity = useTransform(progress, [0, 0.7], [1, 0]);
+  const glowY = useTransform(progress, [0, 1], [0, 120]);
   const cueOpacity = useTransform(progress, [0, 0.12], [1, 0]);
 
   const off = !!reduce;
@@ -123,50 +80,97 @@ export default function HeroSection({ banner = null }: { banner?: HeroBanner | n
     <section
       ref={sectionRef}
       aria-label="Eifa Couture — Lucknow Chikankari & silk"
-      className="surface-dark relative isolate flex min-h-[calc(100svh-5rem)] flex-col overflow-hidden"
+      className="surface-dark relative overflow-hidden"
     >
-      {/* Background image (+ optional video) with parallax */}
+      {/* Decorative gold glow that drifts as you scroll */}
       <motion.div
         aria-hidden="true"
-        style={off ? { scale: 1.08 } : { y: bgY, scale: bgScale }}
-        className="absolute inset-0 -z-10 will-change-transform"
-      >
-        <picture>
-          <source media="(min-width: 768px)" srcSet={desktopBg.srcSet} sizes={desktopBg.sizes} />
-          <img {...mobileBg} alt="" />
-        </picture>
-        {videoSrc && reduce === false && (
-          <video
-            src={videoSrc}
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="metadata"
-            onCanPlay={() => setVideoReady(true)}
-            className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-1000 ${
-              videoReady ? 'opacity-100' : 'opacity-0'
-            }`}
-          />
-        )}
-      </motion.div>
-
-      {/* Dark overlay: keeps ivory text at AA contrast on any photo */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-espresso/70" />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 -z-10 bg-linear-to-t from-espresso via-espresso/30 to-espresso/40"
+        style={off ? undefined : { y: glowY }}
+        className="pointer-events-none absolute -right-40 top-10 h-[34rem] w-[34rem] rounded-full bg-gold/15 blur-3xl"
       />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-gold/60 to-transparent"
       />
 
-      <div className="luxury-container relative flex flex-1 items-center py-14 sm:py-20 lg:py-24">
-        <motion.div style={off ? undefined : { y: textY, opacity: textOpacity }} className="max-w-2xl">
+      <div className="luxury-container relative grid items-center gap-10 pb-14 pt-8 lg:min-h-[calc(100svh-5rem)] lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:pb-20 lg:pt-14">
+        {/* Visual: rotating looks with parallax + karigar inset */}
+        <motion.div style={off ? undefined : { y: frameY }} className="relative lg:order-2">
+          <motion.div
+            {...(off
+              ? {}
+              : {
+                  initial: { opacity: 0, scale: 0.96 },
+                  animate: { opacity: 1, scale: 1 },
+                  transition: { duration: 1.1, ease: EASE },
+                })}
+            className="relative aspect-[4/5] overflow-hidden rounded-[1.75rem] border border-gold/40 bg-maroon-dark shadow-[0_30px_80px_rgba(0,0,0,0.45)] sm:aspect-[5/4] lg:aspect-[5/5.2]"
+          >
+            <motion.div
+              style={off ? undefined : { y: imageY, scale: imageScale }}
+              className="absolute inset-0 will-change-transform"
+            >
+              {LOOKS.map((item, i) => (
+                <Image
+                  key={item.src}
+                  src={item.src}
+                  alt={item.alt}
+                  fill
+                  priority={i === 0}
+                  sizes="(max-width: 1024px) 92vw, 48vw"
+                  className={`object-cover object-[50%_15%] transition-[opacity,transform] duration-[1400ms] ease-out ${
+                    look === i ? 'scale-100 opacity-100' : 'scale-105 opacity-0'
+                  }`}
+                />
+              ))}
+            </motion.div>
+
+            {/* Soft vignette so the frame feels rich, not flat */}
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-0 bg-linear-to-t from-maroon-dark/50 via-transparent to-transparent"
+            />
+
+            <div className="absolute right-3 top-3 flex gap-1.5 rounded-full bg-espresso/70 px-2.5 py-1.5 backdrop-blur">
+              {LOOKS.map((item, i) => (
+                <button
+                  key={item.src}
+                  type="button"
+                  aria-label={`Show look ${i + 1}`}
+                  onClick={() => setLook(i)}
+                  className={`h-1.5 rounded-full transition-all duration-500 ${
+                    look === i ? 'w-5 bg-gold' : 'w-1.5 bg-ivory/50'
+                  }`}
+                />
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Karigar inset — the craft behind the brand */}
+          <motion.figure
+            style={off ? undefined : { y: insetY }}
+            className="absolute -bottom-6 left-3 w-[46%] overflow-hidden rounded-2xl border-4 border-espresso bg-ivory shadow-[0_18px_40px_rgba(0,0,0,0.5)] sm:w-[34%] lg:-bottom-8 lg:-left-6 lg:w-[38%]"
+          >
+            <div className="relative aspect-[4/3]">
+              <Image
+                src="/images/about/heritage.png"
+                alt="A karigar hand-embroidering Chikankari on a wooden hoop"
+                fill
+                sizes="(max-width: 1024px) 45vw, 20vw"
+                className="object-cover"
+              />
+            </div>
+            <figcaption className="px-3 py-2 text-[10px] uppercase tracking-[0.18em] text-maroon sm:text-[11px]">
+              Every stitch by hand
+            </figcaption>
+          </motion.figure>
+        </motion.div>
+
+        {/* Story */}
+        <motion.div style={off ? undefined : { y: textY, opacity: textOpacity }} className="pt-6 lg:order-1 lg:pt-0">
           <motion.p
             {...fade(0.1)}
-            className="flex items-center gap-3 text-[11px] uppercase tracking-[0.3em] text-gold-light sm:text-xs"
+            className="flex items-center gap-3 text-[10px] uppercase tracking-[0.32em] text-gold-light sm:text-xs"
           >
             <span className="block h-px w-10 bg-gold" aria-hidden="true" />
             The Chikankari House of Lucknow
@@ -174,40 +178,72 @@ export default function HeroSection({ banner = null }: { banner?: HeroBanner | n
 
           <motion.h1
             {...fade(0.25)}
-            className="mt-4 font-heading text-[2.35rem] leading-[1.05] text-ivory sm:text-6xl xl:text-7xl"
+            className="mt-4 font-heading text-[2.35rem] leading-[1.05] text-ivory sm:text-6xl xl:text-[4rem]"
           >
-            {headline[0]}
-            {headline[1] && <span className="text-gradient-gold block italic">{headline[1]}</span>}
+            {banner?.title ? (
+              banner.title
+            ) : (
+              <>
+                Lucknow’s heritage,
+                <span className="text-gradient-gold block italic">woven in silk.</span>
+              </>
+            )}
           </motion.h1>
 
-          <motion.p {...fade(0.4)} className="mt-5 max-w-xl text-[15px] leading-7 text-ivory/90 sm:text-lg sm:leading-8">
-            {tagline}
+          <motion.p
+            {...fade(0.4)}
+            className="mt-5 max-w-xl text-[15px] leading-7 text-ivory/85 sm:text-base sm:leading-8"
+          >
+            {banner?.subtitle ||
+              'For over two decades our family atelier has worked with Lucknow’s master karigars — hand-embroidering Chikankari on pure silk, chanderi and fine cotton. Sarees, kurtas, dupattas and silk accessories, made the slow, honest way.'}
           </motion.p>
 
-          <motion.div {...fade(0.55)} className="mt-8 flex flex-wrap gap-3">
-            <CtaLink
-              href={primary.href}
-              className="inline-flex min-h-12 items-center rounded-full bg-gold px-7 text-[12px] font-semibold uppercase tracking-[0.16em] text-espresso shadow-[0_10px_30px_rgba(200,165,72,0.35)] transition-colors hover:bg-gold-light"
+          <motion.div {...fade(0.55)} className="mt-7">
+            <Link
+              href={banner?.link_url || '/shop?collection=new-arrivals'}
+              className="inline-flex min-h-12 items-center rounded-full bg-gold px-7 text-[11px] font-semibold uppercase tracking-[0.18em] text-espresso shadow-[0_10px_30px_rgba(200,165,72,0.35)] transition-colors hover:bg-gold-light"
             >
-              {primary.label}
-            </CtaLink>
-            <CtaLink
-              href={secondary.href}
-              className="inline-flex min-h-12 items-center rounded-full border border-gold/70 px-7 text-[12px] font-medium uppercase tracking-[0.16em] text-ivory transition-colors hover:bg-gold hover:text-espresso"
-            >
-              {secondary.label}
-            </CtaLink>
+              {banner?.cta_label || 'Shop New Arrivals'}
+            </Link>
+
+            <p className="mt-6 text-[10px] uppercase tracking-[0.26em] text-gold-light sm:text-[11px]">Shop by</p>
+            <ul className="mt-3 grid max-w-xl grid-cols-3 gap-2 sm:gap-3">
+              {AUDIENCE_TILES.map((tile) => (
+                <li key={tile.href}>
+                  <Link
+                    href={tile.href}
+                    className="group flex min-h-14 flex-col items-stretch overflow-hidden rounded-xl border border-gold/40 bg-espresso/60 backdrop-blur transition-colors hover:border-gold hover:bg-espresso sm:flex-row sm:items-center"
+                  >
+                    <span className="relative block h-14 w-full shrink-0 overflow-hidden sm:h-14 sm:w-14">
+                      <Image
+                        src={tile.image}
+                        alt=""
+                        fill
+                        sizes="64px"
+                        className="object-cover object-[50%_20%] transition-transform duration-500 group-hover:scale-110"
+                      />
+                    </span>
+                    <span className="px-2 py-2 sm:px-3">
+                      <span className="block text-[11px] font-semibold uppercase tracking-[0.12em] text-ivory sm:text-xs">
+                        {tile.label}
+                      </span>
+                      <span className="mt-0.5 block text-[10px] leading-tight text-ivory/80 sm:text-[11px]">{tile.sub}</span>
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </motion.div>
 
           <motion.dl
             {...fade(0.7)}
-            className="mt-10 grid max-w-xl grid-cols-4 gap-2 border-t border-gold/30 pt-6 sm:gap-6"
+            className="mt-9 grid max-w-xl grid-cols-4 gap-2 border-t border-gold/30 pt-6 sm:gap-6"
           >
             {STATS.map((stat) => (
               <div key={stat.label}>
                 <dt className="sr-only">{stat.label}</dt>
                 <dd className="whitespace-nowrap font-heading text-lg text-gold-light sm:text-3xl">{stat.value}</dd>
-                <dd className="mt-1 text-[10px] uppercase leading-tight tracking-[0.12em] text-ivory/85 sm:text-[11px]">
+                <dd className="mt-1 text-[9px] uppercase leading-tight tracking-[0.12em] text-ivory/80 sm:text-[11px]">
                   {stat.label}
                 </dd>
               </div>

@@ -88,3 +88,29 @@ export const RETURN_POLICY = {
   ],
   message: "We want you to love your purchase. If something isn't right, we're here to help.",
 } as const;
+// ── Size chart (approximate body measurements, inches) ──
+// Shown in the product page "Size guide" modal. Edit here if the atelier's
+// fit differs; only sizes the product actually offers are displayed.
+export const SIZE_CHART = {
+  women: {
+    measureLabel: "Bust",
+    rows: [
+      { size: "XS", measure: "32", waist: "26" },
+      { size: "S", measure: "34", waist: "28" },
+      { size: "M", measure: "36", waist: "30" },
+      { size: "L", measure: "38", waist: "32" },
+      { size: "XL", measure: "40", waist: "34" },
+      { size: "XXL", measure: "42", waist: "36" },
+    ],
+  },
+  men: {
+    measureLabel: "Chest",
+    rows: [
+      { size: "S", measure: "38", waist: "32" },
+      { size: "M", measure: "40", waist: "34" },
+      { size: "L", measure: "42", waist: "36" },
+      { size: "XL", measure: "44", waist: "38" },
+      { size: "XXL", measure: "46", waist: "40" },
+    ],
+  },
+} as const;

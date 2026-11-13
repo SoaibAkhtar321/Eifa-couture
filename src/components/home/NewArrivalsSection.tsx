@@ -21,7 +21,6 @@ export default async function NewArrivalsSection({ limit = 8, title, subtitle }:
       products={products}
       viewAllHref="/shop?collection=new-arrivals"
       viewAllLabel="View all"
-      badge="new"
       tone="cream"
     />
   );

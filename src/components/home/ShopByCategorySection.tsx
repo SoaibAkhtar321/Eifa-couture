@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+import SectionHeader from '@/components/home/SectionHeader';
+import Reveal from '@/components/motion/Reveal';
+import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
 import ProductImage from '@/components/ui/ProductImage';
 import { createClient } from '@/lib/supabase/server';
 import { fetchActiveCategories } from '@/lib/data/categories';
@@ -32,34 +35,22 @@ export default async function ShopByCategorySection({
       aria-labelledby="categories-heading"
     >
       <div className="luxury-container">
-        <div className="mb-8 flex flex-col gap-4 text-center md:mb-12 md:items-center">
-          <div>
-            <span className="mb-3 block font-body text-[10px] uppercase tracking-[0.28em] text-gold md:text-xs">
-              Explore
-            </span>
+        <SectionHeader
+          id="categories-heading"
+          eyebrow="Explore"
+          title={title || 'Shop by Category'}
+          subtitle={
+            subtitle ||
+            'Move directly into the collection you are looking for — from handcrafted Chikankari classics to festive accessories.'
+          }
+        />
 
-            <h2
-              id="categories-heading"
-              className="font-heading text-3xl leading-tight text-charcoal md:text-5xl lg:text-6xl"
-            >
-              {title || 'Shop by Category'}
-            </h2>
-
-            <div className="divider-gold mx-auto mt-4 w-20 md:mt-5 md:w-24" />
-          </div>
-
-          <p className="mx-auto max-w-xl text-sm leading-7 text-ink-soft md:text-base md:leading-8">
-            {subtitle ||
-              'Move directly into the collection you are looking for — from handcrafted Chikankari classics to festive accessories.'}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+        <StaggerGroup className="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
           {categories.map((category, index) => (
-            <article key={category.id} className="group">
+            <StaggerItem key={category.id} className="group">
               <Link
                 href={getCategoryHref(category.slug)}
-                className="relative block aspect-[4/5] overflow-hidden bg-charcoal"
+                className="relative block aspect-[4/5] overflow-hidden rounded-2xl bg-charcoal ring-1 ring-gold-deep/30"
                 aria-label={`Explore ${category.name}`}
               >
                 <ProductImage
@@ -74,7 +65,7 @@ export default async function ShopByCategorySection({
                 <div className="absolute inset-0 bg-gradient-to-t from-charcoal/80 via-charcoal/25 to-transparent" />
 
                 <div className="absolute left-3 top-3 rounded-full border border-white/20 bg-white/15 px-3 py-1 backdrop-blur-sm md:left-5 md:top-5">
-                  <span className="font-body text-[9px] font-medium uppercase tracking-[0.2em] text-white/85 md:text-[10px]">
+                  <span className="font-body text-[9px] font-medium uppercase tracking-[0.2em] text-white md:text-[10px]">
                     {String(index + 1).padStart(2, '0')}
                   </span>
                 </div>
@@ -84,11 +75,11 @@ export default async function ShopByCategorySection({
                     {category.name}
                   </h3>
 
-                  <p className="mt-2 line-clamp-2 max-w-xs font-body text-xs leading-5 text-white/72 md:text-sm md:leading-relaxed">
+                  <p className="mt-2 line-clamp-2 max-w-xs font-body text-xs leading-5 text-white/90 md:text-sm md:leading-relaxed">
                     {category.description}
                   </p>
 
-                  <div className="mt-3 flex items-center gap-2 text-gold md:mt-4">
+                  <div className="mt-3 flex items-center gap-2 text-gold-light md:mt-4">
                     <span className="font-body text-[10px] uppercase tracking-[0.2em] md:text-xs">
                       Explore
                     </span>
@@ -110,15 +101,15 @@ export default async function ShopByCategorySection({
                   </div>
                 </div>
               </Link>
-            </article>
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerGroup>
 
-        <div className="mt-8 flex justify-center md:mt-10">
+        <Reveal className="mt-10 flex justify-center md:mt-12">
           <Link href="/shop" className="btn-luxury btn-luxury-secondary">
             View All Collections
           </Link>
-        </div>
+        </Reveal>
       </div>
     </section>
   );

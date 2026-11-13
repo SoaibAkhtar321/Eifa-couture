@@ -3,7 +3,8 @@
 import { useLayoutEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import ShopProductCard from '@/components/shop/ShopProductCard';
+import Reveal from '@/components/motion/Reveal';
+import ProductCard from '@/components/product/ProductCard';
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
 import {
   PRICE_FILTER_OPTIONS,
@@ -621,11 +622,9 @@ export default function ShopPageClient({ categories, products }: ShopPageClientP
           <>
             <div className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 lg:gap-x-6 xl:grid-cols-4">
               {visibleProducts.map((product, index) => (
-                <ShopProductCard
-                  key={product.id}
-                  product={product}
-                  index={index}
-                />
+                <Reveal key={product.id} delay={Math.min((index % 8) * 0.06, 0.3)}>
+                  <ProductCard product={product} priority={index < 2} saveShopScroll />
+                </Reveal>
               ))}
             </div>
 

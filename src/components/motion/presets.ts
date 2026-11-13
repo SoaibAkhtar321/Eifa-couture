@@ -22,3 +22,7 @@ export const VIEWPORT = { once: true, margin: '-70px' } as const;
 
 /** Delay between siblings in a staggered group (seconds). */
 export const STAGGER = 0.08;
+
+/** Shared hover-lift for cards: rises slightly, shadow deepens. No movement for reduced motion. */
+export const HOVER_LIFT =
+  'transition-[transform,box-shadow] duration-500 ease-out hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(30,10,16,0.18)] motion-reduce:transition-none motion-reduce:hover:translate-y-0';

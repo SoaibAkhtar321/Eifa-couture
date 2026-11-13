@@ -21,7 +21,6 @@ export default async function BestSellersSection({ limit = 8, title, subtitle }:
       products={products}
       viewAllHref="/shop?collection=best-sellers"
       viewAllLabel="View all"
-      badge="bestseller"
     />
   );
 }

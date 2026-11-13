@@ -29,6 +29,7 @@ export default function ProductImageGallery({
   const selectedImage =
     selection.gallery === images && selection.image ? selection.image : images[0];
   const setSelectedImage = (image: string) => setSelection({ gallery: images, image });
+  const [mobileIndex, setMobileIndex] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
   useBodyScrollLock(isZoomOpen);
 
@@ -63,13 +64,63 @@ export default function ProductImageGallery({
   }, [isZoomOpen]);
 
   return (
-    <div className="w-full min-h-[450px] sm:min-h-[550px]">
+    <div className="w-full">
+      {/* Phones and tablets: swipeable carousel (scroll-snap), tap to zoom */}
+      <div className="lg:hidden" key={images.join('|')}>
+        <div
+          className="-mx-6 flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] sm:mx-0 [&::-webkit-scrollbar]:hidden"
+          onScroll={(event) => {
+            const el = event.currentTarget;
+            setMobileIndex(Math.round(el.scrollLeft / el.clientWidth));
+          }}
+          role="group"
+          aria-roledescription="carousel"
+          aria-label={`${product.name} photos`}
+        >
+          {images.map((image, index) => (
+            <button
+              key={image}
+              type="button"
+              onClick={() => {
+                setSelectedImage(image);
+                openZoom();
+              }}
+              aria-label={`Zoom photo ${index + 1} of ${images.length}`}
+              className="relative aspect-[4/5] w-full shrink-0 snap-center bg-cream sm:aspect-[5/4]"
+            >
+              <ProductImage
+                src={image}
+                alt={index === 0 ? product.name : `${product.name} photo ${index + 1}`}
+                fill
+                sizes="100vw"
+                className="object-cover"
+              />
+            </button>
+          ))}
+        </div>
+        {images.length > 1 && (
+          <p className="mt-3 flex items-center justify-center gap-2" aria-live="polite">
+            <span className="sr-only">{`Photo ${mobileIndex + 1} of ${images.length}`}</span>
+            {images.map((image, index) => (
+              <span
+                key={image}
+                aria-hidden="true"
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  index === mobileIndex ? 'w-6 bg-maroon' : 'w-1.5 bg-ink-muted/50'
+                }`}
+              />
+            ))}
+          </p>
+        )}
+      </div>
+
+      {/* Desktop: thumbnails + large zoomable image */}
       <motion.div
         initial={{ opacity: 0, y: 28 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.7, ease: [0.25, 0.46, 0.45, 0.94] }}
         // Added explicit height constraints to prevent DOM collapse on mobile viewports
-        className="grid gap-4 lg:grid-cols-[96px_1fr] h-full"
+        className="hidden h-full gap-4 lg:grid lg:grid-cols-[96px_1fr]"
       >
         <div
           className="order-2 flex gap-3 overflow-x-auto pb-4 lg:order-1 lg:flex-col lg:overflow-visible lg:pb-0 touch-pan-x max-w-full"
@@ -117,7 +168,7 @@ export default function ProductImageGallery({
           <div className="absolute inset-0 bg-gradient-to-t from-charcoal/20 via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
 
           <span className="absolute bottom-5 right-5 bg-ivory/95 px-4 py-2 text-[10px] font-medium uppercase tracking-[0.22em] text-charcoal shadow-sm pointer-events-none">
-            Click to Zoom
+            Click to zoom
           </span>
         </button>
       </motion.div>

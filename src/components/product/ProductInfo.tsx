@@ -5,6 +5,9 @@ import { usePathname, useRouter } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 
 import MobileStickyActionBar from '@/components/product/MobileStickyActionBar';
+import SizeChartModal from '@/components/product/SizeChartModal';
+import { useShippingConfig } from '@/hooks/useShippingConfig';
+import { SHIPPING_INFO } from '@/lib/constants';
 import { useAuth } from '@/hooks/useAuth';
 import { useMediaQuery, usePrefersReducedMotion } from '@/hooks/useMediaQuery';
 import {
@@ -75,34 +78,32 @@ function useHasHydrated() {
 type AccordionSection = {
   id: string;
   title: string;
-  content: string;
+  content: string[];
 };
 
 function ProductAccordion({ product }: { product: Product }) {
   const [openId, setOpenId] = useState<string | null>('description');
+  const { freeThreshold } = useShippingConfig();
 
-  // description and care both come straight off the Product type — no
-  // fallback needed, every product record has them.
-  const careCopy = product.care.join(' ');
+  const days = SHIPPING_INFO.standardDeliveryDays;
+  const fabricAndCare = [
+    product.fabric ? `Fabric: ${product.fabric}.` : '',
+    ...product.care,
+  ].filter(Boolean);
 
   const sections: AccordionSection[] = [
-    {
-      id: 'description',
-      title: 'Description',
-      content: product.description,
-    },
+    { id: 'description', title: 'Description', content: [product.description || product.shortDescription] },
+    { id: 'care', title: 'Fabric & Care', content: fabricAndCare },
     {
       id: 'shipping',
-      title: 'Shipping & Returns',
-      content:
-        'Ships within 3–5 business days across India, with express options available at checkout. International shipping is available to select countries. Returns are accepted within 7 days of delivery for unworn, unwashed items with tags intact — please see our full returns policy for details.',
+      title: 'Delivery & Returns',
+      content: [
+        `Delivered across India in about ${days.min}–${days.max} business days, with express delivery available at checkout.`,
+        ...(freeThreshold === null ? [] : [`Free shipping on orders above ${formatPrice(freeThreshold)}.`]),
+        'Returns are accepted within 7 days of delivery for unworn, unwashed pieces with tags intact.',
+      ],
     },
-    {
-      id: 'care',
-      title: 'Care Instructions',
-      content: careCopy,
-    },
-  ];
+  ].filter((section) => section.content.some((line) => line.trim().length > 0));
 
   const toggleSection = (id: string) => {
     setOpenId((current) => (current === id ? null : id));
@@ -118,13 +119,13 @@ function ProductAccordion({ product }: { product: Product }) {
               type="button"
               onClick={() => toggleSection(section.id)}
               aria-expanded={isOpen}
-              className="flex w-full items-center justify-between py-5 text-left transition-colors duration-300 hover:text-maroon"
+              className="flex min-h-11 w-full items-center justify-between py-5 text-left transition-colors duration-300 hover:text-maroon"
             >
               <span className="text-[11px] font-medium uppercase tracking-[0.22em] text-charcoal">
                 {section.title}
               </span>
               <span
-                className={`text-lg text-ink-muted transition-transform duration-300 ${
+                className={`text-lg text-ink-soft transition-transform duration-300 ${
                   isOpen ? 'rotate-45' : 'rotate-0'
                 }`}
               >
@@ -137,7 +138,11 @@ function ProductAccordion({ product }: { product: Product }) {
               }`}
             >
               <div className="overflow-hidden">
-                <p className="pb-5 text-sm leading-7 text-ink-muted">{section.content}</p>
+                <div className="space-y-2 pb-5 text-sm leading-7 text-ink-soft">
+                  {section.content.map((line, index) => (
+                    <p key={index}>{line}</p>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -182,6 +187,7 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
      handleAddToCart / handleBuyNow / handleToggleWishlist below rather
      than any logic of its own.
      ============================================ */
+  const [sizeChartOpen, setSizeChartOpen] = useState(false);
   const primaryCtaRef = useRef<HTMLDivElement>(null);
   const [isPrimaryCTAVisible, setIsPrimaryCTAVisible] = useState(true);
   const isMobileOrTablet = useMediaQuery('(max-width: 1023px)');
@@ -396,7 +402,7 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
       transition={{ duration: 0.7, delay: 0.12, ease: [0.25, 0.46, 0.45, 0.94] }}
       className="lg:sticky lg:top-32 lg:self-start"
     >
-      <p className="text-xs font-medium uppercase tracking-[0.28em] text-gold-dark">{product.fabric}</p>
+      <p className="text-xs font-medium uppercase tracking-[0.28em] text-gold-deep">{product.fabric}</p>
 
       <h1 className="mt-3 font-heading text-4xl leading-tight text-charcoal sm:text-5xl lg:text-6xl">
         {product.name}
@@ -411,7 +417,7 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
       <div className="mt-5 flex flex-wrap items-center gap-3">
         <span className="font-subheading text-3xl text-maroon">{priceLabel}</span>
         {!showFromPrice && product.compareAtPrice && (
-          <span className="text-base text-ink-muted line-through">{formatPrice(product.compareAtPrice)}</span>
+          <span className="text-base text-ink-soft line-through">{formatPrice(product.compareAtPrice)}</span>
         )}
         {!showFromPrice && discount > 0 && (
           <span className="bg-maroon px-2 py-1 text-[9px] font-medium uppercase tracking-[0.2em] text-white">
@@ -421,12 +427,12 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
       </div>
 
       {!showFromPrice && savings > 0 && (
-        <p className="mt-2 text-xs font-medium text-ink-muted">
+        <p className="mt-2 text-xs font-medium text-ink-soft">
           You save {formatPrice(savings)}
         </p>
       )}
 
-      <p className="mt-5 text-sm leading-7 text-ink-muted">{product.shortDescription}</p>
+      <p className="mt-5 text-sm leading-7 text-ink-soft">{product.shortDescription}</p>
 
       <div className="mt-8 border-y border-beige py-7">
         {product.productType !== 'simple' && (
@@ -434,9 +440,15 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
           <div>
             <div className="mb-3 flex items-center justify-between">
               <p className="text-[10px] font-medium uppercase tracking-[0.24em] text-ink-soft">Select Size</p>
-              <button type="button" className="text-[10px] uppercase tracking-wider text-ink-muted underline underline-offset-4 transition-colors duration-300 hover:text-maroon">
-                Size Guide
-              </button>
+              {product.audience !== 'accessories' && (
+                <button
+                  type="button"
+                  onClick={() => setSizeChartOpen(true)}
+                  className="min-h-11 text-[11px] uppercase tracking-wider text-ink-soft underline underline-offset-4 transition-colors duration-300 hover:text-maroon"
+                >
+                  Size guide
+                </button>
+              )}
             </div>
             <div className="flex flex-wrap gap-2">
               {product.sizes.map((size) => {
@@ -446,6 +458,7 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
                     key={size}
                     type="button"
                     onClick={() => handleSizeChange(size)}
+                    aria-pressed={selectedSize === size}
                     disabled={!sizeHasStock}
                     className={`min-h-[44px] min-w-[52px] border px-4 py-2 text-xs transition-all duration-300 ${
                       selectedSize === size ? 'border-maroon bg-maroon text-white' : 'border-beige bg-white text-charcoal hover:border-gold'
@@ -470,6 +483,8 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
                     key={color.name}
                     type="button"
                     onClick={() => handleColorChange(color.name)}
+                    aria-label={`Colour ${color.name}`}
+                    aria-pressed={selectedColor === color.name}
                     disabled={!colorHasStock}
                     className={`flex h-11 w-11 items-center justify-center rounded-full border transition-all duration-300 ${
                       selectedColor === color.name ? 'border-maroon' : 'border-beige hover:border-gold'
@@ -493,12 +508,12 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
               </p>
             )}
           </div>
-          <div className="flex h-12 w-32 items-center justify-between border border-beige bg-white">
-            <button type="button" onClick={() => setQuantity((c) => Math.max(1, c - 1))} disabled={quantity <= 1} className="h-full w-10 text-xl text-ink-soft transition-colors duration-300 hover:text-maroon disabled:opacity-30">
+          <div className="flex h-12 w-36 items-center justify-between border border-beige bg-white">
+            <button type="button" onClick={() => setQuantity((c) => Math.max(1, c - 1))} disabled={quantity <= 1} aria-label="Decrease quantity" className="h-full w-11 text-xl text-ink-soft transition-colors duration-300 hover:text-maroon disabled:opacity-30">
               −
             </button>
             <span className="text-sm font-medium text-charcoal">{quantity}</span>
-            <button type="button" onClick={() => setQuantity((c) => Math.min(maxQuantity, c + 1))} disabled={quantity >= maxQuantity || !hasStock} className="h-full w-10 text-xl text-ink-soft transition-colors duration-300 hover:text-maroon disabled:opacity-30">
+            <button type="button" onClick={() => setQuantity((c) => Math.min(maxQuantity, c + 1))} disabled={quantity >= maxQuantity || !hasStock} aria-label="Increase quantity" className="h-full w-11 text-xl text-ink-soft transition-colors duration-300 hover:text-maroon disabled:opacity-30">
               +
             </button>
           </div>
@@ -513,6 +528,8 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
           <button
             type="button"
             onClick={handleToggleWishlist}
+            aria-pressed={hasHydrated && isInWishlist}
+            aria-label={hasHydrated && isInWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
             className="flex h-[52px] w-[52px] shrink-0 items-center justify-center border border-beige bg-white text-charcoal transition-all duration-300 hover:border-maroon hover:text-maroon"
           >
             <svg
@@ -540,7 +557,29 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
         </button>
       </div>
 
+      <ul className="mt-6 grid grid-cols-3 gap-2 text-center">
+        {[
+          { title: 'Handcrafted', text: 'In Lucknow' },
+          { title: 'Secure payment', text: 'Razorpay' },
+          { title: 'Easy returns', text: 'Within 7 days' },
+        ].map((badge) => (
+          <li key={badge.title} className="rounded-lg border border-gold-deep/25 bg-white px-2 py-3">
+            <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-ink">{badge.title}</span>
+            <span className="mt-0.5 block text-[11px] text-ink-soft">{badge.text}</span>
+          </li>
+        ))}
+      </ul>
+
       <ProductAccordion product={product} />
+
+      {product.audience !== 'accessories' && (
+        <SizeChartModal
+          open={sizeChartOpen}
+          onClose={() => setSizeChartOpen(false)}
+          audience={product.audience === 'men' ? 'men' : 'women'}
+          sizes={product.sizes}
+        />
+      )}
 
       <AnimatePresence>
         {showStickyBar && (

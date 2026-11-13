@@ -39,12 +39,12 @@ export default function ProductDetailsClient({
   if (!product) return null;
 
   return (
-    <main className="bg-ivory w-full overflow-x-hidden">
+    <div className="bg-ivory w-full overflow-x-hidden">
       <section className="border-b border-beige bg-gradient-to-b from-cream/60 to-ivory">
         <div className="luxury-container py-4 sm:py-5">
           <nav
             aria-label="Breadcrumb"
-            className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-muted sm:text-[11px]"
+            className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-[0.22em] text-ink-soft sm:text-[11px]"
           >
             <Link href="/" className="transition-colors duration-300 hover:text-maroon">
               Home
@@ -77,6 +77,6 @@ export default function ProductDetailsClient({
 
       <ProductReviews product={product} />
       <RelatedProducts products={relatedProducts} />
-    </main>
+    </div>
   );
 }
