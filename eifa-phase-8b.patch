@@ -121,33 +121,6 @@ index 0000000..28457ee
 +
 +  return entries;
 +}
-diff --git a/src/components/admin/AdminSidebar.tsx b/src/components/admin/AdminSidebar.tsx
-index ea79d5a..1867b6e 100644
---- a/src/components/admin/AdminSidebar.tsx
-+++ b/src/components/admin/AdminSidebar.tsx
-@@ -67,11 +67,11 @@ export default function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onC
-               return (
-                 <div
-                   key={item.href}
--                  className="flex items-center justify-between px-3 py-2.5 rounded-md text-sm text-cream/40 cursor-not-allowed"
-+                  className="flex items-center justify-between px-3 py-2.5 rounded-md text-sm text-cream/70 cursor-not-allowed"
-                   title="Coming soon"
-                 >
-                   <span>{item.label}</span>
--                  <span className="text-[10px] uppercase tracking-wide border border-cream/20 rounded px-1.5 py-0.5">
-+                  <span className="text-[10px] uppercase tracking-wide border border-cream/40 rounded px-1.5 py-0.5">
-                     Soon
-                   </span>
-                 </div>
-@@ -95,7 +95,7 @@ export default function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onC
-         </nav>
- 
-         <div className="p-4 border-t border-cream/10">
--          <Link href="/" className="text-xs text-cream/60 hover:text-gold transition-colors">
-+          <Link href="/" className="text-xs text-cream/80 hover:text-gold transition-colors">
-             ← Back to storefront
-           </Link>
-         </div>
 diff --git a/src/components/admin/banners/BannerPreview.tsx b/src/components/admin/banners/BannerPreview.tsx
 index 74082b3..31ed356 100644
 --- a/src/components/admin/banners/BannerPreview.tsx
