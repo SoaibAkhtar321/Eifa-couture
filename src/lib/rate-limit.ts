@@ -131,6 +131,8 @@ export const RATE_LIMITS = {
   /** Customer self-cancel — keyed by user id. Generous for a real
    *  customer (a few orders), tight against scripted abuse. */
   orderCancel: { limit: 5, windowMs: 60_000 },
+  /** Customer return/exchange request — keyed by user id. */
+  returnRequest: { limit: 5, windowMs: 60_000 },
 } as const satisfies Record<string, RateLimitConfig>;
 
 export function rateLimitResponseHeaders(retryAfterSeconds: number): HeadersInit {

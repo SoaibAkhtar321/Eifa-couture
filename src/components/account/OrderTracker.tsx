@@ -5,8 +5,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 
 import CancelOrderButton, { type CancelOutcome } from '@/components/account/CancelOrderButton';
+import ReturnRequestButton from '@/components/account/ReturnRequestButton';
+import ReturnTimeline, { type CustomerReturn } from '@/components/account/ReturnTimeline';
 import { useAuth } from '@/hooks/useAuth';
-import { formatDeliveryPromise, getCancelEligibility } from '@/lib/order-policy';
+import {
+  DEFAULT_RETURN_WINDOW_DAYS,
+  formatDeliveryPromise,
+  getCancelEligibility,
+  getReturnEligibility,
+  OPEN_RETURN_STATUSES,
+} from '@/lib/order-policy';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice } from '@/lib/utils';
 import type { OrderStatus, PaymentStatus } from '@/types/database';
@@ -26,7 +34,7 @@ type OrderRow = {
   shipping_provider: string | null;
   tracking_number: string | null;
   tracking_url: string | null;
-  order_items: { name: string; quantity: number; size: string | null; color_name: string | null }[];
+  order_items: { id: string; product_id: string | null; name: string; quantity: number; size: string | null; color_name: string | null }[];
 };
 
 type HistoryRow = { id: string; new_status: OrderStatus | null; notes: string | null; created_at: string };
@@ -60,7 +68,7 @@ function refundLine(order: Pick<OrderRow, 'status' | 'payment_status'>): string 
 }
 
 const SELECT =
-  'id, order_number, status, payment_status, total, placed_at, estimated_delivery_date, cancelled_at, cancel_reason, shipped_at, delivered_at, shipping_provider, tracking_number, tracking_url, order_items ( name, quantity, size, color_name )';
+  'id, order_number, status, payment_status, total, placed_at, estimated_delivery_date, cancelled_at, cancel_reason, shipped_at, delivered_at, shipping_provider, tracking_number, tracking_url, order_items ( id, product_id, name, quantity, size, color_name )';
 
 function fmt(date: string) {
   return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(
@@ -77,6 +85,8 @@ export default function OrderTracker() {
   const [orders, setOrders] = useState<OrderRow[] | null>(null);
   const [history, setHistory] = useState<HistoryRow[]>([]);
   const [query, setQuery] = useState(requested);
+  const [returns, setReturns] = useState<CustomerReturn[]>([]);
+  const [returnWindowDays, setReturnWindowDays] = useState(DEFAULT_RETURN_WINDOW_DAYS);
 
   useEffect(() => {
     if (!user) return;
@@ -106,6 +116,42 @@ export default function OrderTracker() {
       active = false;
     };
   }, [selected]);
+
+  useEffect(() => {
+    createClient()
+      .from('store_settings')
+      .select('return_window_days')
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        const days = (data as { return_window_days: number } | null)?.return_window_days;
+        if (typeof days === 'number') setReturnWindowDays(days);
+      });
+  }, []);
+
+  const selectedId = selected?.id ?? null;
+
+  function loadReturns(orderId: string) {
+    return createClient()
+      .from('order_returns')
+      .select(
+        'id, order_item_id, status, reason, is_exchange, exchange_size, quantity, admin_notes, refund_amount, requested_at, resolved_at'
+      )
+      .eq('order_id', orderId)
+      .order('requested_at', { ascending: false })
+      .then(({ data }) => (data ?? []) as unknown as CustomerReturn[]);
+  }
+
+  useEffect(() => {
+    if (!selectedId) return;
+    let active = true;
+    loadReturns(selectedId).then((rows) => {
+      if (active) setReturns(rows);
+    });
+    return () => {
+      active = false;
+    };
+  }, [selectedId]);
 
   function handleCancelled(orderId: string, outcome: CancelOutcome) {
     setOrders((prev) =>
@@ -297,20 +343,63 @@ export default function OrderTracker() {
             </ol>
           )}
 
+          <ReturnTimeline
+            returns={returns}
+            itemNames={Object.fromEntries(selected.order_items.map((item) => [item.id, item.name]))}
+          />
+
           <div className="mt-8 border-t border-beige pt-5">
             <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Items</p>
             <ul className="mt-3 space-y-2 text-sm text-charcoal">
-              {selected.order_items.map((item, i) => (
-                <li key={i} className="flex justify-between gap-3">
-                  <span>
-                    {item.name}
-                    {(item.size || item.color_name) && (
-                      <span className="text-ink-muted"> · {[item.size, item.color_name].filter(Boolean).join(' / ')}</span>
-                    )}
-                  </span>
-                  <span className="text-ink-soft">× {item.quantity}</span>
-                </li>
-              ))}
+              {selected.order_items.map((item) => {
+                const itemReturns = returns.filter((r) => r.order_item_id === item.id);
+                const hasOpen = itemReturns.some((r) => OPEN_RETURN_STATUSES.includes(r.status));
+                const doneQty = itemReturns
+                  .filter((r) => r.status === 'refunded' || r.status === 'exchanged')
+                  .reduce((sum, r) => sum + r.quantity, 0);
+                const canReturn =
+                  !hasOpen &&
+                  doneQty < item.quantity &&
+                  getReturnEligibility(
+                    {
+                      status: selected.status,
+                      payment_status: selected.payment_status,
+                      delivered_at: selected.delivered_at,
+                    },
+                    returnWindowDays
+                  ).ok;
+
+                return (
+                  <li key={item.id} className="flex flex-wrap items-center justify-between gap-3">
+                    <span>
+                      {item.name}
+                      {(item.size || item.color_name) && (
+                        <span className="text-ink-muted"> · {[item.size, item.color_name].filter(Boolean).join(' / ')}</span>
+                      )}
+                    </span>
+                    <span className="flex items-center gap-3">
+                      <span className="text-ink-soft">× {item.quantity}</span>
+                      {canReturn && (
+                        <ReturnRequestButton
+                          orderId={selected.id}
+                          orderNumber={selected.order_number}
+                          item={{
+                            id: item.id,
+                            productId: item.product_id,
+                            name: item.name,
+                            size: item.size,
+                            colorName: item.color_name,
+                            quantity: item.quantity - doneQty,
+                          }}
+                          onRequested={() => {
+                            loadReturns(selected.id).then(setReturns);
+                          }}
+                        />
+                      )}
+                    </span>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         </article>

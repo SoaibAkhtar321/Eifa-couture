@@ -347,6 +347,8 @@ export interface DbOrderReturn {
   image_urls: string[];
   admin_notes: string | null;
   exchange_size: string | null;
+  /** Refund that paid this return out; set before the Razorpay call so a retry can't refund twice. */
+  refund_id: string | null;
   requested_at: string;
   resolved_at: string | null;
   updated_at: string;

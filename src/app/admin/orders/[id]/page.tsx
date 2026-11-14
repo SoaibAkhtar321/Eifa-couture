@@ -2,9 +2,11 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
 import { getOrderById, getOrderStatusHistory } from '@/lib/admin/orders';
+import { getOrderReturns } from '@/lib/admin/returns';
 import OrderStatusUpdate from '@/components/admin/orders/OrderStatusUpdate';
 import OrderTimeline from '@/components/admin/orders/OrderTimeline';
 import RefundPanel from '@/components/admin/orders/RefundPanel';
+import ReturnsPanel from '@/components/admin/orders/ReturnsPanel';
 import ShippingPanel from '@/components/admin/orders/ShippingPanel';
 import { formatPrice, formatDate } from '@/lib/utils';
 
@@ -18,9 +20,10 @@ export default async function AdminOrderDetailPage({ params }: OrderDetailPagePr
   const { id } = await params;
   // Run in parallel — the order and its history are independent
   // queries, so no reason to wait on one before starting the other.
-  const [{ data: order, error }, { data: history }] = await Promise.all([
+  const [{ data: order, error }, { data: history }, { data: returns }] = await Promise.all([
     getOrderById(id),
     getOrderStatusHistory(id),
+    getOrderReturns(id),
   ]);
 
   if (error) {
@@ -94,6 +97,8 @@ export default async function AdminOrderDetailPage({ params }: OrderDetailPagePr
           </section>
 
           <ShippingPanel orderId={order.id} />
+
+          <ReturnsPanel returns={returns} />
 
           <OrderTimeline
             status={order.status}

@@ -1,0 +1,1587 @@
+diff --git a/src/app/admin/orders/[id]/page.tsx b/src/app/admin/orders/[id]/page.tsx
+index f6582ba..e52090f 100644
+--- a/src/app/admin/orders/[id]/page.tsx
++++ b/src/app/admin/orders/[id]/page.tsx
+@@ -2,9 +2,11 @@ import { notFound } from 'next/navigation';
+ import Link from 'next/link';
+ 
+ import { getOrderById, getOrderStatusHistory } from '@/lib/admin/orders';
++import { getOrderReturns } from '@/lib/admin/returns';
+ import OrderStatusUpdate from '@/components/admin/orders/OrderStatusUpdate';
+ import OrderTimeline from '@/components/admin/orders/OrderTimeline';
+ import RefundPanel from '@/components/admin/orders/RefundPanel';
++import ReturnsPanel from '@/components/admin/orders/ReturnsPanel';
+ import ShippingPanel from '@/components/admin/orders/ShippingPanel';
+ import { formatPrice, formatDate } from '@/lib/utils';
+ 
+@@ -18,9 +20,10 @@ export default async function AdminOrderDetailPage({ params }: OrderDetailPagePr
+   const { id } = await params;
+   // Run in parallel — the order and its history are independent
+   // queries, so no reason to wait on one before starting the other.
+-  const [{ data: order, error }, { data: history }] = await Promise.all([
++  const [{ data: order, error }, { data: history }, { data: returns }] = await Promise.all([
+     getOrderById(id),
+     getOrderStatusHistory(id),
++    getOrderReturns(id),
+   ]);
+ 
+   if (error) {
+@@ -95,6 +98,8 @@ export default async function AdminOrderDetailPage({ params }: OrderDetailPagePr
+ 
+           <ShippingPanel orderId={order.id} />
+ 
++          <ReturnsPanel returns={returns} />
++
+           <OrderTimeline
+             status={order.status}
+             placedAt={order.placedAt}
+diff --git a/src/app/api/admin/returns/[id]/route.ts b/src/app/api/admin/returns/[id]/route.ts
+new file mode 100644
+index 0000000..650735c
+--- /dev/null
++++ b/src/app/api/admin/returns/[id]/route.ts
+@@ -0,0 +1,310 @@
++/* ============================================
++   EIFA COUTURE — Admin Return Workflow Route
++   ============================================
++   POST /api/admin/returns/[id]
++   body: { action, notes?, restock? }
++   action: approve | reject | picked_up | received | refunded | exchanged
++
++   Every status change goes through the `admin_update_return` RPC
++   (transition map, stock, history row — see migration 20261114160000).
++
++   'refunded' also moves money, so it reuses the same two-step pattern
++   as the admin refund route: initiate_refund -> Razorpay ->
++   finalize_refund. To make a retry safe, the refund id is saved on the
++   return BEFORE Razorpay is called:
++     - refund processed but the return update failed -> retry skips
++       Razorpay and only finishes the status change (no double refund)
++     - refund still 'processing'                      -> blocked
++     - refund failed                                  -> a new refund
++       may be started
++
++   The refund is the item's share of what the customer actually paid
++   (coupon discount spread across items), never more than the
++   remaining refundable balance (initiate_refund enforces that).
++   ============================================ */
++
++import { NextResponse, type NextRequest } from 'next/server';
++import { randomUUID } from 'crypto';
++import { z } from 'zod';
++
++import { logAdminAction } from '@/lib/admin/audit-log';
++import { rateLimit, rateLimitResponseHeaders, RATE_LIMITS } from '@/lib/rate-limit';
++import { createRazorpayRefund } from '@/lib/razorpay';
++import { createClient } from '@/lib/supabase/server';
++import { createServiceClient } from '@/lib/supabase/service';
++import type { UserRole } from '@/types/database';
++
++const ACTION_TO_STATUS = {
++  approve: 'approved',
++  reject: 'rejected',
++  picked_up: 'picked_up',
++  received: 'received',
++  refunded: 'refunded',
++  exchanged: 'exchanged',
++} as const;
++
++const bodySchema = z.object({
++  action: z.enum(['approve', 'reject', 'picked_up', 'received', 'refunded', 'exchanged']),
++  notes: z.string().trim().max(500).optional(),
++  restock: z.boolean().optional(),
++});
++
++const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
++  return_not_found: { status: 404, message: 'Return not found.' },
++  invalid_transition: { status: 409, message: 'This return cannot move to that step from its current status.' },
++  not_an_exchange: { status: 409, message: 'This is a return, not an exchange.' },
++  rejection_note_required: { status: 400, message: 'Add a note explaining why the request is rejected.' },
++  exchange_variant_unavailable: { status: 409, message: 'The exchange size no longer exists.' },
++  exchange_out_of_stock: { status: 409, message: 'The exchange size is out of stock.' },
++  invalid_refund_amount: { status: 400, message: 'Refund amount must be greater than zero.' },
++  order_not_paid: { status: 409, message: 'Only paid orders can be refunded.' },
++  order_already_refunded: { status: 409, message: 'This order has already been fully refunded.' },
++  refund_exceeds_captured_amount: {
++    status: 400,
++    message: 'The refund would exceed the amount still refundable on this order.',
++  },
++  missing_payment_id: { status: 400, message: 'This order has no captured payment to refund.' },
++  unsupported_payment_provider: { status: 400, message: 'This order was not paid via Razorpay.' },
++};
++
++function mapRpcError(message: string): { status: number; message: string } {
++  for (const [code, mapped] of Object.entries(ERROR_RESPONSES)) {
++    if (message.includes(code)) return mapped;
++  }
++  return { status: 500, message: 'Could not update the return. Please try again.' };
++}
++
++const fail = (status: number, message: string) =>
++  NextResponse.json({ error: { message } }, { status });
++
++export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
++  const { id: returnId } = await context.params;
++
++  if (!z.string().uuid().safeParse(returnId).success) {
++    return fail(400, 'Invalid return id.');
++  }
++
++  // ---- Auth: same session + role check as the admin refund route ----
++  const supabase = await createClient();
++  const {
++    data: { user },
++  } = await supabase.auth.getUser();
++
++  if (!user) return fail(401, 'Not authenticated.');
++
++  const { data: profile, error: profileError } = await supabase
++    .from('profiles')
++    .select('role')
++    .eq('id', user.id)
++    .single();
++
++  const role = (profile as { role: UserRole } | null)?.role;
++  if (profileError || !profile || (role !== 'admin' && role !== 'superadmin')) {
++    return fail(403, 'Admin access required.');
++  }
++
++  const limit = rateLimit(`admin-refund:${user.id}`, RATE_LIMITS.adminRefund);
++  if (!limit.success) {
++    return NextResponse.json(
++      { error: { message: 'Too many requests. Please slow down.' } },
++      { status: 429, headers: rateLimitResponseHeaders(limit.retryAfterSeconds!) }
++    );
++  }
++
++  const json = await request.json().catch(() => null);
++  const parsed = bodySchema.safeParse(json);
++  if (!parsed.success) return fail(400, 'Invalid request body.');
++
++  const { action, notes, restock } = parsed.data;
++  const toStatus = ACTION_TO_STATUS[action];
++  const service = createServiceClient();
++
++  const { data: ret } = await service
++    .from('order_returns')
++    .select('id, status, order_id, order_item_id, quantity, refund_id')
++    .eq('id', returnId)
++    .maybeSingle<{
++      id: string;
++      status: string;
++      order_id: string;
++      order_item_id: string;
++      quantity: number;
++      refund_id: string | null;
++    }>();
++
++  if (!ret) return fail(404, 'Return not found.');
++
++  let refundAmount: number | null = null;
++  let razorpayRefundId: string | null = null;
++
++  // ---------------- Money step (only for 'refunded') ----------------
++  if (toStatus === 'refunded') {
++    if (ret.status !== 'received') {
++      return fail(409, 'A return can only be refunded after it is marked received.');
++    }
++
++    // A refund may already exist from an earlier attempt.
++    let existing: { status: string; amount: number; razorpay_refund_id: string | null } | null = null;
++    if (ret.refund_id) {
++      const { data } = await service
++        .from('refunds')
++        .select('status, amount, razorpay_refund_id')
++        .eq('id', ret.refund_id)
++        .maybeSingle<{ status: string; amount: number; razorpay_refund_id: string | null }>();
++      existing = data;
++    }
++
++    if (existing?.status === 'processing') {
++      return fail(409, 'A refund for this return is already in progress.');
++    }
++
++    if (existing?.status === 'processed') {
++      // Money already moved; only the return status is left to record.
++      refundAmount = Number(existing.amount);
++      razorpayRefundId = existing.razorpay_refund_id;
++    } else {
++      const [{ data: order }, { data: item }] = await Promise.all([
++        service
++          .from('orders')
++          .select('id, order_number, subtotal, discount')
++          .eq('id', ret.order_id)
++          .maybeSingle<{ id: string; order_number: string; subtotal: number; discount: number }>(),
++        service
++          .from('order_items')
++          .select('unit_price')
++          .eq('id', ret.order_item_id)
++          .maybeSingle<{ unit_price: number }>(),
++      ]);
++
++      if (!order || !item) return fail(404, 'Order item not found.');
++
++      const subtotal = Number(order.subtotal);
++      const discount = Number(order.discount ?? 0);
++      const paidRatio = subtotal > 0 ? Math.max(0, (subtotal - discount) / subtotal) : 1;
++      const amount = Math.round(Number(item.unit_price) * ret.quantity * paidRatio * 100) / 100;
++
++      if (!Number.isFinite(amount) || amount <= 0) {
++        return fail(400, 'Refund amount must be greater than zero.');
++      }
++
++      const idempotencyKey = randomUUID();
++      const { data: initiated, error: initiateError } = await service.rpc('initiate_refund', {
++        p_order_id: order.id,
++        p_amount: amount,
++        p_reason: `Return approved (${order.order_number})`,
++        p_idempotency_key: idempotencyKey,
++        p_initiated_by: user.id,
++      });
++
++      if (initiateError || !initiated) {
++        const mapped = mapRpcError(initiateError?.message ?? '');
++        return fail(mapped.status, mapped.message);
++      }
++
++      const { refund_id: refundId, razorpay_payment_id: razorpayPaymentId } = initiated as {
++        refund_id: string;
++        razorpay_payment_id: string;
++      };
++
++      // Link BEFORE calling Razorpay so a retry can see this attempt.
++      const { error: linkError } = await service
++        .from('order_returns')
++        .update({ refund_id: refundId })
++        .eq('id', returnId);
++
++      if (linkError) {
++        await service.rpc('finalize_refund', {
++          p_refund_id: refundId,
++          p_status: 'failed',
++          p_razorpay_refund_id: null,
++          p_error_message: 'Could not link refund to return.',
++        });
++        return fail(500, 'Could not start the refund. Please try again.');
++      }
++
++      try {
++        const result = await createRazorpayRefund({
++          razorpayPaymentId,
++          amountInPaise: Math.round(amount * 100),
++          idempotencyKey,
++          notes: {
++            internal_order_id: order.id,
++            order_number: order.order_number,
++            refund_id: refundId,
++            return_id: returnId,
++            source: 'return',
++          },
++        });
++        razorpayRefundId = result.razorpayRefundId;
++      } catch (err) {
++        const message = err instanceof Error ? err.message : 'Razorpay refund request failed.';
++        await service.rpc('finalize_refund', {
++          p_refund_id: refundId,
++          p_status: 'failed',
++          p_razorpay_refund_id: null,
++          p_error_message: message,
++        });
++        return fail(502, message);
++      }
++
++      const { error: finalizeError } = await service.rpc('finalize_refund', {
++        p_refund_id: refundId,
++        p_status: 'processed',
++        p_razorpay_refund_id: razorpayRefundId,
++        p_error_message: null,
++      });
++
++      if (finalizeError) {
++        return fail(
++          500,
++          'Refund was processed by Razorpay but could not be recorded. Reference: ' + razorpayRefundId
++        );
++      }
++
++      refundAmount = amount;
++    }
++  }
++
++  // ---------------- Status step (all actions) ----------------
++  const { data: updated, error: updateError } = await service.rpc('admin_update_return', {
++    p_return_id: returnId,
++    p_admin_id: user.id,
++    p_to: toStatus,
++    p_notes: notes ?? null,
++    p_restock: restock ?? false,
++    p_refund_amount: refundAmount,
++  });
++
++  if (updateError || !updated) {
++    const mapped = mapRpcError(updateError?.message ?? '');
++    const message =
++      toStatus === 'refunded' && refundAmount !== null
++        ? 'The refund was issued, but the return status could not be updated. Press "Mark refunded" again — it will not refund twice.'
++        : mapped.message;
++    return fail(mapped.status, message);
++  }
++
++  const result = updated as { id: string; order_id: string; order_number: string; status: string };
++
++  await logAdminAction({
++    action: 'return',
++    entityType: 'order',
++    entityId: result.order_id,
++    entityLabel: result.order_number,
++    detail: `Return ${returnId.slice(0, 8)} -> ${result.status}${notes ? ` — ${notes}` : ''}`,
++    metadata: {
++      return_id: returnId,
++      status: result.status,
++      refund_amount: refundAmount,
++      razorpay_refund_id: razorpayRefundId,
++      restock: restock ?? false,
++    },
++  });
++
++  return NextResponse.json({
++    returnId: result.id,
++    orderId: result.order_id,
++    status: result.status,
++    refundAmount,
++  });
++}
+diff --git a/src/app/api/orders/[id]/return/route.ts b/src/app/api/orders/[id]/return/route.ts
+new file mode 100644
+index 0000000..b3a87e9
+--- /dev/null
++++ b/src/app/api/orders/[id]/return/route.ts
+@@ -0,0 +1,109 @@
++/* ============================================
++   EIFA COUTURE — Customer Return / Exchange Request Route
++   ============================================
++   POST /api/orders/[id]/return
++   body: { orderItemId, quantity, reason, details?, isExchange?, exchangeSize? }
++
++   Lets a signed-in customer ask to return or exchange an item of
++   their OWN delivered order. Every rule (ownership, delivered, paid,
++   return window, quantity, one open return per item, exchange size
++   exists and is in stock) is enforced inside the `request_return` RPC
++   (migration 20261114160000) under an order-row lock. The UI only
++   decides what to show.
++   ============================================ */
++
++import { NextResponse, type NextRequest } from 'next/server';
++import { z } from 'zod';
++
++import { rateLimit, rateLimitResponseHeaders, RATE_LIMITS } from '@/lib/rate-limit';
++import { createClient } from '@/lib/supabase/server';
++import { createServiceClient } from '@/lib/supabase/service';
++
++const bodySchema = z.object({
++  orderItemId: z.string().uuid(),
++  quantity: z.coerce.number().int().min(1).max(50),
++  reason: z.string().trim().min(1).max(200),
++  details: z.string().trim().max(1000).optional(),
++  isExchange: z.boolean().optional(),
++  exchangeSize: z.string().trim().max(20).optional(),
++});
++
++const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
++  order_not_found: { status: 404, message: 'Order not found.' },
++  item_not_found: { status: 404, message: 'Item not found on this order.' },
++  order_not_delivered: { status: 409, message: 'Returns can be requested once the order is delivered.' },
++  order_not_paid: { status: 409, message: 'This order is not eligible for a return.' },
++  return_window_closed: { status: 409, message: 'The return window for this order has closed.' },
++  return_already_open: { status: 409, message: 'A return is already in progress for this item.' },
++  quantity_exceeds_purchased: { status: 409, message: 'This item has already been returned or exchanged.' },
++  invalid_quantity: { status: 400, message: 'Choose a valid quantity.' },
++  reason_required: { status: 400, message: 'Please choose a reason.' },
++  exchange_size_required: { status: 400, message: 'Choose the size you want in exchange.' },
++  exchange_variant_unavailable: { status: 409, message: 'That size is not available for exchange.' },
++  exchange_out_of_stock: { status: 409, message: 'That size is out of stock right now.' },
++};
++
++function mapRpcError(message: string): { status: number; message: string } {
++  for (const [code, mapped] of Object.entries(ERROR_RESPONSES)) {
++    if (message.includes(code)) return mapped;
++  }
++  return { status: 500, message: 'Could not submit your request. Please try again.' };
++}
++
++export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
++  const { id: orderId } = await context.params;
++
++  if (!z.string().uuid().safeParse(orderId).success) {
++    return NextResponse.json({ error: { message: 'Invalid order id.' } }, { status: 400 });
++  }
++
++  const supabase = await createClient();
++  const {
++    data: { user },
++  } = await supabase.auth.getUser();
++
++  if (!user) {
++    return NextResponse.json({ error: { message: 'Please sign in to request a return.' } }, { status: 401 });
++  }
++
++  const limit = rateLimit(`order-return:${user.id}`, RATE_LIMITS.returnRequest);
++  if (!limit.success) {
++    return NextResponse.json(
++      { error: { message: 'Too many attempts. Please wait a moment and try again.' } },
++      { status: 429, headers: rateLimitResponseHeaders(limit.retryAfterSeconds!) }
++    );
++  }
++
++  const json = await request.json().catch(() => null);
++  const parsed = bodySchema.safeParse(json);
++  if (!parsed.success) {
++    return NextResponse.json({ error: { message: 'Invalid request.' } }, { status: 400 });
++  }
++
++  const body = parsed.data;
++  const service = createServiceClient();
++
++  const { data, error } = await service.rpc('request_return', {
++    p_order_id: orderId,
++    p_user_id: user.id,
++    p_order_item_id: body.orderItemId,
++    p_quantity: body.quantity,
++    p_reason: body.reason,
++    p_details: body.details ?? null,
++    p_is_exchange: body.isExchange ?? false,
++    p_exchange_size: body.isExchange ? (body.exchangeSize ?? null) : null,
++  });
++
++  if (error || !data) {
++    const mapped = mapRpcError(error?.message ?? '');
++    return NextResponse.json({ error: { message: mapped.message } }, { status: mapped.status });
++  }
++
++  const result = data as { id: string; order_number: string; status: string };
++
++  return NextResponse.json({
++    returnId: result.id,
++    orderNumber: result.order_number,
++    status: result.status,
++  });
++}
+diff --git a/src/components/account/OrderTracker.tsx b/src/components/account/OrderTracker.tsx
+index 3eed45c..ac1f6b9 100644
+--- a/src/components/account/OrderTracker.tsx
++++ b/src/components/account/OrderTracker.tsx
+@@ -5,8 +5,16 @@ import { useRouter, useSearchParams } from 'next/navigation';
+ import { FormEvent, useEffect, useState } from 'react';
+ 
+ import CancelOrderButton, { type CancelOutcome } from '@/components/account/CancelOrderButton';
++import ReturnRequestButton from '@/components/account/ReturnRequestButton';
++import ReturnTimeline, { type CustomerReturn } from '@/components/account/ReturnTimeline';
+ import { useAuth } from '@/hooks/useAuth';
+-import { formatDeliveryPromise, getCancelEligibility } from '@/lib/order-policy';
++import {
++  DEFAULT_RETURN_WINDOW_DAYS,
++  formatDeliveryPromise,
++  getCancelEligibility,
++  getReturnEligibility,
++  OPEN_RETURN_STATUSES,
++} from '@/lib/order-policy';
+ import { createClient } from '@/lib/supabase/client';
+ import { formatPrice } from '@/lib/utils';
+ import type { OrderStatus, PaymentStatus } from '@/types/database';
+@@ -26,7 +34,7 @@ type OrderRow = {
+   shipping_provider: string | null;
+   tracking_number: string | null;
+   tracking_url: string | null;
+-  order_items: { name: string; quantity: number; size: string | null; color_name: string | null }[];
++  order_items: { id: string; product_id: string | null; name: string; quantity: number; size: string | null; color_name: string | null }[];
+ };
+ 
+ type HistoryRow = { id: string; new_status: OrderStatus | null; notes: string | null; created_at: string };
+@@ -60,7 +68,7 @@ function refundLine(order: Pick<OrderRow, 'status' | 'payment_status'>): string
+ }
+ 
+ const SELECT =
+-  'id, order_number, status, payment_status, total, placed_at, estimated_delivery_date, cancelled_at, cancel_reason, shipped_at, delivered_at, shipping_provider, tracking_number, tracking_url, order_items ( name, quantity, size, color_name )';
++  'id, order_number, status, payment_status, total, placed_at, estimated_delivery_date, cancelled_at, cancel_reason, shipped_at, delivered_at, shipping_provider, tracking_number, tracking_url, order_items ( id, product_id, name, quantity, size, color_name )';
+ 
+ function fmt(date: string) {
+   return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(
+@@ -77,6 +85,8 @@ export default function OrderTracker() {
+   const [orders, setOrders] = useState<OrderRow[] | null>(null);
+   const [history, setHistory] = useState<HistoryRow[]>([]);
+   const [query, setQuery] = useState(requested);
++  const [returns, setReturns] = useState<CustomerReturn[]>([]);
++  const [returnWindowDays, setReturnWindowDays] = useState(DEFAULT_RETURN_WINDOW_DAYS);
+ 
+   useEffect(() => {
+     if (!user) return;
+@@ -107,6 +117,42 @@ export default function OrderTracker() {
+     };
+   }, [selected]);
+ 
++  useEffect(() => {
++    createClient()
++      .from('store_settings')
++      .select('return_window_days')
++      .limit(1)
++      .maybeSingle()
++      .then(({ data }) => {
++        const days = (data as { return_window_days: number } | null)?.return_window_days;
++        if (typeof days === 'number') setReturnWindowDays(days);
++      });
++  }, []);
++
++  const selectedId = selected?.id ?? null;
++
++  function loadReturns(orderId: string) {
++    return createClient()
++      .from('order_returns')
++      .select(
++        'id, order_item_id, status, reason, is_exchange, exchange_size, quantity, admin_notes, refund_amount, requested_at, resolved_at'
++      )
++      .eq('order_id', orderId)
++      .order('requested_at', { ascending: false })
++      .then(({ data }) => (data ?? []) as unknown as CustomerReturn[]);
++  }
++
++  useEffect(() => {
++    if (!selectedId) return;
++    let active = true;
++    loadReturns(selectedId).then((rows) => {
++      if (active) setReturns(rows);
++    });
++    return () => {
++      active = false;
++    };
++  }, [selectedId]);
++
+   function handleCancelled(orderId: string, outcome: CancelOutcome) {
+     setOrders((prev) =>
+       (prev ?? []).map((o): OrderRow =>
+@@ -297,20 +343,63 @@ export default function OrderTracker() {
+             </ol>
+           )}
+ 
++          <ReturnTimeline
++            returns={returns}
++            itemNames={Object.fromEntries(selected.order_items.map((item) => [item.id, item.name]))}
++          />
++
+           <div className="mt-8 border-t border-beige pt-5">
+             <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Items</p>
+             <ul className="mt-3 space-y-2 text-sm text-charcoal">
+-              {selected.order_items.map((item, i) => (
+-                <li key={i} className="flex justify-between gap-3">
+-                  <span>
+-                    {item.name}
+-                    {(item.size || item.color_name) && (
+-                      <span className="text-ink-muted"> · {[item.size, item.color_name].filter(Boolean).join(' / ')}</span>
+-                    )}
+-                  </span>
+-                  <span className="text-ink-soft">× {item.quantity}</span>
+-                </li>
+-              ))}
++              {selected.order_items.map((item) => {
++                const itemReturns = returns.filter((r) => r.order_item_id === item.id);
++                const hasOpen = itemReturns.some((r) => OPEN_RETURN_STATUSES.includes(r.status));
++                const doneQty = itemReturns
++                  .filter((r) => r.status === 'refunded' || r.status === 'exchanged')
++                  .reduce((sum, r) => sum + r.quantity, 0);
++                const canReturn =
++                  !hasOpen &&
++                  doneQty < item.quantity &&
++                  getReturnEligibility(
++                    {
++                      status: selected.status,
++                      payment_status: selected.payment_status,
++                      delivered_at: selected.delivered_at,
++                    },
++                    returnWindowDays
++                  ).ok;
++
++                return (
++                  <li key={item.id} className="flex flex-wrap items-center justify-between gap-3">
++                    <span>
++                      {item.name}
++                      {(item.size || item.color_name) && (
++                        <span className="text-ink-muted"> · {[item.size, item.color_name].filter(Boolean).join(' / ')}</span>
++                      )}
++                    </span>
++                    <span className="flex items-center gap-3">
++                      <span className="text-ink-soft">× {item.quantity}</span>
++                      {canReturn && (
++                        <ReturnRequestButton
++                          orderId={selected.id}
++                          orderNumber={selected.order_number}
++                          item={{
++                            id: item.id,
++                            productId: item.product_id,
++                            name: item.name,
++                            size: item.size,
++                            colorName: item.color_name,
++                            quantity: item.quantity - doneQty,
++                          }}
++                          onRequested={() => {
++                            loadReturns(selected.id).then(setReturns);
++                          }}
++                        />
++                      )}
++                    </span>
++                  </li>
++                );
++              })}
+             </ul>
+           </div>
+         </article>
+diff --git a/src/components/account/ReturnRequestButton.tsx b/src/components/account/ReturnRequestButton.tsx
+new file mode 100644
+index 0000000..ae1872e
+--- /dev/null
++++ b/src/components/account/ReturnRequestButton.tsx
+@@ -0,0 +1,218 @@
++'use client';
++
++import { useEffect, useState } from 'react';
++
++import { RETURN_REASONS } from '@/lib/order-policy';
++import { createClient } from '@/lib/supabase/client';
++
++export interface ReturnableItem {
++  id: string;
++  productId: string | null;
++  name: string;
++  size: string | null;
++  colorName: string | null;
++  quantity: number;
++}
++
++interface ReturnRequestButtonProps {
++  orderId: string;
++  orderNumber: string;
++  item: ReturnableItem;
++  onRequested: () => void;
++}
++
++/** "Return / exchange" button + request dialog. The server checks every
++ *  rule (window, quantity, stock); this only collects the request. */
++export default function ReturnRequestButton({ orderId, orderNumber, item, onRequested }: ReturnRequestButtonProps) {
++  const [open, setOpen] = useState(false);
++  const [mode, setMode] = useState<'return' | 'exchange'>('return');
++  const [reason, setReason] = useState<string>(RETURN_REASONS[0]);
++  const [details, setDetails] = useState('');
++  const [quantity, setQuantity] = useState(1);
++  const [sizes, setSizes] = useState<string[]>([]);
++  const [exchangeSize, setExchangeSize] = useState('');
++  const [busy, setBusy] = useState(false);
++  const [error, setError] = useState<string | null>(null);
++
++  // Sizes offered for exchange: active variants of the same product and colour.
++  useEffect(() => {
++    if (!open || mode !== 'exchange' || !item.productId || sizes.length > 0) return;
++    let active = true;
++    createClient()
++      .from('product_variants')
++      .select('size')
++      .eq('product_id', item.productId)
++      .eq('color_name', item.colorName ?? '')
++      .eq('is_active', true)
++      .then(({ data }) => {
++        if (!active) return;
++        const list = ((data ?? []) as { size: string }[]).map((v) => v.size);
++        setSizes(list);
++        setExchangeSize((current) => current || list[0] || '');
++      });
++    return () => {
++      active = false;
++    };
++  }, [open, mode, item.productId, item.colorName, sizes.length]);
++
++  async function submit() {
++    if (mode === 'exchange' && !exchangeSize) {
++      setError('Choose the size you want in exchange.');
++      return;
++    }
++    setBusy(true);
++    setError(null);
++    try {
++      const res = await fetch(`/api/orders/${orderId}/return`, {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({
++          orderItemId: item.id,
++          quantity,
++          reason,
++          details: details.trim() || undefined,
++          isExchange: mode === 'exchange',
++          exchangeSize: mode === 'exchange' ? exchangeSize : undefined,
++        }),
++      });
++      const body = await res.json().catch(() => ({}));
++      if (!res.ok) {
++        setError(body?.error?.message ?? 'Could not submit your request. Please try again.');
++        return;
++      }
++      setOpen(false);
++      onRequested();
++    } catch {
++      setError('Network problem. Please check your connection and try again.');
++    } finally {
++      setBusy(false);
++    }
++  }
++
++  return (
++    <>
++      <button
++        type="button"
++        onClick={() => setOpen(true)}
++        className="rounded-full border border-maroon px-3 py-1.5 text-[11px] font-medium uppercase tracking-wider text-maroon transition-colors hover:bg-maroon hover:text-white"
++      >
++        Return / exchange
++      </button>
++
++      {open && (
++        <div
++          role="dialog"
++          aria-modal="true"
++          aria-labelledby="return-request-title"
++          className="fixed inset-0 z-[100] flex items-end justify-center bg-charcoal/50 p-4 sm:items-center"
++        >
++          <div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
++            <h2 id="return-request-title" className="font-heading text-2xl text-charcoal">
++              Return or exchange
++            </h2>
++            <p className="mt-1 text-sm text-ink-soft">
++              {item.name} · Order {orderNumber}
++            </p>
++
++            <fieldset className="mt-5 flex gap-5 text-sm text-charcoal" disabled={busy}>
++              <label className="flex cursor-pointer items-center gap-2">
++                <input type="radio" name="return-mode" checked={mode === 'return'} onChange={() => setMode('return')} className="accent-maroon" />
++                Return for refund
++              </label>
++              <label className="flex cursor-pointer items-center gap-2">
++                <input type="radio" name="return-mode" checked={mode === 'exchange'} onChange={() => setMode('exchange')} className="accent-maroon" />
++                Exchange size
++              </label>
++            </fieldset>
++
++            {mode === 'exchange' && (
++              <label className="mt-4 block text-sm text-charcoal">
++                <span className="text-xs uppercase tracking-[0.18em] text-ink-muted">New size</span>
++                <select
++                  value={exchangeSize}
++                  onChange={(e) => setExchangeSize(e.target.value)}
++                  disabled={busy}
++                  className="mt-1 w-full rounded-md border border-beige bg-white px-3 py-2 text-base outline-none focus:border-gold sm:text-sm"
++                >
++                  {sizes.length === 0 && <option value="">No sizes available</option>}
++                  {sizes.map((s) => (
++                    <option key={s} value={s}>
++                      {s}
++                    </option>
++                  ))}
++                </select>
++              </label>
++            )}
++
++            {item.quantity > 1 && (
++              <label className="mt-4 block text-sm text-charcoal">
++                <span className="text-xs uppercase tracking-[0.18em] text-ink-muted">Quantity</span>
++                <select
++                  value={quantity}
++                  onChange={(e) => setQuantity(Number(e.target.value))}
++                  disabled={busy}
++                  className="mt-1 w-full rounded-md border border-beige bg-white px-3 py-2 text-base outline-none focus:border-gold sm:text-sm"
++                >
++                  {Array.from({ length: item.quantity }, (_, i) => i + 1).map((n) => (
++                    <option key={n} value={n}>
++                      {n}
++                    </option>
++                  ))}
++                </select>
++              </label>
++            )}
++
++            <label className="mt-4 block text-sm text-charcoal">
++              <span className="text-xs uppercase tracking-[0.18em] text-ink-muted">Reason</span>
++              <select
++                value={reason}
++                onChange={(e) => setReason(e.target.value)}
++                disabled={busy}
++                className="mt-1 w-full rounded-md border border-beige bg-white px-3 py-2 text-base outline-none focus:border-gold sm:text-sm"
++              >
++                {RETURN_REASONS.map((r) => (
++                  <option key={r} value={r}>
++                    {r}
++                  </option>
++                ))}
++              </select>
++            </label>
++
++            <label className="mt-4 block text-sm text-charcoal">
++              <span className="text-xs uppercase tracking-[0.18em] text-ink-muted">Details (optional)</span>
++              <textarea
++                value={details}
++                onChange={(e) => setDetails(e.target.value)}
++                disabled={busy}
++                rows={3}
++                maxLength={1000}
++                className="mt-1 w-full rounded-md border border-beige bg-white px-3 py-2 text-base outline-none focus:border-gold sm:text-sm"
++              />
++            </label>
++
++            {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
++
++            <div className="mt-6 flex flex-wrap justify-end gap-3">
++              <button
++                type="button"
++                disabled={busy}
++                onClick={() => setOpen(false)}
++                className="rounded-full border border-beige px-5 py-2 text-xs font-medium uppercase tracking-wider text-charcoal hover:bg-cream disabled:opacity-50"
++              >
++                Close
++              </button>
++              <button
++                type="button"
++                disabled={busy}
++                onClick={submit}
++                className="rounded-full bg-maroon px-5 py-2 text-xs font-medium uppercase tracking-wider text-white hover:opacity-90 disabled:opacity-50"
++              >
++                {busy ? 'Submitting…' : 'Submit request'}
++              </button>
++            </div>
++          </div>
++        </div>
++      )}
++    </>
++  );
++}
+diff --git a/src/components/account/ReturnTimeline.tsx b/src/components/account/ReturnTimeline.tsx
+new file mode 100644
+index 0000000..dea231a
+--- /dev/null
++++ b/src/components/account/ReturnTimeline.tsx
+@@ -0,0 +1,104 @@
++import { RETURN_STATUS_LABEL } from '@/lib/order-policy';
++import { formatPrice } from '@/lib/utils';
++import type { ReturnStatus } from '@/types/database';
++
++export interface CustomerReturn {
++  id: string;
++  order_item_id: string;
++  status: ReturnStatus;
++  reason: string;
++  is_exchange: boolean;
++  exchange_size: string | null;
++  quantity: number;
++  admin_notes: string | null;
++  refund_amount: number | null;
++  requested_at: string;
++  resolved_at: string | null;
++}
++
++const REFUND_FLOW: ReturnStatus[] = ['requested', 'approved', 'picked_up', 'received', 'refunded'];
++const EXCHANGE_FLOW: ReturnStatus[] = ['requested', 'approved', 'picked_up', 'received', 'exchanged'];
++
++function fmt(date: string) {
++  return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(
++    new Date(date)
++  );
++}
++
++/** Progress of each return/exchange on an order. Only the request and
++ *  closing times are known, so intermediate steps show no time. */
++export default function ReturnTimeline({
++  returns,
++  itemNames,
++}: {
++  returns: CustomerReturn[];
++  itemNames: Record<string, string>;
++}) {
++  if (returns.length === 0) return null;
++
++  return (
++    <div className="mt-8 border-t border-beige pt-5">
++      <p className="text-xs uppercase tracking-[0.2em] text-ink-muted">Returns &amp; exchanges</p>
++
++      <div className="mt-4 space-y-6">
++        {returns.map((r) => {
++          const flow = r.is_exchange ? EXCHANGE_FLOW : REFUND_FLOW;
++          // An exchange that ends in a refund still finishes the flow.
++          const finalStep = r.status === 'refunded' && r.is_exchange ? 'refunded' : null;
++          const steps = finalStep ? [...EXCHANGE_FLOW.slice(0, 4), 'refunded' as ReturnStatus] : flow;
++          const rejected = r.status === 'rejected';
++          const current = steps.indexOf(r.status);
++
++          return (
++            <div key={r.id} className="rounded-lg border border-beige p-4">
++              <p className="text-sm font-medium text-charcoal">
++                {r.is_exchange ? 'Exchange' : 'Return'}: {itemNames[r.order_item_id] ?? 'Item'} × {r.quantity}
++                {r.is_exchange && r.exchange_size ? ` → size ${r.exchange_size}` : ''}
++              </p>
++              <p className="mt-0.5 text-xs text-ink-muted">
++                {r.reason} · Requested {fmt(r.requested_at)}
++              </p>
++
++              {rejected ? (
++                <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-xs text-red-800">
++                  <p className="font-medium">This request was not approved.</p>
++                  {r.admin_notes && <p className="mt-1">{r.admin_notes}</p>}
++                </div>
++              ) : (
++                <ol className="mt-3 space-y-1.5">
++                  {steps.map((step, i) => {
++                    const done = i <= current;
++                    return (
++                      <li key={step} className="flex items-center gap-2 text-xs">
++                        <span
++                          className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[9px] ${
++                            done ? 'border-maroon bg-maroon text-white' : 'border-beige text-ink-muted'
++                          }`}
++                        >
++                          {done ? '✓' : ''}
++                        </span>
++                        <span className={done ? 'text-charcoal' : 'text-ink-muted'}>{RETURN_STATUS_LABEL[step]}</span>
++                        {step === r.status && r.resolved_at && (
++                          <span className="text-ink-muted">· {fmt(r.resolved_at)}</span>
++                        )}
++                      </li>
++                    );
++                  })}
++                </ol>
++              )}
++
++              {!rejected && r.admin_notes && (
++                <p className="mt-2 text-xs italic text-ink-soft">“{r.admin_notes}”</p>
++              )}
++              {r.status === 'refunded' && r.refund_amount !== null && (
++                <p className="mt-2 text-xs text-ink-soft">
++                  {formatPrice(Number(r.refund_amount))} refunded to your original payment method. It usually reflects in 5–7 business days.
++                </p>
++              )}
++            </div>
++          );
++        })}
++      </div>
++    </div>
++  );
++}
+diff --git a/src/components/admin/orders/ReturnsPanel.tsx b/src/components/admin/orders/ReturnsPanel.tsx
+new file mode 100644
+index 0000000..ccb9756
+--- /dev/null
++++ b/src/components/admin/orders/ReturnsPanel.tsx
+@@ -0,0 +1,199 @@
++'use client';
++
++/* ============================================
++   EIFA COUTURE — Admin Returns Panel
++   ============================================
++   Lives on the order detail page. Every button posts to
++   /api/admin/returns/[id]; the server enforces the allowed steps, so
++   this panel only decides which buttons to show.
++   The note is shown to the customer on their return timeline.
++   ============================================ */
++
++import { useRouter } from 'next/navigation';
++import { useState } from 'react';
++
++import { formatDate, formatPrice } from '@/lib/utils';
++import { RETURN_STATUS_LABEL } from '@/lib/order-policy';
++import type { AdminReturnRecord } from '@/lib/admin/returns-types';
++import type { ReturnStatus } from '@/types/database';
++
++type Action = 'approve' | 'reject' | 'picked_up' | 'received' | 'refunded' | 'exchanged';
++
++const STATUS_CLASSES: Record<ReturnStatus, string> = {
++  requested: 'bg-gold/15 text-gold',
++  approved: 'bg-maroon/10 text-maroon',
++  picked_up: 'bg-maroon/10 text-maroon',
++  received: 'bg-maroon/10 text-maroon',
++  rejected: 'bg-red-100 text-red-800',
++  refunded: 'bg-green-100 text-green-800',
++  exchanged: 'bg-green-100 text-green-800',
++};
++
++function actionsFor(r: AdminReturnRecord): { action: Action; label: string; danger?: boolean }[] {
++  switch (r.status) {
++    case 'requested':
++      return [
++        { action: 'approve', label: 'Approve' },
++        { action: 'reject', label: 'Reject', danger: true },
++      ];
++    case 'approved':
++      return [
++        { action: 'picked_up', label: 'Mark picked up' },
++        { action: 'reject', label: 'Reject', danger: true },
++      ];
++    case 'picked_up':
++      return [{ action: 'received', label: 'Mark received' }];
++    case 'received':
++      return r.isExchange
++        ? [
++            { action: 'exchanged', label: 'Mark exchange shipped' },
++            { action: 'refunded', label: 'Refund instead' },
++          ]
++        : [{ action: 'refunded', label: 'Mark refunded' }];
++    default:
++      return [];
++  }
++}
++
++export default function ReturnsPanel({ returns }: { returns: AdminReturnRecord[] }) {
++  const router = useRouter();
++  const [busyId, setBusyId] = useState<string | null>(null);
++  const [notes, setNotes] = useState<Record<string, string>>({});
++  const [restock, setRestock] = useState<Record<string, boolean>>({});
++  const [errors, setErrors] = useState<Record<string, string>>({});
++
++  async function run(r: AdminReturnRecord, action: Action) {
++    const note = (notes[r.id] ?? '').trim();
++
++    if (action === 'reject' && !note) {
++      setErrors((e) => ({ ...e, [r.id]: 'Add a note explaining the rejection.' }));
++      return;
++    }
++    if (
++      action === 'refunded' &&
++      !confirm('Issue the refund for this item via Razorpay now? This cannot be undone.')
++    ) {
++      return;
++    }
++
++    setBusyId(r.id);
++    setErrors((e) => ({ ...e, [r.id]: '' }));
++
++    try {
++      const res = await fetch(`/api/admin/returns/${r.id}`, {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({
++          action,
++          notes: note || undefined,
++          restock: action === 'received' ? (restock[r.id] ?? true) : undefined,
++        }),
++      });
++      const json = await res.json().catch(() => null);
++
++      if (!res.ok) {
++        setErrors((e) => ({ ...e, [r.id]: json?.error?.message ?? 'Could not update the return.' }));
++      } else {
++        setNotes((n) => ({ ...n, [r.id]: '' }));
++        router.refresh();
++      }
++    } catch {
++      setErrors((e) => ({ ...e, [r.id]: 'Could not reach the server. Please try again.' }));
++    } finally {
++      setBusyId(null);
++    }
++  }
++
++  return (
++    <section className="rounded-lg border border-charcoal/10 bg-ivory p-5">
++      <h2 className="font-heading text-lg text-maroon">Returns &amp; exchanges</h2>
++
++      {returns.length === 0 ? (
++        <p className="mt-2 text-xs text-ink-muted">No return or exchange requests for this order.</p>
++      ) : (
++        <div className="mt-4 space-y-5">
++          {returns.map((r) => {
++            const actions = actionsFor(r);
++            const busy = busyId === r.id;
++            return (
++              <div key={r.id} className="space-y-2 border-t border-charcoal/10 pt-4 first:border-t-0 first:pt-0">
++                <div className="flex items-start justify-between gap-3">
++                  <div>
++                    <p className="text-sm font-medium text-charcoal">
++                      {r.isExchange ? 'Exchange' : 'Return'}: {r.itemName}
++                    </p>
++                    <p className="text-xs text-ink-muted">
++                      {[r.itemSize, r.itemColor].filter(Boolean).join(' / ')} · Qty {r.quantity}
++                      {r.isExchange && r.exchangeSize ? ` · wants size ${r.exchangeSize}` : ''}
++                    </p>
++                  </div>
++                  <span
++                    className={`shrink-0 rounded-full px-2.5 py-1 text-[11px] uppercase tracking-[0.1em] ${STATUS_CLASSES[r.status]}`}
++                  >
++                    {RETURN_STATUS_LABEL[r.status]}
++                  </span>
++                </div>
++
++                <p className="text-sm text-ink-soft">
++                  {r.reason}
++                  {r.details && <span className="text-ink-muted"> — {r.details}</span>}
++                </p>
++                <p className="text-xs text-ink-muted">
++                  Requested {formatDate(r.requestedAt, 'long')}
++                  {r.resolvedAt ? ` · Closed ${formatDate(r.resolvedAt, 'long')}` : ''}
++                  {r.refundAmount !== null ? ` · Refunded ${formatPrice(r.refundAmount)}` : ''}
++                </p>
++                {r.adminNotes && <p className="text-xs italic text-ink-soft">Note: {r.adminNotes}</p>}
++
++                {actions.length > 0 && (
++                  <div className="space-y-2 pt-1">
++                    <textarea
++                      value={notes[r.id] ?? ''}
++                      onChange={(e) => setNotes((n) => ({ ...n, [r.id]: e.target.value }))}
++                      disabled={busy}
++                      rows={2}
++                      placeholder="Note (visible to the customer; required to reject)"
++                      className="w-full rounded-md border border-charcoal/15 bg-white px-3 py-2 text-sm outline-none focus:border-gold"
++                    />
++
++                    {r.status === 'picked_up' && (
++                      <label className="flex items-center gap-2 text-xs text-ink-soft">
++                        <input
++                          type="checkbox"
++                          checked={restock[r.id] ?? true}
++                          onChange={(e) => setRestock((s) => ({ ...s, [r.id]: e.target.checked }))}
++                          disabled={busy}
++                        />
++                        Item is sellable — add it back to stock
++                      </label>
++                    )}
++
++                    <div className="flex flex-wrap gap-2">
++                      {actions.map((a) => (
++                        <button
++                          key={a.action}
++                          type="button"
++                          disabled={busy}
++                          onClick={() => run(r, a.action)}
++                          className={
++                            a.danger
++                              ? 'rounded-md border border-red-300 px-3 py-1.5 text-xs font-medium text-red-700 hover:bg-red-50 disabled:opacity-50'
++                              : 'rounded-md bg-maroon px-3 py-1.5 text-xs font-medium text-ivory hover:bg-maroon/90 disabled:opacity-50'
++                          }
++                        >
++                          {busy ? 'Working…' : a.label}
++                        </button>
++                      ))}
++                    </div>
++                  </div>
++                )}
++
++                {errors[r.id] && <p className="text-xs text-red-600">{errors[r.id]}</p>}
++              </div>
++            );
++          })}
++        </div>
++      )}
++    </section>
++  );
++}
+diff --git a/src/lib/admin/returns-types.ts b/src/lib/admin/returns-types.ts
+new file mode 100644
+index 0000000..5bbddab
+--- /dev/null
++++ b/src/lib/admin/returns-types.ts
+@@ -0,0 +1,21 @@
++/* Pure types for the admin returns panel (no runtime imports, so Client
++   Components can import them without pulling in next/headers). */
++
++import type { ReturnStatus } from '@/types/database';
++
++export interface AdminReturnRecord {
++  id: string;
++  status: ReturnStatus;
++  reason: string;
++  details: string | null;
++  quantity: number;
++  isExchange: boolean;
++  exchangeSize: string | null;
++  adminNotes: string | null;
++  refundAmount: number | null;
++  requestedAt: string;
++  resolvedAt: string | null;
++  itemName: string;
++  itemSize: string;
++  itemColor: string;
++}
+diff --git a/src/lib/admin/returns.ts b/src/lib/admin/returns.ts
+new file mode 100644
+index 0000000..56044af
+--- /dev/null
++++ b/src/lib/admin/returns.ts
+@@ -0,0 +1,66 @@
++/* ============================================
++   EIFA COUTURE — Admin Returns Data Access (server read)
++   ============================================
++   Server-only (server Supabase client). Admins can read every row via
++   the `returns_select_own_or_admin` policy. Writes never happen here:
++   they go through /api/admin/returns/[id].
++   ============================================ */
++
++import { createClient } from '@/lib/supabase/server';
++import type { ReturnStatus } from '@/types/database';
++import type { AdminReturnRecord } from './returns-types';
++
++export type { AdminReturnRecord } from './returns-types';
++
++interface RawRow {
++  id: string;
++  status: ReturnStatus;
++  reason: string;
++  details: string | null;
++  quantity: number;
++  is_exchange: boolean;
++  exchange_size: string | null;
++  admin_notes: string | null;
++  refund_amount: number | null;
++  requested_at: string;
++  resolved_at: string | null;
++  order_items: { name: string; size: string; color_name: string } | null;
++}
++
++export async function getOrderReturns(orderId: string): Promise<{
++  data: AdminReturnRecord[];
++  error: string | null;
++}> {
++  const supabase = await createClient();
++
++  const { data, error } = await supabase
++    .from('order_returns')
++    .select(
++      'id, status, reason, details, quantity, is_exchange, exchange_size, admin_notes, refund_amount, requested_at, resolved_at, order_items ( name, size, color_name )'
++    )
++    .eq('order_id', orderId)
++    .order('requested_at', { ascending: false });
++
++  if (error) return { data: [], error: error.message };
++
++  const rows = ((data ?? []) as unknown as RawRow[]).map(
++    (r): AdminReturnRecord => ({
++      id: r.id,
++      status: r.status,
++      reason: r.reason,
++      details: r.details,
++      quantity: r.quantity,
++      isExchange: r.is_exchange,
++      exchangeSize: r.exchange_size,
++      adminNotes: r.admin_notes,
++      refundAmount: r.refund_amount === null ? null : Number(r.refund_amount),
++      requestedAt: r.requested_at,
++      resolvedAt: r.resolved_at,
++      itemName: r.order_items?.name ?? 'Item',
++      itemSize: r.order_items?.size ?? '',
++      itemColor: r.order_items?.color_name ?? '',
++    })
++  );
++
++  return { data: rows, error: null };
++}
+diff --git a/src/lib/rate-limit.ts b/src/lib/rate-limit.ts
+index bf54a7f..8463c75 100644
+--- a/src/lib/rate-limit.ts
++++ b/src/lib/rate-limit.ts
+@@ -131,6 +131,8 @@ export const RATE_LIMITS = {
+   /** Customer self-cancel — keyed by user id. Generous for a real
+    *  customer (a few orders), tight against scripted abuse. */
+   orderCancel: { limit: 5, windowMs: 60_000 },
++  /** Customer return/exchange request — keyed by user id. */
++  returnRequest: { limit: 5, windowMs: 60_000 },
+ } as const satisfies Record<string, RateLimitConfig>;
+ 
+ export function rateLimitResponseHeaders(retryAfterSeconds: number): HeadersInit {
+diff --git a/src/types/database.ts b/src/types/database.ts
+index e325f68..3443887 100644
+--- a/src/types/database.ts
++++ b/src/types/database.ts
+@@ -347,6 +347,8 @@ export interface DbOrderReturn {
+   image_urls: string[];
+   admin_notes: string | null;
+   exchange_size: string | null;
++  /** Refund that paid this return out; set before the Razorpay call so a retry can't refund twice. */
++  refund_id: string | null;
+   requested_at: string;
+   resolved_at: string | null;
+   updated_at: string;
+diff --git a/supabase/migrations/20261114160000_returns_and_exchanges.sql b/supabase/migrations/20261114160000_returns_and_exchanges.sql
+new file mode 100644
+index 0000000..5032ba1
+--- /dev/null
++++ b/supabase/migrations/20261114160000_returns_and_exchanges.sql
+@@ -0,0 +1,282 @@
++-- ============================================================
++-- EIFA COUTURE — Returns & exchanges (Phase D)
++-- ============================================================
++-- Requires 20261114140000 (Phase B: order_returns columns, unique
++-- open-return index, returns_insert_own dropped) and 0018 (refunds).
++-- Re-runnable.
++--
++-- 1. order_returns.refund_id links a return to the refund that paid
++--    it out, so a retried "Mark refunded" can never refund twice.
++-- 2. request_return(): customer request. Ownership, delivered, paid,
++--    return window, item, quantity, exchange variant + stock are all
++--    checked under an order-row lock. Service-role only.
++-- 3. admin_update_return(): the only way a return changes status.
++--    Enforces the transition map, restocks on request, takes stock
++--    for the exchange piece, writes the history row. Service-role only.
++-- 4. The direct admin UPDATE policy on order_returns is dropped, so
++--    nothing can skip the transition rules.
++
++alter table order_returns
++  add column if not exists refund_id uuid references refunds(id) on delete set null;
++
++drop policy if exists "returns_update_admin" on order_returns;
++
++-- ------------------------------------------------------------
++-- request_return()
++-- ------------------------------------------------------------
++create or replace function request_return(
++  p_order_id uuid,
++  p_user_id uuid,
++  p_order_item_id uuid,
++  p_quantity int,
++  p_reason text,
++  p_details text default null,
++  p_is_exchange boolean default false,
++  p_exchange_size text default null
++)
++returns jsonb
++language plpgsql
++security definer
++set search_path = public
++as $$
++declare
++  v_order record;
++  v_item record;
++  v_window int;
++  v_reason text := nullif(left(trim(coalesce(p_reason, '')), 200), '');
++  v_details text := nullif(left(trim(coalesce(p_details, '')), 1000), '');
++  v_already int;
++  v_variant uuid;
++  v_available int;
++  v_return_id uuid;
++begin
++  select id, user_id, order_number, status, payment_status, delivered_at
++  into v_order
++  from orders
++  where id = p_order_id
++  for update;
++
++  -- Same error for "missing" and "someone else's" so ids can't be probed.
++  if v_order.id is null or v_order.user_id is distinct from p_user_id then
++    raise exception 'order_not_found' using errcode = 'P0002';
++  end if;
++
++  if v_order.status <> 'delivered' or v_order.delivered_at is null then
++    raise exception 'order_not_delivered' using errcode = '22023';
++  end if;
++
++  if v_order.payment_status not in ('paid', 'partially_refunded') then
++    raise exception 'order_not_paid' using errcode = '22023';
++  end if;
++
++  select return_window_days into v_window from store_settings limit 1;
++  v_window := coalesce(v_window, 7);
++
++  -- Window closes at the end of the Nth day after delivery (IST).
++  if now() >= (((v_order.delivered_at at time zone 'Asia/Kolkata')::date + v_window + 1)::timestamp
++               at time zone 'Asia/Kolkata') then
++    raise exception 'return_window_closed' using errcode = '22023';
++  end if;
++
++  if v_reason is null then
++    raise exception 'reason_required' using errcode = '22023';
++  end if;
++
++  select id, product_id, size, color_name, quantity, name
++  into v_item
++  from order_items
++  where id = p_order_item_id and order_id = p_order_id;
++
++  if v_item.id is null then
++    raise exception 'item_not_found' using errcode = 'P0002';
++  end if;
++
++  if p_quantity is null or p_quantity < 1 or p_quantity > v_item.quantity then
++    raise exception 'invalid_quantity' using errcode = '22023';
++  end if;
++
++  if exists (
++    select 1 from order_returns
++    where order_item_id = p_order_item_id
++      and status in ('requested', 'approved', 'picked_up', 'received')
++  ) then
++    raise exception 'return_already_open' using errcode = '22023';
++  end if;
++
++  -- Completed returns/exchanges count against what was bought.
++  select coalesce(sum(quantity), 0) into v_already
++  from order_returns
++  where order_item_id = p_order_item_id and status in ('refunded', 'exchanged');
++
++  if v_already + p_quantity > v_item.quantity then
++    raise exception 'quantity_exceeds_purchased' using errcode = '22023';
++  end if;
++
++  if p_is_exchange then
++    if p_exchange_size is null or length(trim(p_exchange_size)) = 0 then
++      raise exception 'exchange_size_required' using errcode = '22023';
++    end if;
++
++    select id into v_variant
++    from product_variants
++    where product_id = v_item.product_id
++      and size = trim(p_exchange_size)
++      and color_name = v_item.color_name
++      and is_active;
++
++    if v_variant is null then
++      raise exception 'exchange_variant_unavailable' using errcode = '22023';
++    end if;
++
++    select quantity - reserved into v_available from inventory where variant_id = v_variant;
++    if coalesce(v_available, 0) < p_quantity then
++      raise exception 'exchange_out_of_stock' using errcode = '22023';
++    end if;
++  end if;
++
++  insert into order_returns (
++    order_item_id, order_id, user_id, status, reason, details, quantity,
++    is_exchange, exchange_variant_id, exchange_size
++  ) values (
++    p_order_item_id, p_order_id, p_user_id, 'requested', v_reason, v_details, p_quantity,
++    coalesce(p_is_exchange, false), v_variant,
++    case when p_is_exchange then trim(p_exchange_size) else null end
++  )
++  returning id into v_return_id;
++
++  insert into order_status_history (
++    order_id, event_type, previous_status, new_status, actor_type, actor_id, notes
++  ) values (
++    p_order_id, 'return_requested', null, null, 'customer', p_user_id,
++    case when p_is_exchange then 'Exchange' else 'Return' end
++      || ' requested for ' || v_item.name || ' (x' || p_quantity || '): ' || v_reason
++  );
++
++  return jsonb_build_object(
++    'id', v_return_id,
++    'order_number', v_order.order_number,
++    'status', 'requested'
++  );
++end;
++$$;
++
++revoke all on function request_return(uuid, uuid, uuid, int, text, text, boolean, text) from public;
++revoke all on function request_return(uuid, uuid, uuid, int, text, text, boolean, text) from anon, authenticated;
++grant execute on function request_return(uuid, uuid, uuid, int, text, text, boolean, text) to service_role;
++
++-- ------------------------------------------------------------
++-- admin_update_return()
++-- ------------------------------------------------------------
++create or replace function admin_update_return(
++  p_return_id uuid,
++  p_admin_id uuid,
++  p_to return_status,
++  p_notes text default null,
++  p_restock boolean default false,
++  p_refund_amount numeric default null
++)
++returns jsonb
++language plpgsql
++security definer
++set search_path = public
++as $$
++declare
++  v_role text;
++  v_order_id uuid;
++  v_order record;
++  v_ret record;
++  v_variant uuid;
++  v_notes text := nullif(left(trim(coalesce(p_notes, '')), 500), '');
++  v_ok boolean;
++  v_taken int;
++begin
++  select role::text into v_role from profiles where id = p_admin_id;
++  if v_role is null or v_role not in ('admin', 'superadmin') then
++    raise exception 'admin_required' using errcode = '42501';
++  end if;
++
++  select order_id into v_order_id from order_returns where id = p_return_id;
++  if v_order_id is null then
++    raise exception 'return_not_found' using errcode = 'P0002';
++  end if;
++
++  -- Lock order first, then the return (request_return locks the same way).
++  select id, order_number into v_order from orders where id = v_order_id for update;
++
++  select r.id, r.status, r.is_exchange, r.quantity, r.exchange_variant_id, r.order_item_id
++  into v_ret
++  from order_returns r
++  where r.id = p_return_id
++  for update;
++
++  v_ok := case v_ret.status
++    when 'requested' then p_to in ('approved', 'rejected')
++    when 'approved'  then p_to in ('picked_up', 'rejected')
++    when 'picked_up' then p_to = 'received'
++    when 'received'  then p_to in ('refunded', 'exchanged')
++    else false
++  end;
++  if not v_ok then
++    raise exception 'invalid_transition' using errcode = '22023';
++  end if;
++
++  if p_to = 'exchanged' and not v_ret.is_exchange then
++    raise exception 'not_an_exchange' using errcode = '22023';
++  end if;
++
++  if p_to = 'rejected' and v_notes is null then
++    raise exception 'rejection_note_required' using errcode = '22023';
++  end if;
++
++  if p_to = 'refunded' and (p_refund_amount is null or p_refund_amount <= 0) then
++    raise exception 'invalid_refund_amount' using errcode = '22023';
++  end if;
++
++  -- Back on the shelf only when the admin says the piece is sellable.
++  if p_to = 'received' and coalesce(p_restock, false) then
++    select variant_id into v_variant from order_items where id = v_ret.order_item_id;
++    if v_variant is not null then
++      update inventory set quantity = quantity + v_ret.quantity where variant_id = v_variant;
++    end if;
++  end if;
++
++  -- The replacement leaves the shelf when it ships.
++  if p_to = 'exchanged' then
++    if v_ret.exchange_variant_id is null then
++      raise exception 'exchange_variant_unavailable' using errcode = '22023';
++    end if;
++    update inventory
++       set quantity = quantity - v_ret.quantity
++     where variant_id = v_ret.exchange_variant_id
++       and quantity - reserved >= v_ret.quantity;
++    get diagnostics v_taken = row_count;
++    if v_taken = 0 then
++      raise exception 'exchange_out_of_stock' using errcode = '22023';
++    end if;
++  end if;
++
++  update order_returns
++     set status = p_to,
++         admin_notes = coalesce(v_notes, admin_notes),
++         refund_amount = case when p_to = 'refunded' then p_refund_amount else refund_amount end,
++         resolved_at = case when p_to in ('rejected', 'refunded', 'exchanged') then now() else resolved_at end
++   where id = p_return_id;
++
++  insert into order_status_history (
++    order_id, event_type, previous_status, new_status, actor_type, actor_id, notes
++  ) values (
++    v_order_id, 'return_' || p_to::text, null, null, 'admin', p_admin_id, v_notes
++  );
++
++  return jsonb_build_object(
++    'id', p_return_id,
++    'order_id', v_order_id,
++    'order_number', v_order.order_number,
++    'status', p_to
++  );
++end;
++$$;
++
++revoke all on function admin_update_return(uuid, uuid, return_status, text, boolean, numeric) from public;
++revoke all on function admin_update_return(uuid, uuid, return_status, text, boolean, numeric) from anon, authenticated;
++grant execute on function admin_update_return(uuid, uuid, return_status, text, boolean, numeric) to service_role;
