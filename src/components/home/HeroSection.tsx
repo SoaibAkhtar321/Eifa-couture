@@ -125,11 +125,11 @@ export default function HeroSection({
         of stacking a tall image above a wall of text.
         Desktop (lg): the original two-column layout.
       */}
-      <div className="relative mx-auto grid w-full max-w-[1400px] items-center px-3 pb-4 pt-3 sm:px-6 lg:min-h-[calc(100svh-5rem)] lg:grid-cols-[1.05fr_1fr] lg:gap-10 lg:px-12 lg:pb-20 lg:pt-14 xl:px-16">
+      <div className="relative mx-auto grid w-full max-w-[1400px] items-center px-3 pb-4 pt-3 sm:px-6 lg:min-h-[calc(100svh-5rem)] lg:grid-cols-[1.05fr_1fr] lg:items-center lg:gap-10 lg:px-12 lg:pb-20 lg:pt-14 xl:px-16">
         {/* Visual: rotating looks with parallax + karigar inset */}
         <motion.div
           style={parallax ? { y: frameY } : undefined}
-          className="relative col-start-1 row-start-1 lg:order-2"
+          className="relative col-start-1 row-start-1 sm:col-auto sm:row-auto lg:order-2"
         >
           <motion.div
             {...(off
@@ -165,7 +165,7 @@ export default function HeroSection({
             {/* Gradient: strong at the bottom on phones so the headline is readable */}
             <div
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 bg-linear-to-t from-maroon-dark/95 via-maroon-dark/35 via-45% to-transparent lg:from-maroon-dark/50 lg:via-transparent lg:via-100%"
+              className="pointer-events-none absolute inset-0 bg-linear-to-t from-maroon-dark/95 via-maroon-dark/35 via-45% to-transparent sm:from-maroon-dark/50 sm:via-transparent sm:via-100%"
             />
 
             <div className="absolute right-3 top-3 flex gap-1.5 rounded-full bg-espresso/70 px-2.5 py-1.5 backdrop-blur">
@@ -206,7 +206,7 @@ export default function HeroSection({
         {/* Story — overlays the bottom of the photo on phones */}
         <motion.div
           style={parallax ? { y: textY, opacity: textOpacity } : undefined}
-          className="relative z-10 col-start-1 row-start-1 self-end p-5 pb-6 sm:p-8 lg:order-1 lg:self-center lg:p-0 lg:pt-0"
+          className="relative z-10 col-start-1 row-start-1 self-end p-5 pb-6 sm:col-auto sm:row-auto sm:self-auto sm:p-0 sm:pt-12 lg:order-1 lg:self-center lg:pt-0"
         >
           <motion.p
             {...fade(0.1)}

@@ -301,7 +301,7 @@ export function sanitizeRedirectPath(path: string | null | undefined, fallback =
 // ── Placeholder imagery for products without uploaded photos ──
 const CATEGORY_PLACEHOLDER_IMAGES: Record<string, string> = {
   'womens-wear': '/images/categories/kurtas.png',
-  'mens-wear': '/images/categories/men-kurtas.png',
+  'mens-wear': '/images/collections/men.png',
   'bags-accessories': '/images/categories/dupattas.png',
   sarees: '/images/categories/sarees.png',
   dupattas: '/images/categories/dupattas.png',
