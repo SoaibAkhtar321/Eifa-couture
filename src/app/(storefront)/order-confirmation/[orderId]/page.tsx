@@ -38,6 +38,7 @@ import { useParams } from 'next/navigation';
 
 import { useAuth } from '@/hooks/useAuth';
 import { fetchOrderById, type OrderDetail } from '@/lib/orders';
+import { formatDeliveryPromise } from '@/lib/order-policy';
 import {
   createRazorpayOrderForInternalOrder,
   loadRazorpayScript,
@@ -372,17 +373,26 @@ export default function OrderConfirmationPage() {
                     </span>
 
                     <span className="mb-3 block font-body text-[10px] uppercase tracking-[0.3em] text-gold sm:text-xs">
-                      Order Confirmed
+                      {order.status === 'cancelled' ? 'Order Cancelled' : 'Order Confirmed'}
                     </span>
 
                     <h1 className="font-heading text-3xl text-charcoal sm:text-4xl">
-                      Thank You For Your Order
+                      {order.status === 'cancelled' ? 'This Order Was Cancelled' : 'Thank You For Your Order'}
                     </h1>
 
                     <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-ink-muted sm:text-base">
-                      Your payment was successful and your order has been placed. We&apos;ll
-                      send updates to your email as it&apos;s processed and shipped.
+                      {order.status === 'cancelled'
+                        ? paymentState === 'successful'
+                          ? 'Your refund is being processed to the original payment method.'
+                          : 'Your refund has been issued to the original payment method. It usually reflects in 5–7 business days.'
+                        : 'Your payment was successful and your order has been placed. Follow every step — from packing to delivery — on your order tracking page.'}
                     </p>
+
+                    {formatDeliveryPromise(order.status, order.estimatedDeliveryDate) && (
+                      <p className="mx-auto mt-4 inline-block rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-sm font-medium text-charcoal">
+                        {formatDeliveryPromise(order.status, order.estimatedDeliveryDate)}
+                      </p>
+                    )}
 
                     <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
                       <span className="font-heading text-lg text-charcoal">
@@ -442,7 +452,14 @@ export default function OrderConfirmationPage() {
                     )}
 
                     <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-                      <Link href="/shop" className="btn-luxury btn-luxury-primary text-center">
+                      <Link
+                        href={`/track-order?order=${order.orderNumber}`}
+                        className="btn-luxury btn-luxury-primary text-center"
+                      >
+                        Track Order
+                      </Link>
+
+                      <Link href="/shop" className="btn-luxury btn-luxury-secondary text-center">
                         Continue Shopping
                       </Link>
 
@@ -471,7 +488,9 @@ export default function OrderConfirmationPage() {
                       {paymentState === 'failed' &&
                         "We couldn't confirm payment for this order. This can happen if the payment was declined or the connection dropped mid-way. No amount has been charged for this attempt — you can safely retry."}
                       {paymentState === 'cancelled' &&
-                        'This order was cancelled before payment was completed and any reserved stock has been released. You can retry payment if the items are still available.'}
+                        (order.cancelledBy === 'customer' || order.cancelledBy === 'admin'
+                          ? 'This order was cancelled before payment was completed. Nothing was charged. You can place a new order any time.'
+                          : 'This order was cancelled before payment was completed and any reserved stock has been released. You can retry payment if the items are still available.')}
                     </p>
 
                     <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
@@ -489,7 +508,10 @@ export default function OrderConfirmationPage() {
                     )}
 
                     <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
-                      {order.paymentProvider === 'razorpay' && retryButton}
+                      {order.paymentProvider === 'razorpay' &&
+                        order.cancelledBy !== 'customer' &&
+                        order.cancelledBy !== 'admin' &&
+                        retryButton}
 
                       <Link href="/account/orders" className="btn-luxury btn-luxury-secondary text-center">
                         View My Orders

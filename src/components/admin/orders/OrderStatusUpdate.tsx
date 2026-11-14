@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { SelectField, TextareaField } from '@/components/admin/FormField';
 import { ORDER_STATUS_OPTIONS } from '@/lib/admin/orders-types';
 import { updateOrderStatus } from '@/lib/admin/orders-actions';
+import { canAdminTransition } from '@/lib/order-policy';
 import type { OrderStatus } from '@/types/database';
 
 const RESTOCK_STATUSES: OrderStatus[] = ['cancelled', 'refunded'];
@@ -66,7 +67,7 @@ export default function OrderStatusUpdate({
         value={pendingStatus ?? status}
         disabled={isSaving}
         onChange={(e) => handleChange(e.target.value as OrderStatus)}
-        options={ORDER_STATUS_OPTIONS}
+        options={ORDER_STATUS_OPTIONS.filter((o) => o.value === status || canAdminTransition(status, o.value))}
       />
       {error && <p className="text-xs text-red-600">{error}</p>}
 

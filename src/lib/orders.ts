@@ -187,6 +187,12 @@ export interface OrderSummary {
   total: number;
   itemCount: number;
   placedAt: string;
+  /** Expected delivery date (YYYY-MM-DD); null until the order is paid. */
+  estimatedDeliveryDate: string | null;
+  shippedAt: string | null;
+  /** Who cancelled it, if cancelled. Used to hide "Retry Payment" on
+   *  orders the customer or an admin deliberately cancelled. */
+  cancelledBy: DbOrder['cancelled_by'];
   refunds: CustomerRefundSummary[];
 }
 
@@ -196,7 +202,7 @@ export async function fetchOrders(userId: string): Promise<{ data: OrderSummary[
   const { data, error } = await supabase
     .from('orders')
     .select(
-      'id, order_number, status, payment_status, payment_provider, payment_provider_ref, razorpay_payment_id, payment_verified_at, total, placed_at, order_items ( quantity ), refunds ( amount, status, reason, created_at, processed_at )'
+      'id, order_number, status, payment_status, payment_provider, payment_provider_ref, razorpay_payment_id, payment_verified_at, total, placed_at, estimated_delivery_date, shipped_at, cancelled_by, order_items ( quantity ), refunds ( amount, status, reason, created_at, processed_at )'
     )
     .eq('user_id', userId)
     .order('placed_at', { ascending: false });
@@ -215,6 +221,9 @@ export async function fetchOrders(userId: string): Promise<{ data: OrderSummary[
     | 'payment_verified_at'
     | 'total'
     | 'placed_at'
+    | 'estimated_delivery_date'
+    | 'shipped_at'
+    | 'cancelled_by'
   > & {
     order_items: Pick<DbOrderItem, 'quantity'>[];
     refunds: RefundRow[];
@@ -232,6 +241,9 @@ export async function fetchOrders(userId: string): Promise<{ data: OrderSummary[
     total: Number(row.total),
     itemCount: row.order_items.reduce((sum, item) => sum + item.quantity, 0),
     placedAt: row.placed_at,
+    estimatedDeliveryDate: row.estimated_delivery_date,
+    shippedAt: row.shipped_at,
+    cancelledBy: row.cancelled_by,
     refunds: toCustomerRefunds(row.refunds),
   }));
 
@@ -262,7 +274,7 @@ export async function fetchOrderById(
   const { data, error } = await supabase
     .from('orders')
     .select(
-      'id, order_number, status, payment_status, payment_provider, payment_provider_ref, razorpay_payment_id, payment_verified_at, subtotal, shipping_fee, total, placed_at, shipping_address, order_items ( id, name, image_url, size, color_name, quantity, unit_price ), refunds ( amount, status, reason, created_at, processed_at )'
+      'id, order_number, status, payment_status, payment_provider, payment_provider_ref, razorpay_payment_id, payment_verified_at, subtotal, shipping_fee, total, placed_at, estimated_delivery_date, shipped_at, cancelled_by, shipping_address, order_items ( id, name, image_url, size, color_name, quantity, unit_price ), refunds ( amount, status, reason, created_at, processed_at )'
     )
     .eq('user_id', userId)
     .eq('id', orderId)
@@ -288,6 +300,9 @@ export async function fetchOrderById(
       total: Number(row.total),
       itemCount: row.order_items.reduce((sum, item) => sum + item.quantity, 0),
       placedAt: row.placed_at,
+      estimatedDeliveryDate: row.estimated_delivery_date,
+      shippedAt: row.shipped_at,
+      cancelledBy: row.cancelled_by,
       shippingAddress: row.shipping_address,
       items: row.order_items.map((item) => ({
         id: item.id,

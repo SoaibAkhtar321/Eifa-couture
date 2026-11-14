@@ -128,6 +128,9 @@ export const RATE_LIMITS = {
    *  slow down a compromised admin session or a UI double-click bug
    *  from firing many refunds in a row. */
   adminRefund: { limit: 20, windowMs: 60_000 },
+  /** Customer self-cancel — keyed by user id. Generous for a real
+   *  customer (a few orders), tight against scripted abuse. */
+  orderCancel: { limit: 5, windowMs: 60_000 },
 } as const satisfies Record<string, RateLimitConfig>;
 
 export function rateLimitResponseHeaders(retryAfterSeconds: number): HeadersInit {

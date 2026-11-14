@@ -11,6 +11,10 @@ type Shipping = {
   tracking_url: string | null;
   shipped_at: string | null;
   delivered_at: string | null;
+  estimated_delivery_date: string | null;
+  cancelled_at: string | null;
+  cancelled_by: string | null;
+  cancel_reason: string | null;
 };
 
 /** Courier + tracking details the customer sees on their Track Order page. */
@@ -19,13 +23,16 @@ export default function ShippingPanel({ orderId }: { orderId: string }) {
   const [provider, setProvider] = useState('');
   const [number, setNumber] = useState('');
   const [url, setUrl] = useState('');
+  const [eta, setEta] = useState('');
   const [message, setMessage] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     createClient()
       .from('orders')
-      .select('shipping_provider, tracking_number, tracking_url, shipped_at, delivered_at')
+      .select(
+        'shipping_provider, tracking_number, tracking_url, shipped_at, delivered_at, estimated_delivery_date, cancelled_at, cancelled_by, cancel_reason'
+      )
       .eq('id', orderId)
       .single()
       .then(({ data: row }) => {
@@ -35,6 +42,7 @@ export default function ShippingPanel({ orderId }: { orderId: string }) {
         setProvider(shipping.shipping_provider ?? '');
         setNumber(shipping.tracking_number ?? '');
         setUrl(shipping.tracking_url ?? '');
+        setEta(shipping.estimated_delivery_date ?? '');
       });
   }, [orderId]);
 
@@ -53,6 +61,7 @@ export default function ShippingPanel({ orderId }: { orderId: string }) {
         shipping_provider: provider.trim() || null,
         tracking_number: number.trim() || null,
         tracking_url: trimmedUrl || null,
+        estimated_delivery_date: eta || null,
       })
       .eq('id', orderId);
     setSaving(false);
@@ -71,6 +80,13 @@ export default function ShippingPanel({ orderId }: { orderId: string }) {
         <TextField label="Courier" placeholder="e.g. Delhivery, Blue Dart, India Post" value={provider} onChange={(e) => setProvider(e.target.value)} />
         <TextField label="Tracking / AWB number" value={number} onChange={(e) => setNumber(e.target.value)} />
         <TextField label="Tracking link (optional)" placeholder="https://…" value={url} onChange={(e) => setUrl(e.target.value)} />
+        <TextField
+          label="Estimated delivery date"
+          type="date"
+          hint="Set automatically when payment succeeds. Change it here if the courier gives a new date."
+          value={eta}
+          onChange={(e) => setEta(e.target.value)}
+        />
         <button
           type="submit"
           disabled={saving}
@@ -86,6 +102,21 @@ export default function ShippingPanel({ orderId }: { orderId: string }) {
           <dd>{fmt(data.shipped_at)}</dd>
           <dt className="text-ink-muted">Delivered</dt>
           <dd>{fmt(data.delivered_at)}</dd>
+          {data.cancelled_at && (
+            <>
+              <dt className="text-ink-muted">Cancelled</dt>
+              <dd>
+                {fmt(data.cancelled_at)}
+                {data.cancelled_by ? ` · by ${data.cancelled_by}` : ''}
+              </dd>
+              {data.cancel_reason && (
+                <>
+                  <dt className="text-ink-muted">Reason</dt>
+                  <dd>{data.cancel_reason}</dd>
+                </>
+              )}
+            </>
+          )}
         </dl>
       )}
     </section>

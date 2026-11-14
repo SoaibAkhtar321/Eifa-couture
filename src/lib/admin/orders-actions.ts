@@ -7,6 +7,7 @@
    ============================================ */
 
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
+import { canAdminTransition } from '@/lib/order-policy';
 import type { OrderStatus } from '@/types/database';
 
 const RESTOCK_TRIGGERS: OrderStatus[] = ['cancelled', 'refunded'];
@@ -17,6 +18,10 @@ export async function updateOrderStatus(
   previousStatus: OrderStatus,
   notes?: string
 ): Promise<{ error: string | null }> {
+  if (!canAdminTransition(previousStatus, status)) {
+    return { error: `Cannot move an order from "${previousStatus}" to "${status}".` };
+  }
+
   const supabase = createBrowserClient();
 
   const shouldRestock =

@@ -23,18 +23,20 @@ import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { fetchOrders, type OrderSummary } from '@/lib/orders';
 import { formatPrice } from '@/lib/utils';
+import CancelOrderButton from '@/components/account/CancelOrderButton';
 import OrderStatusBadge from '@/components/account/OrderStatusBadge';
+import { formatDeliveryPromise, getCancelEligibility } from '@/lib/order-policy';
 
 const STATUS_LABELS: Record<OrderSummary['status'], string> = {
   pending: 'Pending',
-  confirmed: 'Processing',
+  confirmed: 'Confirmed',
   processing: 'Processing',
   shipped: 'Shipped',
-  out_for_delivery: 'Shipped',
+  out_for_delivery: 'Out for delivery',
   delivered: 'Delivered',
   cancelled: 'Cancelled',
-  returned: 'Cancelled',
-  refunded: 'Cancelled',
+  returned: 'Returned',
+  refunded: 'Refunded',
 };
 
 type PaymentUiState = 'pending' | 'successful' | 'failed' | 'cancelled' | 'refunded' | 'partially_refunded';
@@ -166,8 +168,10 @@ export default function OrdersPage() {
           <div className="mt-8 space-y-4">
             {orders.map((order) => {
               const paymentState = derivePaymentState(order);
+              const cancelledOnPurpose = order.cancelledBy === 'customer' || order.cancelledBy === 'admin';
               const needsRetry =
                 order.paymentProvider === 'razorpay' &&
+                !cancelledOnPurpose &&
                 (paymentState === 'pending' || paymentState === 'failed' || paymentState === 'cancelled');
 
               return (
@@ -184,10 +188,16 @@ export default function OrdersPage() {
                     </div>
 
                     <div className="flex flex-wrap items-center gap-2">
-                      <OrderStatusBadge status={STATUS_LABELS[order.status] as 'Pending' | 'Processing' | 'Shipped' | 'Delivered' | 'Cancelled'} />
+                      <OrderStatusBadge status={STATUS_LABELS[order.status]} />
                       <PaymentStateBadge state={paymentState} />
                     </div>
                   </div>
+
+                  {formatDeliveryPromise(order.status, order.estimatedDeliveryDate) && (
+                    <p className="mt-3 text-sm font-medium text-charcoal">
+                      {formatDeliveryPromise(order.status, order.estimatedDeliveryDate)}
+                    </p>
+                  )}
 
                   <div className="mt-4 grid gap-x-6 gap-y-1 text-xs text-ink-muted sm:grid-cols-2 lg:grid-cols-4">
                     <p>
@@ -240,6 +250,37 @@ export default function OrdersPage() {
                         >
                           Retry Payment
                         </Link>
+                      )}
+
+                      {getCancelEligibility({
+                        status: order.status,
+                        payment_status: order.paymentStatus,
+                        shipped_at: order.shippedAt,
+                      }).ok && (
+                        <CancelOrderButton
+                          orderId={order.id}
+                          orderNumber={order.orderNumber}
+                          isPaid={order.paymentStatus === 'paid'}
+                          onCancelled={(outcome) =>
+                            setOrders((prev) =>
+                              prev.map((o): OrderSummary =>
+                                o.id === order.id
+                                  ? {
+                                      ...o,
+                                      status: 'cancelled',
+                                      cancelledBy: 'customer',
+                                      paymentStatus:
+                                        o.paymentStatus === 'paid' && outcome.refund === 'initiated'
+                                          ? 'refunded'
+                                          : o.paymentStatus === 'pending'
+                                            ? 'failed'
+                                            : o.paymentStatus,
+                                    }
+                                  : o
+                              )
+                            )
+                          }
+                        />
                       )}
 
                       <Link

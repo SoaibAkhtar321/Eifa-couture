@@ -69,13 +69,20 @@ export async function POST(request: NextRequest) {
 
   const { data: order, error: fetchError } = await supabase
     .from('orders')
-    .select('id, order_number, total, payment_status, payment_provider, payment_provider_ref')
+    .select('id, order_number, total, status, cancelled_by, payment_status, payment_provider, payment_provider_ref')
     .eq('id', orderId)
     .eq('user_id', user.id)
     .maybeSingle<
       Pick<
         DbOrder,
-        'id' | 'order_number' | 'total' | 'payment_status' | 'payment_provider' | 'payment_provider_ref'
+        | 'id'
+        | 'order_number'
+        | 'total'
+        | 'status'
+        | 'cancelled_by'
+        | 'payment_status'
+        | 'payment_provider'
+        | 'payment_provider_ref'
       >
     >();
 
@@ -93,6 +100,17 @@ export async function POST(request: NextRequest) {
   if (order.payment_status === 'paid') {
     return NextResponse.json(
       { error: { message: 'This order has already been paid.' } },
+      { status: 409 }
+    );
+  }
+
+  // A deliberately cancelled order (by the customer or an admin) must
+  // not be payable again — otherwise a late payment would settle and
+  // bring it back to life. System expiry (cancelled_by = 'system')
+  // stays retryable, as before.
+  if (order.status === 'cancelled' && (order.cancelled_by === 'customer' || order.cancelled_by === 'admin')) {
+    return NextResponse.json(
+      { error: { message: 'This order was cancelled. Please place a new order.' } },
       { status: 409 }
     );
   }

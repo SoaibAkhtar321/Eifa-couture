@@ -4,17 +4,23 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FormEvent, useEffect, useState } from 'react';
 
+import CancelOrderButton, { type CancelOutcome } from '@/components/account/CancelOrderButton';
 import { useAuth } from '@/hooks/useAuth';
+import { formatDeliveryPromise, getCancelEligibility } from '@/lib/order-policy';
 import { createClient } from '@/lib/supabase/client';
 import { formatPrice } from '@/lib/utils';
-import type { OrderStatus } from '@/types/database';
+import type { OrderStatus, PaymentStatus } from '@/types/database';
 
 type OrderRow = {
   id: string;
   order_number: string;
   status: OrderStatus;
+  payment_status: PaymentStatus;
   total: number;
   placed_at: string;
+  estimated_delivery_date: string | null;
+  cancelled_at: string | null;
+  cancel_reason: string | null;
   shipped_at: string | null;
   delivered_at: string | null;
   shipping_provider: string | null;
@@ -40,8 +46,21 @@ const STOPPED: Partial<Record<OrderStatus, string>> = {
   refunded: 'This order was refunded.',
 };
 
+function refundLine(order: Pick<OrderRow, 'status' | 'payment_status'>): string | null {
+  if (order.payment_status === 'refunded') {
+    return 'Your refund has been issued to the original payment method. It usually reflects in 5–7 business days.';
+  }
+  if (order.payment_status === 'partially_refunded') {
+    return 'A partial refund has been issued to the original payment method.';
+  }
+  if (order.status === 'cancelled' && order.payment_status === 'paid') {
+    return 'Your refund is being processed. If you do not see it within 5–7 business days, contact us.';
+  }
+  return null;
+}
+
 const SELECT =
-  'id, order_number, status, total, placed_at, shipped_at, delivered_at, shipping_provider, tracking_number, tracking_url, order_items ( name, quantity, size, color_name )';
+  'id, order_number, status, payment_status, total, placed_at, estimated_delivery_date, cancelled_at, cancel_reason, shipped_at, delivered_at, shipping_provider, tracking_number, tracking_url, order_items ( name, quantity, size, color_name )';
 
 function fmt(date: string) {
   return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(
@@ -87,6 +106,29 @@ export default function OrderTracker() {
       active = false;
     };
   }, [selected]);
+
+  function handleCancelled(orderId: string, outcome: CancelOutcome) {
+    setOrders((prev) =>
+      (prev ?? []).map((o): OrderRow =>
+        o.id === orderId
+          ? {
+              ...o,
+              status: 'cancelled',
+              cancelled_at: new Date().toISOString(),
+              payment_status:
+                o.payment_status === 'paid' && outcome.refund === 'initiated'
+                  ? 'refunded'
+                  : o.payment_status === 'pending'
+                    ? 'failed'
+                    : o.payment_status,
+            }
+          : o
+      )
+    );
+    // Pull the history row the server just wrote.
+    setHistory([]);
+    router.refresh();
+  }
 
   function search(event: FormEvent) {
     event.preventDefault();
@@ -171,6 +213,27 @@ export default function OrderTracker() {
             <p className="font-subheading text-2xl font-semibold text-charcoal">{formatPrice(selected.total)}</p>
           </div>
 
+          {formatDeliveryPromise(selected.status, selected.estimated_delivery_date) && (
+            <p className="mt-5 rounded-lg border border-gold/40 bg-gold/10 px-4 py-3 text-sm font-medium text-charcoal">
+              {formatDeliveryPromise(selected.status, selected.estimated_delivery_date)}
+            </p>
+          )}
+
+          {getCancelEligibility({
+            status: selected.status,
+            payment_status: selected.payment_status,
+            shipped_at: selected.shipped_at,
+          }).ok && (
+            <div className="mt-4">
+              <CancelOrderButton
+                orderId={selected.id}
+                orderNumber={selected.order_number}
+                isPaid={selected.payment_status === 'paid'}
+                onCancelled={(outcome) => handleCancelled(selected.id, outcome)}
+              />
+            </div>
+          )}
+
           {(selected.shipping_provider || selected.tracking_number) && (
             <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-lg bg-cream px-4 py-3 text-sm">
               <div>
@@ -193,7 +256,14 @@ export default function OrderTracker() {
           )}
 
           {stopped ? (
-            <p className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">{stopped}</p>
+            <div className="mt-8 space-y-1 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+              <p className="font-medium">{stopped}</p>
+              {selected.status === 'cancelled' && selected.cancelled_at && (
+                <p className="text-xs">Cancelled on {fmt(selected.cancelled_at)}.</p>
+              )}
+              {selected.cancel_reason && <p className="text-xs">Reason: {selected.cancel_reason}</p>}
+              {refundLine(selected) && <p className="pt-1 text-xs">{refundLine(selected)}</p>}
+            </div>
           ) : (
             <ol className="mt-8 space-y-0">
               {STEPS.map((step, i) => {
