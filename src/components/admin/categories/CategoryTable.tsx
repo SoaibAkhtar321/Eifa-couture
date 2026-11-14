@@ -1,107 +1,267 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
+import CategoryDeleteDialog from '@/components/admin/categories/CategoryDeleteDialog';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
-import { softDeleteCategory } from '@/lib/admin/categories-write';
+import { useToast } from '@/components/admin/ui/Toaster';
+import CategoryPlaceholder from '@/components/ui/CategoryPlaceholder';
+import {
+  deleteCategoryAction,
+  getCategoryDeleteImpactAction,
+  reorderCategoriesAction,
+  type CategoryDeleteImpact,
+} from '@/lib/admin/categories-actions';
+import { AUDIENCE_OPTIONS } from '@/lib/catalog';
 import type { DbCategory } from '@/types/database';
 
 interface CategoryTableProps {
   rows: DbCategory[];
+  /** category id -> number of products. null when counts could not be loaded. */
+  productCounts: Record<string, number> | null;
   error: string | null;
 }
 
-export default function CategoryTable({ rows, error }: CategoryTableProps) {
+const AUDIENCE_LABELS = new Map<string, string>(AUDIENCE_OPTIONS.map((o) => [o.value, o.label]));
+
+function bySortThenName(a: DbCategory, b: DbCategory) {
+  return a.sort_order - b.sort_order || a.name.localeCompare(b.name);
+}
+
+interface DeleteState {
+  category: DbCategory;
+  impact: CategoryDeleteImpact | null;
+  loadError: string | null;
+  submitError: string | null;
+  busy: boolean;
+}
+
+export default function CategoryTable({ rows, productCounts, error }: CategoryTableProps) {
   const router = useRouter();
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const toast = useToast();
+  const [query, setQuery] = useState('');
+  const [isReordering, setIsReordering] = useState(false);
+  const [dialog, setDialog] = useState<DeleteState | null>(null);
 
-  const nameById = new Map(rows.map((c) => [c.id, c.name]));
+  const nameById = useMemo(() => new Map(rows.map((c) => [c.id, c.name])), [rows]);
 
-  async function handleDelete(row: DbCategory) {
-    setDeleteError(null);
-    const confirmed = window.confirm(
-      `Delete "${row.name}"? Products already assigned to it will keep their category reference, but it will no longer appear as an option.`
+  // Main categories first, each followed by its sub-categories.
+  const ordered = useMemo(() => {
+    const ids = new Set(rows.map((c) => c.id));
+    const isTop = (c: DbCategory) => !c.parent_id || !ids.has(c.parent_id);
+    const tops = rows.filter(isTop).sort(bySortThenName);
+    const result: DbCategory[] = [];
+    for (const top of tops) {
+      result.push(top);
+      result.push(...rows.filter((c) => c.parent_id === top.id).sort(bySortThenName));
+    }
+    return result;
+  }, [rows]);
+
+  const searchText = query.trim().toLowerCase();
+  const visible = useMemo(() => {
+    if (!searchText) return ordered;
+    return ordered.filter((c) => {
+      const haystack = [
+        c.name,
+        c.slug,
+        c.audience ? AUDIENCE_LABELS.get(c.audience) ?? c.audience : '',
+        c.parent_id ? nameById.get(c.parent_id) ?? '' : '',
+        c.is_active ? 'active' : 'hidden inactive',
+      ]
+        .join(' ')
+        .toLowerCase();
+      return haystack.includes(searchText);
+    });
+  }, [ordered, searchText, nameById]);
+
+  const canReorder = !searchText && !isReordering;
+
+  function siblingsOf(row: DbCategory): DbCategory[] {
+    return rows.filter((c) => (c.parent_id ?? null) === (row.parent_id ?? null)).sort(bySortThenName);
+  }
+
+  async function move(row: DbCategory, direction: -1 | 1) {
+    const siblings = siblingsOf(row);
+    const index = siblings.findIndex((c) => c.id === row.id);
+    const target = index + direction;
+    if (index === -1 || target < 0 || target >= siblings.length) return;
+
+    const next = [...siblings];
+    [next[index], next[target]] = [next[target], next[index]];
+
+    setIsReordering(true);
+    const parentLabel = row.parent_id ? `Sub-categories of ${nameById.get(row.parent_id) ?? 'category'}` : 'Main categories';
+    const { error: reorderError } = await reorderCategoriesAction(
+      next.map((c) => c.id),
+      parentLabel
     );
-    if (!confirmed) return;
+    setIsReordering(false);
 
-    setPendingDeleteId(row.id);
-    const { error: deleteErr } = await softDeleteCategory(row.id);
-    setPendingDeleteId(null);
-
-    if (deleteErr) {
-      setDeleteError(deleteErr);
+    if (reorderError) {
+      toast.error(reorderError);
       return;
     }
+    toast.success('Order saved');
     router.refresh();
   }
 
+  async function openDelete(row: DbCategory) {
+    setDialog({ category: row, impact: null, loadError: null, submitError: null, busy: false });
+    const { data, error: impactError } = await getCategoryDeleteImpactAction(row.id);
+    setDialog((current) =>
+      current && current.category.id === row.id
+        ? { ...current, impact: data, loadError: impactError }
+        : current
+    );
+  }
+
+  async function confirmDelete(choice: { moveProductsTo: string | null; moveChildrenTo: string | null }) {
+    if (!dialog) return;
+    const target = dialog.category;
+    setDialog({ ...dialog, busy: true, submitError: null });
+
+    const { error: deleteError } = await deleteCategoryAction({ id: target.id, ...choice });
+    if (deleteError) {
+      setDialog((current) => (current ? { ...current, busy: false, submitError: deleteError } : current));
+      return;
+    }
+
+    setDialog(null);
+    toast.success(`“${target.name}” deleted`);
+    router.refresh();
+  }
+
+  const productTargets = dialog
+    ? rows
+        .filter((c) => c.id !== dialog.category.id && c.is_active)
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((c) => ({
+          value: c.id,
+          label: c.parent_id ? `${nameById.get(c.parent_id) ?? ''} › ${c.name}` : c.name,
+        }))
+    : [];
+  const childTargets = dialog
+    ? rows
+        .filter((c) => c.id !== dialog.category.id && !c.parent_id && c.is_active)
+        .sort(bySortThenName)
+        .map((c) => ({ value: c.id, label: c.name }))
+    : [];
+
   const columns: DataTableColumn<DbCategory>[] = [
+    {
+      key: 'picture',
+      header: 'Picture',
+      render: (row) => (
+        <div className="relative h-14 w-11 overflow-hidden rounded-md bg-charcoal ring-1 ring-gold-deep/30">
+          {row.image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element -- small admin thumbnail
+            <img src={row.image_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+          ) : (
+            <CategoryPlaceholder name={row.name} size="thumb" />
+          )}
+        </div>
+      ),
+    },
     {
       key: 'name',
       header: 'Name',
       render: (row) => (
-        <div>
-          <p className="font-medium text-charcoal">{row.name}</p>
+        <div className={row.parent_id ? 'pl-4' : ''}>
+          <p className="font-medium text-charcoal">
+            {row.parent_id && <span className="mr-1 text-ink-muted">↳</span>}
+            {row.name}
+          </p>
           <p className="text-xs text-ink-muted">{row.slug}</p>
         </div>
       ),
     },
     {
-      key: 'parent',
-      header: 'Parent',
-      render: (row) => (row.parent_id ? nameById.get(row.parent_id) ?? '—' : <span className="text-ink-muted">—</span>),
+      key: 'audience',
+      header: 'For',
+      render: (row) => (row.audience ? AUDIENCE_LABELS.get(row.audience) ?? row.audience : <span className="text-ink-muted">—</span>),
     },
     {
-      key: 'sort_order',
-      header: 'Sort',
-      render: (row) => row.sort_order,
+      key: 'parent',
+      header: 'Parent',
+      render: (row) =>
+        row.parent_id ? nameById.get(row.parent_id) ?? '—' : <span className="text-ink-muted">Main category</span>,
+    },
+    {
+      key: 'products',
+      header: 'Products',
+      render: (row) => (productCounts ? (productCounts[row.id] ?? 0) : <span className="text-ink-muted">—</span>),
+    },
+    {
+      key: 'order',
+      header: 'Order',
+      render: (row) => {
+        const siblings = siblingsOf(row);
+        const index = siblings.findIndex((c) => c.id === row.id);
+        return (
+          <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <button
+              type="button"
+              disabled={!canReorder || index <= 0}
+              onClick={() => void move(row, -1)}
+              aria-label={`Move ${row.name} up`}
+              className="flex h-10 w-10 items-center justify-center rounded text-charcoal hover:bg-charcoal/10 disabled:opacity-30"
+            >
+              ▲
+            </button>
+            <button
+              type="button"
+              disabled={!canReorder || index === -1 || index >= siblings.length - 1}
+              onClick={() => void move(row, 1)}
+              aria-label={`Move ${row.name} down`}
+              className="flex h-10 w-10 items-center justify-center rounded text-charcoal hover:bg-charcoal/10 disabled:opacity-30"
+            >
+              ▼
+            </button>
+            <span className="ml-1 text-xs text-ink-muted">{row.sort_order}</span>
+          </div>
+        );
+      },
     },
     {
       key: 'active',
-      header: 'Active',
+      header: 'Status',
       render: (row) => (
         <span
           className={`rounded-full px-2.5 py-1 text-xs font-medium ${
             row.is_active ? 'bg-green-100 text-green-800' : 'bg-charcoal/10 text-ink-muted'
           }`}
         >
-          {row.is_active ? 'Active' : 'Inactive'}
+          {row.is_active ? 'Showing' : 'Hidden'}
         </span>
       ),
-    },
-    {
-      key: 'updated',
-      header: 'Updated',
-      render: (row) => new Date(row.updated_at).toLocaleDateString('en-IN'),
     },
     {
       key: 'actions',
       header: '',
       className: 'text-right',
       render: (row) => (
-        <div className="flex justify-end gap-3">
+        <div className="flex justify-end gap-1">
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation();
               router.push(`/admin/categories/${row.id}/edit`);
             }}
-            className="text-sm font-medium text-maroon hover:underline"
+            className="min-h-[44px] px-2 text-sm font-medium text-maroon hover:underline"
           >
             Edit
           </button>
           <button
             type="button"
-            disabled={pendingDeleteId === row.id}
             onClick={(e) => {
               e.stopPropagation();
-              void handleDelete(row);
+              void openDelete(row);
             }}
-            className="text-sm font-medium text-red-600 hover:underline disabled:opacity-50"
+            className="min-h-[44px] px-2 text-sm font-medium text-red-600 hover:underline"
           >
-            {pendingDeleteId === row.id ? 'Deleting…' : 'Delete'}
+            Delete
           </button>
         </div>
       ),
@@ -110,18 +270,44 @@ export default function CategoryTable({ rows, error }: CategoryTableProps) {
 
   return (
     <div className="space-y-4">
-      {deleteError && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{deleteError}</div>
-      )}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by name, web address, Women / Men…"
+          aria-label="Search categories"
+          className="w-full rounded-md border border-charcoal/15 bg-ivory px-3 py-2.5 text-sm text-charcoal placeholder:text-ink-muted focus:border-maroon focus:outline-none focus:ring-2 focus:ring-maroon/30 sm:max-w-sm"
+        />
+        <p className="text-xs text-ink-muted">
+          {searchText
+            ? `Showing ${visible.length} of ${rows.length}. Clear the search to change the order.`
+            : 'Use ▲ ▼ to change the order shoppers see. Hidden categories are listed too.'}
+        </p>
+      </div>
 
       <DataTable
         columns={columns}
-        rows={rows}
+        rows={visible}
         getRowKey={(row) => row.id}
         error={error}
-        emptyMessage="No categories yet."
+        emptyMessage={searchText ? 'No categories match your search.' : 'No categories yet.'}
         onRowClick={(row) => router.push(`/admin/categories/${row.id}/edit`)}
       />
+
+      {dialog && (
+        <CategoryDeleteDialog
+          name={dialog.category.name}
+          impact={dialog.impact}
+          loadError={dialog.loadError}
+          submitError={dialog.submitError}
+          busy={dialog.busy}
+          productTargets={productTargets}
+          childTargets={childTargets}
+          onConfirm={(choice) => void confirmDelete(choice)}
+          onCancel={() => setDialog(null)}
+        />
+      )}
     </div>
   );
 }

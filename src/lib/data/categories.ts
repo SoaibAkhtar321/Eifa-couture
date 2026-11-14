@@ -6,7 +6,7 @@
    products.ts for the reasoning behind this pattern.
    ============================================ */
 
-import { getCategoryPlaceholder } from '@/lib/utils';
+import { getKnownCategoryImage } from '@/lib/utils';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
 import type { Category } from '@/types';
@@ -19,9 +19,11 @@ function mapCategoryRow(row: DbCategory): Category {
     name: row.name,
     slug: row.slug,
     description: row.description,
-    image:
-      row.image_url ??
-      getCategoryPlaceholder(row.slug),
+    // Uploaded image first; the seeded categories keep their bundled
+    // picture; everything else is '' and renders the neutral placeholder
+    // (see CategoryImage). The latest-product-photo step sits between
+    // the two in fetchActiveCategoriesWithImages.
+    image: row.image_url ?? getKnownCategoryImage(row.slug) ?? '',
     parentId: row.parent_id,
     audience: row.audience ?? null,
     isActive: row.is_active,
@@ -62,8 +64,8 @@ export async function fetchCategoryBySlug(
 /**
  * Active categories with a guaranteed REAL image: the admin-uploaded
  * category image first, otherwise the newest product photo in that
- * category (or its sub-categories), and only then the bundled
- * placeholder. Keeps homepage and audience tiles relevant without the
+ * category (or its sub-categories), and only then the neutral
+ * placeholder (an empty `image`, drawn by CategoryImage). Keeps homepage and audience tiles relevant without the
  * admin having to upload a picture for every category.
  */
 export async function fetchActiveCategoriesWithImages(

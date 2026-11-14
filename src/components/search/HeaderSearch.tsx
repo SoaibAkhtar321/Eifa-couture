@@ -202,8 +202,11 @@ function SuggestionIcon({ type }: { type: AutocompleteItem['type'] }) {
 }
 
 // The catalogue used for suggestions is only downloaded the first time the
-// search is opened (it used to load on EVERY page view), then reused.
-let catalogCache: { products: Product[]; categories: Category[] } | null = null;
+// search is opened (it used to load on EVERY page view), then reused for
+// a minute, so a category added/edited/removed in the admin shows up in the
+// suggestions soon after instead of staying stale until a full page reload.
+const CATALOG_CACHE_MS = 60_000;
+let catalogCache: { products: Product[]; categories: Category[]; fetchedAt: number } | null = null;
 
 /**
  * Search overlay. Mounted only while open, so its state resets on every
@@ -227,13 +230,13 @@ function SearchDialog() {
   const searchText = debouncedQuery.trim();
 
   useEffect(() => {
-    if (catalogCache) return;
+    if (catalogCache && Date.now() - catalogCache.fetchedAt < CATALOG_CACHE_MS) return;
     let isMounted = true;
     const supabase = createClient();
 
     Promise.all([fetchActiveProducts(supabase), fetchActiveCategories(supabase)]).then(
       ([liveProducts, liveCategories]) => {
-        catalogCache = { products: liveProducts, categories: liveCategories };
+        catalogCache = { products: liveProducts, categories: liveCategories, fetchedAt: Date.now() };
         if (!isMounted) return;
         setProducts(liveProducts);
         setCategories(liveCategories);

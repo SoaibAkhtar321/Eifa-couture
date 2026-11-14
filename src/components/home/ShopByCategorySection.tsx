@@ -3,12 +3,43 @@ import Link from 'next/link';
 import SectionHeader from '@/components/home/SectionHeader';
 import Reveal from '@/components/motion/Reveal';
 import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
-import ProductImage from '@/components/ui/ProductImage';
+import CategoryImage from '@/components/ui/CategoryImage';
 import { createClient } from '@/lib/supabase/server';
 import { fetchActiveCategoriesWithImages } from '@/lib/data/categories';
 
 function getCategoryHref(slug: string) {
   return `/shop?category=${slug}`;
+}
+
+/**
+ * Card sizes for ANY number of categories (1 to 12+). Rows are centred
+ * (flex-wrap + justify-center), so a short last row never leaves a hole.
+ * Gaps are 12px (mobile), 20px (md) and 24px (lg), matching the classes
+ * on the grid; the calc() widths subtract each breakpoint's share of the
+ * gaps. Class names are written out in full so Tailwind can see them.
+ *
+ *   mobile : 2 columns (a single category is one centred card)
+ *   tablet : 2 columns for 2 or 4 categories, otherwise 3
+ *   desktop: 1-4 categories fill one row, then 3 (5, 6, 9), 5 (10) or 4
+ */
+function getCategoryGrid(count: number): { container: string; item: string } {
+  if (count <= 1) {
+    return { container: '', item: 'w-full max-w-[320px]' };
+  }
+
+  const base = 'w-[calc(50%-6px)]';
+  const md = count === 2 || count === 4 ? 'md:w-[calc(50%-10px)]' : 'md:w-[calc(33.333%-14px)]';
+
+  let lg: string;
+  if (count === 2) lg = 'lg:w-[calc(50%-12px)]';
+  else if (count === 3 || count === 5 || count === 6 || count === 9) lg = 'lg:w-[calc(33.333%-16px)]';
+  else if (count === 10) lg = 'lg:w-[calc(20%-20px)]';
+  else lg = 'lg:w-[calc(25%-18px)]';
+
+  return {
+    container: count === 2 ? 'mx-auto max-w-3xl' : '',
+    item: `${base} ${md} ${lg}`,
+  };
 }
 
 interface ShopByCategorySectionProps {
@@ -29,17 +60,8 @@ export default async function ShopByCategorySection({
 
   if (categories.length === 0) return null;
 
-  // Size the grid to the number of categories so a short list never
-  // leaves an empty column on desktop.
   const count = categories.length;
-  const gridCols =
-    count === 1
-      ? 'mx-auto max-w-sm grid-cols-1'
-      : count === 2
-        ? 'mx-auto max-w-3xl grid-cols-2'
-        : count === 3
-          ? 'grid-cols-2 md:grid-cols-3'
-          : 'grid-cols-2 md:grid-cols-3 lg:grid-cols-4';
+  const grid = getCategoryGrid(count);
 
   return (
     <section
@@ -57,23 +79,17 @@ export default async function ShopByCategorySection({
           }
         />
 
-        <StaggerGroup className={`grid gap-3 sm:gap-5 lg:gap-6 ${gridCols}`}>
+        <StaggerGroup className={`flex flex-wrap justify-center gap-3 md:gap-5 lg:gap-6 ${grid.container}`}>
           {categories.map((category, index) => (
-            <StaggerItem
-              key={category.id}
-              className={`group ${count === 3 && index === 2 ? 'col-span-2 md:col-span-1' : ''}`}
-            >
+            <StaggerItem key={category.id} className={`group ${grid.item}`}>
               <Link
                 href={getCategoryHref(category.slug)}
-                className={`relative block overflow-hidden rounded-2xl bg-charcoal ring-1 ring-gold-deep/30 ${
-                  count === 3 && index === 2 ? 'aspect-[16/10] md:aspect-[4/5]' : 'aspect-[4/5]'
-                }`}
+                className="relative block aspect-[4/5] overflow-hidden rounded-2xl bg-charcoal ring-1 ring-gold-deep/30"
                 aria-label={`Explore ${category.name}`}
               >
-                <ProductImage
+                <CategoryImage
                   src={category.image}
-                  alt={category.name}
-                  fill
+                  name={category.name}
                   priority={index < 2}
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
                   className="object-cover transition-transform duration-700 group-hover:scale-105"

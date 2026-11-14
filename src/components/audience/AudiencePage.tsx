@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Reveal from '@/components/motion/Reveal';
 import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
 import ProductCard from '@/components/product/ProductCard';
-import ProductImage from '@/components/ui/ProductImage';
+import CategoryImage from '@/components/ui/CategoryImage';
 import { getAudienceContent } from '@/lib/audience-content';
 import { getAudiencePanelImage } from '@/lib/data/audience-panels';
 import { getAudienceRootCategories, type Audience } from '@/lib/catalog';
@@ -77,10 +77,9 @@ export default async function AudiencePage({ audience }: { audience: Audience })
                     href={`/shop?audience=${audience}&category=${category.slug}`}
                     className="group relative block aspect-[4/5] overflow-hidden rounded-2xl bg-espresso ring-1 ring-gold-deep/30"
                   >
-                    <ProductImage
+                    <CategoryImage
                       src={category.image}
-                      alt={category.name}
-                      fill
+                      name={category.name}
                       sizes="(max-width: 640px) 50vw, 256px"
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />

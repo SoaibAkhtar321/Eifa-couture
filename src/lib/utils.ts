@@ -314,3 +314,12 @@ export const DEFAULT_PLACEHOLDER_IMAGE = '/images/categories/kurtas.png';
 export function getCategoryPlaceholder(slug: string | null | undefined): string {
   return (slug && CATEGORY_PLACEHOLDER_IMAGES[slug]) || DEFAULT_PLACEHOLDER_IMAGE;
 }
+
+/**
+ * Bundled picture for the original seeded categories only (sarees,
+ * dupattas, …). Any other category returns null so the storefront shows
+ * the neutral maroon/gold placeholder instead of an unrelated kurta photo.
+ */
+export function getKnownCategoryImage(slug: string | null | undefined): string | null {
+  return (slug && CATEGORY_PLACEHOLDER_IMAGES[slug]) || null;
+}

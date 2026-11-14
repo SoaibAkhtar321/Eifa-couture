@@ -11,6 +11,7 @@ script, either way it's a few clicks/one script run, not a schema change.
 | `product-images`    | Yes    | `product_images.url`, variant swatches         | CDN-cacheable, immutable filenames (hash-suffixed) |
 | `fabric-swatches`    | Yes    | `fabrics.swatch_url`                           | Small images, rarely change |
 | `banners`            | Yes    | `banners.image_url` / `mobile_image_url`       | Two sizes per banner |
+| `category-images`    | Yes    | `categories.image_url`                         | Admin-uploaded, resized to ~1200px WebP in the browser; created by migration 20261115120000 |
 | `review-images`      | Yes    | `review_images.url`                            | Customer-uploaded, moderated via `reviews.is_published` |
 | `avatars`            | Yes    | `profiles.avatar_url`                          | User-uploaded profile photos |
 | `invoices`           | No     | Generated order invoice PDFs                    | Private — signed URLs only, referenced by `orders.invoice_url` |
@@ -23,6 +24,7 @@ product-images/{product_id}/{variant_id?}/{filename}
 fabric-swatches/{fabric_id}/{filename}
 banners/{banner_id}/desktop.{ext}
 banners/{banner_id}/mobile.{ext}
+category-images/{category_id}/{timestamp-random}.webp
 review-images/{review_id}/{filename}
 avatars/{user_id}/{filename}
 invoices/{order_id}/invoice.pdf
@@ -37,7 +39,7 @@ makes cleanup on row delete a simple prefix-delete.
 ## Storage RLS policies (applied when the bucket is created)
 
 - **Public buckets** (`product-images`, `fabric-swatches`, `banners`,
-  `review-images`, `avatars`, `store-assets`): `select` allowed for
+  `review-images`, `avatars`, `store-assets`, `category-images`): `select` allowed for
   everyone; `insert` / `update` / `delete` restricted to `is_admin()`
   — **except** `avatars/{user_id}/*` (owner can manage their own) and
   `review-images/{review_id}/*` (owner of the parent review can upload,
