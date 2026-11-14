@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import NotificationsView from '@/components/notifications/NotificationsView';
+
 export const metadata = { title: 'Notifications | Eifa Couture' };
 
 export default function NotificationsPage() {
@@ -13,8 +15,10 @@ export default function NotificationsPage() {
         </nav>
 
         <h1 className="font-heading text-4xl text-charcoal sm:text-5xl">Notifications</h1>
-        <div className="mt-8 border border-beige bg-white p-8 text-center">
-          <p className="text-sm text-ink-muted">No notifications yet.</p>
+        <p className="mt-2 text-sm text-ink-muted">Updates about your orders, returns and refunds.</p>
+
+        <div className="mt-8">
+          <NotificationsView variant="storefront" />
         </div>
       </section>
     </main>

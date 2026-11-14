@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 
 import { useAuth } from '@/hooks/useAuth';
 import { getInitials } from '@/lib/utils';
+import NotificationBell from '@/components/notifications/NotificationBell';
 import type { AdminSession } from '@/lib/admin/auth';
 
 export default function AdminHeader({
@@ -40,6 +41,8 @@ export default function AdminHeader({
       </div>
 
       <div className="flex items-center gap-4">
+        <NotificationBell variant="admin" />
+
         <span className="hidden sm:inline-block text-[11px] uppercase tracking-wide text-gold-dark bg-gold/10 border border-gold/30 rounded-full px-3 py-1">
           {admin.role}
         </span>

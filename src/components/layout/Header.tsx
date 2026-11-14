@@ -13,6 +13,7 @@ import { getUserInitial } from '@/lib/user-display';
 import AnnouncementBar from './AnnouncementBar';
 import MobileMenu from './MobileMenu';
 import HeaderSearch from '@/components/search/HeaderSearch';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 // ── Minimalist Luxury Navigation ──
 const CORE_LINKS = [
@@ -171,6 +172,9 @@ export default function Header() {
                   </span>
                 </Link>
               )}
+
+              {/* Notifications (signed-in only) */}
+              {showAccountIcon && <NotificationBell />}
 
               {/* Wishlist */}
               <Link

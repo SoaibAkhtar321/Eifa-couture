@@ -33,7 +33,7 @@ const MORE_ITEMS: NavItem[] = [
   { label: 'Analytics', href: '/admin/analytics' },
   { label: 'Finance', href: '/admin/finance' },
   { label: 'Audit Log', href: '/admin/audit-log' },
-  { label: 'Notifications', href: '/admin/notifications', comingSoon: true },
+  { label: 'Notifications', href: '/admin/notifications' },
   { label: 'Media Library', href: '/admin/media', comingSoon: true },
 ];
 
