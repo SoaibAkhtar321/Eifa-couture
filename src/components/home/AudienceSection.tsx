@@ -60,12 +60,23 @@ export default async function AudienceSection({ audience, limit = 6 }: Props) {
                 alt={content.imageAlt}
                 fill
                 sizes={hasProducts ? '(max-width: 1024px) 100vw, 40vw' : '100vw'}
-                className="-z-10 object-cover object-[50%_20%] transition-transform duration-[1200ms] ease-out group-hover:scale-105"
+                className={`-z-10 object-cover transition-transform duration-[1200ms] ease-out group-hover:scale-105 ${
+                  // Wide banner shows only a thin slice of a square photo, so anchor
+                  // it to the top to keep the model's head in frame.
+                  hasProducts ? 'object-[50%_20%]' : 'object-[50%_3%]'
+                }`}
               />
               <div
                 className="absolute inset-0 -z-10 bg-gradient-to-t from-espresso/95 via-espresso/45 to-espresso/10"
                 aria-hidden="true"
               />
+              {/* Wide banner: darken the text side so the label and heading stay readable */}
+              {!hasProducts && (
+                <div
+                  className="absolute inset-0 -z-10 bg-gradient-to-r from-espresso/80 via-espresso/35 to-transparent md:via-espresso/20"
+                  aria-hidden="true"
+                />
+              )}
               <div className={`p-6 md:p-10 ${hasProducts ? '' : 'md:max-w-xl lg:p-14'}`}>
                 <span className="flex items-center gap-3 text-[10px] uppercase tracking-[0.3em] text-gold-light md:text-xs">
                   <span className="block h-px w-8 bg-gold-light" aria-hidden="true" />
