@@ -19,14 +19,28 @@ import { sanitizeRedirectPath } from '@/lib/utils';
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = sanitizeRedirectPath(searchParams.get('next'), '/account');
+  const cookieNext = request.headers
+    .get('cookie')
+    ?.split(';')
+    .map((c) => c.trim())
+    .find((c) => c.startsWith('eifa_auth_next='))
+    ?.slice('eifa_auth_next='.length);
+  let decodedCookieNext: string | null = null;
+  try {
+    decodedCookieNext = cookieNext ? decodeURIComponent(cookieNext) : null;
+  } catch {
+    decodedCookieNext = null;
+  }
+  const next = sanitizeRedirectPath(searchParams.get('next') || decodedCookieNext, '/account');
 
   if (code) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      const response = NextResponse.redirect(`${origin}${next}`);
+      response.cookies.delete('eifa_auth_next');
+      return response;
     }
   }
 

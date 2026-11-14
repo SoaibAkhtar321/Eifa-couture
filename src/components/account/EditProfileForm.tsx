@@ -19,6 +19,7 @@
 import { useState } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
+import { PHONE_ERROR_MESSAGE, isValidIndianPhone, normalizeIndianPhone } from '@/lib/addresses';
 
 const GENDER_OPTIONS = [
   { value: '', label: 'Prefer not to say' },
@@ -27,9 +28,9 @@ const GENDER_OPTIONS = [
   { value: 'other', label: 'Other' },
 ];
 
-function isValidIndianPhone(value: string) {
-  if (!value) return true; // optional field
-  return /^[6-9]\d{9}$/.test(value.trim());
+function isValidProfilePhone(value: string) {
+  if (!value.trim()) return true; // optional field
+  return isValidIndianPhone(value);
 }
 
 export default function EditProfileForm() {
@@ -67,8 +68,8 @@ export default function EditProfileForm() {
       setError('Please enter your full name.');
       return;
     }
-    if (!isValidIndianPhone(phone)) {
-      setError('Please enter a valid 10-digit phone number.');
+    if (!isValidProfilePhone(phone)) {
+      setError(PHONE_ERROR_MESSAGE);
       return;
     }
     if (dateOfBirth && new Date(dateOfBirth) > new Date()) {
@@ -79,7 +80,7 @@ export default function EditProfileForm() {
     setIsSaving(true);
     const { error: updateError } = await updateProfile({
       full_name: fullName.trim(),
-      phone: phone.trim(),
+      phone: normalizeIndianPhone(phone) ?? '',
       gender,
       date_of_birth: dateOfBirth,
     });

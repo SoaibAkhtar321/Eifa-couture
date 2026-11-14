@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { AddressInput } from '@/lib/addresses';
+import { PHONE_ERROR_MESSAGE, normalizeIndianPhone, type AddressInput } from '@/lib/addresses';
 
 interface AddressFormProps {
   initialData?: Partial<AddressInput>;
@@ -51,6 +51,7 @@ export default function AddressForm({
 
     if (!formData.full_name?.trim()) newErrors.full_name = 'Name is required';
     if (!formData.phone?.trim()) newErrors.phone = 'Phone number is required';
+    else if (!normalizeIndianPhone(formData.phone)) newErrors.phone = PHONE_ERROR_MESSAGE;
     if (!formData.address_line1?.trim()) newErrors.address_line1 = 'Address line 1 is required';
     if (!formData.city?.trim()) newErrors.city = 'City is required';
     if (!formData.state?.trim()) newErrors.state = 'State is required';
@@ -61,7 +62,7 @@ export default function AddressForm({
       return;
     }
 
-    onSubmit(formData);
+    onSubmit({ ...formData, phone: normalizeIndianPhone(formData.phone) ?? formData.phone });
   };
 
   return (
@@ -91,6 +92,9 @@ export default function AddressForm({
         </span>
         <input
           type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          maxLength={16}
           name="phone"
           value={formData.phone}
           onChange={handleChange}

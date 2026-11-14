@@ -101,10 +101,16 @@ export function useAuth() {
   };
 
   const signInWithGoogle = async (redirectTo?: string) => {
-    const params = redirectTo ? `?next=${encodeURIComponent(redirectTo)}` : '';
+    // Remember where to return in a short-lived cookie instead of a query
+    // string on `redirectTo`: Supabase only honours redirect URLs that match
+    // its allow-list exactly, and otherwise falls back to the Site URL (the
+    // home page). The callback route reads this cookie after sign-in.
+    if (redirectTo && redirectTo.startsWith('/') && !redirectTo.startsWith('//')) {
+      document.cookie = `eifa_auth_next=${encodeURIComponent(redirectTo)}; path=/; max-age=600; SameSite=Lax`;
+    }
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/auth/callback${params}` },
+      options: { redirectTo: `${window.location.origin}/auth/callback` },
     });
     return { error };
   };
