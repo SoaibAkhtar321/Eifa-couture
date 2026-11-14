@@ -2,6 +2,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import CartDrawer from '@/components/ui/CartDrawer';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
+import RouteOverlayReset from '@/components/layout/RouteOverlayReset';
 import CartSyncProvider from '@/providers/CartSyncProvider';
 import WishlistSyncProvider from '@/providers/WishlistSyncProvider';
 
@@ -14,6 +15,7 @@ export default function StorefrontLayout({
     <CartSyncProvider>
       <WishlistSyncProvider>
         <div className="relative flex min-h-screen flex-col overflow-x-clip">
+          <RouteOverlayReset />
           <Header />
 
           <div className="flex-1 w-full relative z-10">{children}</div>

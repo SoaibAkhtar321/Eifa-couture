@@ -2,7 +2,9 @@
 
 /* ============================================
    EIFA COUTURE — Announcement Bar
-   Thin elegant bar with promotional message
+   Thin elegant bar with promotional message.
+   Tablet/desktop only — on phones the same promises live in the
+   footer, which keeps the mobile header compact.
    ============================================ */
 
 import { useState } from 'react';
@@ -19,21 +21,13 @@ export default function AnnouncementBar() {
           animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="bg-maroon text-white overflow-hidden relative z-50"
+          className="relative z-50 hidden overflow-hidden bg-maroon text-white sm:block"
         >
           <div className="luxury-container flex items-center justify-center py-2.5 relative">
             <p className="font-subheading text-[13px] sm:text-sm tracking-wide text-center text-white/90">
-              <span className="hidden sm:inline">
-                Complimentary Shipping on Orders Above ₹2,999
-              </span>
-              <span className="hidden sm:inline mx-3 text-gold/60">|</span>
-              <span className="hidden sm:inline">
-                Handcrafted with Love in Lucknow
-              </span>
-              {/* Mobile - shorter text */}
-              <span className="sm:hidden">
-                Free Shipping Above ₹2,999 · Handcrafted in Lucknow
-              </span>
+              <span>Complimentary Shipping on Orders Above ₹2,999</span>
+              <span className="mx-3 text-gold/60">|</span>
+              <span>Handcrafted with Love in Lucknow</span>
             </p>
 
             {/* Close button */}

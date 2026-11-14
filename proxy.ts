@@ -52,10 +52,21 @@ export async function proxy(request: NextRequest) {
     },
   });
 
+  // Guests (the large majority of storefront traffic) have no auth
+  // cookie, so there is no session to refresh — skip the Supabase
+  // round-trip entirely. This used to add a network call to EVERY page
+  // navigation, which made the site feel slow on mobile.
+  const hasSessionCookie = request.cookies
+    .getAll()
+    .some((cookie) => cookie.name.startsWith('sb-') && cookie.name.includes('-auth-token'));
+
+  if (!hasSessionCookie) return response;
+
   // Refreshes the session if expired — required for Server Components
-  // to reliably read a valid session. Must be called even though the
-  // result isn't used directly here.
-  await supabase.auth.getUser();
+  // to reliably read a valid session. getClaims() validates the JWT
+  // locally (no network call) and only refreshes when the token has
+  // actually expired, unlike getUser() which hits Supabase every time.
+  await supabase.auth.getClaims();
 
   return response;
 }

@@ -1,6 +1,6 @@
 import { cache } from 'react';
 
-import { createClient } from '@/lib/supabase/server';
+import { getCachedStoreSettings } from '@/lib/data/storefront-cache';
 import type { Audience } from '@/lib/catalog';
 
 export type AudiencePanelImages = Record<Audience, string | null>;
@@ -15,9 +15,8 @@ export type AudiencePanelImages = Record<Audience, string | null>;
 export const getAudiencePanelImages = cache(async (): Promise<AudiencePanelImages> => {
   const empty: AudiencePanelImages = { women: null, men: null, accessories: null };
   try {
-    const supabase = await createClient();
-    const { data } = await supabase.from('store_settings').select('*').eq('singleton', true).single();
-    const row = data as Record<string, unknown> | null;
+    const data = await getCachedStoreSettings();
+    const row = data as unknown as Record<string, unknown> | null;
     const pick = (key: string) => {
       const value = row?.[key];
       return typeof value === 'string' && value.trim() !== '' ? value : null;

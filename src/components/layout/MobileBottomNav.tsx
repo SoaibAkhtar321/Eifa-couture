@@ -2,9 +2,10 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useSyncExternalStore, type ReactNode } from 'react';
+import { useSyncExternalStore, type MouseEvent as ReactMouseEvent, type ReactNode } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
+import { useUIStore } from '@/store/ui-store';
 import { useWishlistStore } from '@/store/wishlist-store';
 
 const subscribe = () => () => {};
@@ -35,13 +36,28 @@ export default function MobileBottomNav() {
   const hydrated = useHydrated();
   const wishlistCount = useWishlistStore((state) => state.items.length);
   const { isAuthenticated } = useAuth();
+  const resetOverlays = useUIStore((state) => state.resetOverlays);
 
   if (HIDDEN_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return null;
 
   const itemClass = (active: boolean) =>
-    `relative flex flex-1 flex-col items-center justify-center gap-1 py-2 text-[10px] tracking-wide transition-colors ${
-      active ? 'text-maroon' : 'text-ink-soft'
+    `relative flex flex-1 touch-manipulation flex-col items-center justify-center gap-1 py-2 text-[10px] tracking-wide transition-colors active:bg-cream ${
+      active ? 'font-medium text-maroon' : 'text-ink-soft'
     }`;
+
+  const isHome = pathname === '/';
+  const isBrowse = ['/shop', '/women', '/men', '/accessories', '/search'].some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+  );
+
+  // Tapping the tab you're already on scrolls to the top (standard app behaviour)
+  const handleHomeClick = (event: ReactMouseEvent) => {
+    resetOverlays();
+    if (isHome) {
+      event.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
     <>
@@ -54,14 +70,14 @@ export default function MobileBottomNav() {
         style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
       >
         <div className="flex h-[60px] items-stretch">
-          <Link href="/" className={itemClass(pathname === '/')} aria-current={pathname === '/' ? 'page' : undefined}>
+          <Link href="/" onClick={handleHomeClick} className={itemClass(isHome)} aria-current={isHome ? 'page' : undefined}>
             <Icon>
               <path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z" />
             </Icon>
             Home
           </Link>
 
-          <Link href="/shop" className={itemClass(pathname.startsWith('/shop'))} aria-current={pathname.startsWith('/shop') ? 'page' : undefined}>
+          <Link href="/shop" onClick={resetOverlays} className={itemClass(isBrowse)} aria-current={isBrowse ? 'page' : undefined}>
             <Icon>
               <rect x="3" y="3" width="7" height="7" />
               <rect x="14" y="3" width="7" height="7" />
@@ -71,7 +87,7 @@ export default function MobileBottomNav() {
             Categories
           </Link>
 
-          <Link href="/wishlist" className={itemClass(pathname.startsWith('/wishlist'))}>
+          <Link href="/wishlist" onClick={resetOverlays} className={itemClass(pathname.startsWith('/wishlist'))}>
             <span className="relative">
               <Icon>
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
@@ -83,6 +99,7 @@ export default function MobileBottomNav() {
 
           <Link
             href={hydrated && isAuthenticated ? '/account' : '/login'}
+            onClick={resetOverlays}
             className={itemClass(pathname.startsWith('/account') || pathname === '/login')}
           >
             <Icon>

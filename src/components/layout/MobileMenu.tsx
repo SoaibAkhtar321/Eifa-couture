@@ -86,6 +86,7 @@ export default function MobileMenu() {
         { label: 'My Account', href: '/account' },
         { label: 'My Orders', href: '/account/orders' },
         { label: 'Wishlist', href: '/wishlist' },
+        { label: 'Notifications', href: '/account/notifications' },
         { label: 'Saved Addresses', href: '/account/addresses' },
       ]
     : [

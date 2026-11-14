@@ -8,7 +8,6 @@ import BestSellersSection from '@/components/home/BestSellersSection';
 import ShopByCategorySection from '@/components/home/ShopByCategorySection';
 import AudienceSection from '@/components/home/AudienceSection';
 import WhyChooseUsSection from '@/components/home/WhyChooseUsSection';
-import TrustStrip from '@/components/home/TrustStrip';
 import HeritageSection from '@/components/home/HeritageSection';
 import {
   FeaturedCollectionSkeleton,
@@ -16,8 +15,7 @@ import {
   BestSellersSkeleton,
   ShopByCategorySkeleton,
 } from '@/components/home/HomeSectionSkeletons';
-import { getActiveHomepageSectionMap } from '@/lib/data/homepage-sections';
-import { getActiveHeroBanner } from '@/lib/data/banners';
+import { getCachedHeroBanner, getCachedHomepageSectionMap } from '@/lib/data/storefront-cache';
 import { getAudiencePanelImages } from '@/lib/data/audience-panels';
 import type { HomepageSectionKey } from '@/types/database';
 
@@ -27,12 +25,38 @@ export const metadata: Metadata = {
     'Discover premium handcrafted Lucknowi Chikankari fashion at Eifa Couture. Explore luxury kurtas, sarees, dupattas, bridal wear, and menswear rooted in Lucknowi heritage.',
 };
 
-export default async function HomePage() {
-  const [sectionMap, heroBanner, panelImages] = await Promise.all([
-    getActiveHomepageSectionMap(),
-    getActiveHeroBanner(),
+// The hero is its own async component so the page shell (and the default
+// hero) can paint immediately instead of waiting on Supabase.
+async function HomeHero() {
+  const [heroBanner, panelImages] = await Promise.all([
+    getCachedHeroBanner(),
     getAudiencePanelImages(),
   ]);
+  return <HeroSection banner={heroBanner} panelImages={panelImages} />;
+}
+
+export default function HomePage() {
+  return (
+    <main>
+      <Suspense fallback={<HeroSection />}>
+        <HomeHero />
+      </Suspense>
+
+      {/* Each data-driven section gets its own Suspense boundary so the
+          page streams progressively instead of waiting for every
+          Supabase query to resolve before showing anything. */}
+      <Suspense fallback={<NewArrivalsSkeleton />}>
+        <HomeSections />
+      </Suspense>
+
+      <HeritageSection />
+      <WhyChooseUsSection />
+    </main>
+  );
+}
+
+async function HomeSections() {
+  const sectionMap = await getCachedHomepageSectionMap();
 
   // Renders in admin-configured `sort_order`; a missing/deleted config
   // row falls back to each component's own defaults rather than being
@@ -127,17 +151,7 @@ export default async function HomePage() {
   });
 
   return (
-    <main>
-      <HeroSection
-        banner={heroBanner}
-        panelImages={panelImages}
-      />
-      <TrustStrip />
-
-      {/* Each data-driven section gets its own Suspense boundary so the
-          page streams progressively instead of waiting for every
-          Supabase query to resolve before showing anything below the
-          hero. */}
+    <>
       {lastTopIndex === -1 && audienceBlock}
       {managedSections.map((section, index) => (
         <div key={section.key}>
@@ -145,9 +159,6 @@ export default async function HomePage() {
           {index === lastTopIndex && audienceBlock}
         </div>
       ))}
-
-      <HeritageSection />
-      <WhyChooseUsSection />
-    </main>
+    </>
   );
 }

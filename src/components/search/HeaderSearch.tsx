@@ -9,6 +9,7 @@ import {
   type KeyboardEvent as ReactKeyboardEvent,
   type MouseEvent as ReactMouseEvent,
 } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -200,29 +201,39 @@ function SuggestionIcon({ type }: { type: AutocompleteItem['type'] }) {
   );
 }
 
-export default function HeaderSearch() {
+// The catalogue used for suggestions is only downloaded the first time the
+// search is opened (it used to load on EVERY page view), then reused.
+let catalogCache: { products: Product[]; categories: Category[] } | null = null;
+
+/**
+ * Search overlay. Mounted only while open, so its state resets on every
+ * open. It is rendered through a portal into <body>: the sticky header
+ * uses backdrop-filter, which would otherwise trap `position: fixed`
+ * children inside the header box and break the full-screen mobile layout.
+ */
+function SearchDialog() {
   const router = useRouter();
-  const searchRef = useRef<HTMLDivElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  const isOpen = useUIStore((state) => state.isSearchOpen);
-  const openSearch = useUIStore((state) => state.openSearch);
   const closeSearchStore = useUIStore((state) => state.closeSearch);
 
   const [query, setQuery] = useState('');
-  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => getRecentSearches());
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [products, setProducts] = useState<Product[]>(() => catalogCache?.products ?? []);
+  const [categories, setCategories] = useState<Category[]>(() => catalogCache?.categories ?? []);
   const debouncedQuery = useDebouncedValue(query, DEBOUNCE_DELAY);
   const searchText = debouncedQuery.trim();
 
   useEffect(() => {
+    if (catalogCache) return;
     let isMounted = true;
     const supabase = createClient();
 
     Promise.all([fetchActiveProducts(supabase), fetchActiveCategories(supabase)]).then(
       ([liveProducts, liveCategories]) => {
+        catalogCache = { products: liveProducts, categories: liveCategories };
         if (!isMounted) return;
         setProducts(liveProducts);
         setCategories(liveCategories);
@@ -307,11 +318,13 @@ export default function HeaderSearch() {
     suggestions.fabrics.length > 0;
 
   useEffect(() => {
-    if (!isOpen) return;
-
     const handleClickOutside = (event: globalThis.MouseEvent) => {
-      if (!searchRef.current) return;
-      if (!searchRef.current.contains(event.target as Node)) {
+      if (!dialogRef.current) return;
+      const target = event.target as HTMLElement;
+      // Triggers re-open the search themselves; closing here first would
+      // make them flicker closed → open.
+      if (target.closest?.('[data-search-trigger]')) return;
+      if (!dialogRef.current.contains(target)) {
         closeSearchStore();
       }
     };
@@ -329,9 +342,9 @@ export default function HeaderSearch() {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
     };
-  }, [isOpen, closeSearchStore]);
+  }, [closeSearchStore]);
 
-  useBodyScrollLock(isOpen);
+  useBodyScrollLock(true);
 
   const closeSearch = () => {
     closeSearchStore();
@@ -553,41 +566,9 @@ export default function HeaderSearch() {
     );
   };
 
-  return (
-    <div ref={searchRef} className="relative z-(--z-dropdown)">
-      <button
-        type="button"
-        onClick={() => {
-          if (isOpen) {
-            closeSearch();
-          } else {
-            setRecentSearches(getRecentSearches());
-            openSearch();
-            window.requestAnimationFrame(() => inputRef.current?.focus());
-          }
-        }}
-        className="tap-feedback flex h-11 w-11 items-center justify-center text-ink-muted hover:text-maroon"
-        aria-label="Toggle search"
-        aria-expanded={isOpen}
-      >
-        <svg
-          width="22"
-          height="22"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.55"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <circle cx="11" cy="11" r="8" />
-          <line x1="21" y1="21" x2="16.65" y2="16.65" />
-        </svg>
-      </button>
-
-      {isOpen && (
+  return createPortal(
         <motion.div
+          ref={dialogRef}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
@@ -622,6 +603,8 @@ export default function HeaderSearch() {
                   ref={inputRef}
                   id="header-search-input"
                   type="search"
+                  enterKeyHint="search"
+                  autoComplete="off"
                   value={query}
                   onChange={(event) => {
                     setQuery(event.target.value);
@@ -770,8 +753,59 @@ export default function HeaderSearch() {
               </div>
             )}
           </div>
-        </motion.div>
-      )}
-    </div>
+        </motion.div>,
+    document.body
   );
+}
+
+/** Opens the search overlay. `icon` = desktop header icon, `bar` = mobile search field. */
+export function SearchTrigger({ variant }: { variant: 'icon' | 'bar' }) {
+  const isOpen = useUIStore((state) => state.isSearchOpen);
+  const openSearch = useUIStore((state) => state.openSearch);
+
+  if (variant === 'bar') {
+    return (
+      <button
+        type="button"
+        data-search-trigger
+        onClick={openSearch}
+        aria-label="Search products"
+        aria-haspopup="dialog"
+        aria-expanded={isOpen}
+        className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-full border border-beige bg-white px-3.5 text-left text-[13px] text-ink-muted transition-colors active:bg-cream"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true" className="shrink-0">
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </svg>
+        <span className="truncate">
+          Search<span className="hidden min-[420px]:inline"> sarees, kurtas…</span>
+        </span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      data-search-trigger
+      onClick={openSearch}
+      className="tap-feedback flex h-11 w-11 items-center justify-center text-ink-muted hover:text-maroon"
+      aria-label="Search products"
+      aria-haspopup="dialog"
+      aria-expanded={isOpen}
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.55" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="11" cy="11" r="8" />
+        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+      </svg>
+    </button>
+  );
+}
+
+/** Mount once (in the Header). Renders the overlay only while search is open. */
+export default function HeaderSearch() {
+  const isOpen = useUIStore((state) => state.isSearchOpen);
+  if (!isOpen || typeof document === 'undefined') return null;
+  return <SearchDialog />;
 }

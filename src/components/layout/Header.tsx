@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
@@ -12,7 +13,7 @@ import { getUserInitial } from '@/lib/user-display';
 
 import AnnouncementBar from './AnnouncementBar';
 import MobileMenu from './MobileMenu';
-import HeaderSearch from '@/components/search/HeaderSearch';
+import HeaderSearch, { SearchTrigger } from '@/components/search/HeaderSearch';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
 // ── Minimalist Luxury Navigation ──
@@ -40,9 +41,29 @@ export default function Header() {
   const [logoFailed, setLogoFailed] = useState(false);
   const hasMounted = useHasHydrated();
 
+  const pathname = usePathname();
+  const router = useRouter();
+  const isHome = pathname === '/';
+
+  // Header lives in the shared layout, so it survives client navigations.
+  // Counting route changes tells us whether "back" stays inside the store
+  // (router.back) or the visitor landed here directly (go Home instead).
+  const routeChanges = useRef(0);
+  const lastPath = useRef(pathname);
+  useEffect(() => {
+    if (lastPath.current !== pathname) {
+      lastPath.current = pathname;
+      routeChanges.current += 1;
+    }
+  }, [pathname]);
+
+  const goBack = () => {
+    if (routeChanges.current > 0) router.back();
+    else router.push('/');
+  };
+
   const openCart = useUIStore((state) => state.openCart);
   const openMobileMenu = useUIStore((state) => state.openMobileMenu);
-  const openSearch = useUIStore((state) => state.openSearch);
 
   const cartItemCount = useCartStore((state) => state.getItemCount());
   const wishlistCount = useWishlistStore((state) => state.items.length);
@@ -78,30 +99,43 @@ export default function Header() {
             : 'bg-ivory/92 backdrop-blur-sm'
         }`}
       >
-        <div className="luxury-container">
-          <div className="flex h-[64px] items-center justify-between gap-4 sm:h-[78px] lg:h-[84px]">
-            
+        <div className="mx-auto w-full max-w-[1400px] px-3 sm:px-6 lg:px-12 xl:px-16">
+          <div className="flex h-14 items-center gap-2 sm:h-[78px] sm:gap-4 lg:h-[84px] lg:justify-between">
+            {/* ── Mobile back (inner pages only) ── */}
+            {!isHome && (
+              <button
+                type="button"
+                onClick={goBack}
+                className="tap-feedback -ml-1 flex h-10 w-9 shrink-0 items-center justify-center text-ink-soft lg:hidden"
+                aria-label="Go back"
+              >
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="m15 18-6-6 6-6" />
+                </svg>
+              </button>
+            )}
+
             {/* ── Logo ── */}
             <Link
               href="/"
-              className="group flex min-w-0 shrink items-center min-h-[44px] min-w-[44px] pointer-events-auto"
+              className="group flex shrink-0 items-center min-h-[44px] pointer-events-auto"
               aria-label="Eifa Couture home"
             >
               {!logoFailed ? (
-                <span className="relative block h-[62px] w-[82px] sm:h-[68px] sm:w-[92px] lg:h-[76px] lg:w-[105px]">
+                <span className="relative block h-[46px] w-[60px] sm:h-[68px] sm:w-[92px] lg:h-[76px] lg:w-[105px]">
                   <Image
                     src="/images/eifa-logo-header.png"
                     alt="Eifa Couture"
                     fill
                     priority
-                    sizes="105px"
+                    sizes="(max-width: 640px) 60px, 105px"
                     className="object-contain object-left"
                     onError={() => setLogoFailed(true)}
                   />
                 </span>
               ) : (
                 <span className="flex flex-col">
-                  <span className="font-heading text-[24px] uppercase tracking-[0.24em] text-charcoal sm:text-[28px]">
+                  <span className="font-heading text-[18px] uppercase tracking-[0.2em] text-charcoal sm:text-[28px] sm:tracking-[0.24em]">
                     Eifa Couture
                   </span>
                   <span className="mt-1 font-body text-[9px] uppercase tracking-[0.36em] text-gold sm:text-[10px]">
@@ -128,9 +162,17 @@ export default function Header() {
               ))}
             </nav>
 
+            {/* ── Mobile / tablet search field (the ONLY search control below lg) ── */}
+            <div className="flex min-w-0 flex-1 lg:hidden">
+              <SearchTrigger variant="bar" />
+            </div>
+
             {/* ── Header Actions ── */}
-            <div className="flex shrink-0 items-center gap-1 sm:gap-2">
-              <HeaderSearch />
+            <div className="flex shrink-0 items-center sm:gap-2">
+              {/* Desktop search icon */}
+              <div className="hidden lg:block">
+                <SearchTrigger variant="icon" />
+              </div>
 
               {/* Account (Desktop Only) — auth-aware */}
               {showAccountIcon ? (
@@ -174,7 +216,11 @@ export default function Header() {
               )}
 
               {/* Notifications (signed-in only) */}
-              {showAccountIcon && <NotificationBell />}
+              {showAccountIcon && (
+                <div className="hidden sm:block">
+                  <NotificationBell />
+                </div>
+              )}
 
               {/* Wishlist */}
               <Link
@@ -264,21 +310,10 @@ export default function Header() {
             </div>
           </div>
 
-          {/* Mobile: app-style search bar under the logo (Flipkart/Meesho pattern) */}
-          <button
-            type="button"
-            onClick={openSearch}
-            className="mb-3 flex h-11 w-full items-center gap-3 rounded-md border border-beige bg-white px-4 text-left text-sm text-ink-muted lg:hidden"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden="true">
-              <circle cx="11" cy="11" r="7" />
-              <path d="m20 20-3.5-3.5" />
-            </svg>
-            Search sarees, kurtas, dupattas…
-          </button>
         </div>
       </header>
 
+      <HeaderSearch />
       <MobileMenu />
     </>
   );

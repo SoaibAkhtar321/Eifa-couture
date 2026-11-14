@@ -1,9 +1,8 @@
 import Link from 'next/link';
 
-import { CONTACT_INFO } from '@/lib/constants';
-import { getStoreSettings } from '@/lib/data/store-settings';
-import { createClient } from '@/lib/supabase/server';
-import { fetchActiveCategories } from '@/lib/data/categories';
+import { CONTACT_INFO, SHIPPING_INFO } from '@/lib/constants';
+import { getCachedCategories, getCachedStoreSettings } from '@/lib/data/storefront-cache';
+import { formatPrice } from '@/lib/utils';
 import type { Category } from '@/types';
 
 type FooterLink = {
@@ -44,11 +43,24 @@ function getShopLinks(categories: Category[]): FooterLink[] {
 }
 
 export default async function Footer() {
-  const supabase = await createClient();
-  const [categories, { data: settings }] = await Promise.all([
-    fetchActiveCategories(supabase),
-    getStoreSettings(),
+  const [categories, settings] = await Promise.all([
+    getCachedCategories(),
+    getCachedStoreSettings(),
   ]);
+
+  // Same rule checkout charges against (Admin → Settings), with the
+  // built-in default when settings can't be read.
+  const freeThreshold = settings
+    ? settings.shipping_free_threshold
+    : SHIPPING_INFO.freeShippingThreshold;
+  const trustItems = [
+    freeThreshold === null || freeThreshold === undefined
+      ? { title: 'Pan-India delivery', text: 'Carefully hand-packed' }
+      : { title: 'Free shipping', text: `On orders above ${formatPrice(freeThreshold)}` },
+    { title: 'Pan-India delivery', text: 'Carefully hand-packed' },
+    { title: 'Easy returns', text: '7 days on unworn pieces' },
+    { title: 'Secure payment', text: 'Powered by Razorpay' },
+  ].filter((item, index, all) => all.findIndex((other) => other.title === item.title) === index);
   // Contact + social details come from Admin → Settings, falling back
   // to defaults only for fields the admin hasn't filled in.
   const email = settings?.store_email || CONTACT_INFO.email;
@@ -68,6 +80,21 @@ export default async function Footer() {
   return (
     <footer className="border-t border-beige bg-ivory">
       <div className="luxury-container">
+        {/* Service promises live here (not in the homepage hero) */}
+        <ul
+          aria-label="Why shop with us"
+          className="grid grid-cols-2 gap-x-4 gap-y-5 border-b border-beige py-8 sm:grid-cols-4"
+        >
+          {trustItems.map((item) => (
+            <li key={item.title} className="text-center">
+              <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-charcoal">
+                {item.title}
+              </span>
+              <span className="mt-1 block text-xs text-ink-soft">{item.text}</span>
+            </li>
+          ))}
+        </ul>
+
         <div className="grid gap-10 py-12 sm:py-14 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-12 lg:py-16">
           <div>
             <Link href="/" className="inline-flex flex-col">
