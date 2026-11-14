@@ -38,6 +38,11 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Fonts + logo read from disk by the dynamic share-image routes (src/lib/og/brand-og.tsx).
+  outputFileTracingIncludes: {
+    '/**/*': ['./src/lib/og/**/*'],
+  },
+
   allowedDevOrigins: ['192.168.1.36'],
 
   async headers() {

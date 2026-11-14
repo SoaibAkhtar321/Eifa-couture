@@ -6,6 +6,7 @@ import Reveal from '@/components/motion/Reveal';
 import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
 import ProductCard from '@/components/product/ProductCard';
 import { fetchCollectionPageBySlug } from '@/lib/data/collections';
+import { buildPageMetadata } from '@/lib/seo';
 import { createClient } from '@/lib/supabase/server';
 
 interface PageProps {
@@ -16,13 +17,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const { slug } = await params;
   const supabase = await createClient();
   const result = await fetchCollectionPageBySlug(supabase, slug, 1);
-  if (!result) return { title: 'Collection | Eifa Couture' };
+  if (!result) return { title: 'Collection' };
 
-  return {
-    title: `${result.collection.name} | Eifa Couture`,
+  // og:image comes from the sibling opengraph-image.tsx (renders the collection name).
+  return buildPageMetadata({
+    title: result.collection.name,
     description: result.collection.description || `Shop the ${result.collection.name} collection at Eifa Couture.`,
-    alternates: { canonical: `/collections/${slug}` },
-  };
+    path: `/collections/${slug}`,
+  });
 }
 
 /** Public page for an admin-created collection (e.g. Best Sellers, New Arrivals, Eid Edit). */

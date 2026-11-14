@@ -6,6 +6,7 @@ import ProductDetailsClient from '@/components/product/ProductDetailsClient';
 
 import { createClient } from '@/lib/supabase/server';
 import { SITE_URL } from '@/lib/constants';
+import { formatPrice } from '@/lib/utils';
 import { fetchProductBySlug, fetchRelatedProducts } from '@/lib/data/products';
 
 type ProductPageProps = {
@@ -15,6 +16,14 @@ type ProductPageProps = {
 };
 
 const RELATED_PRODUCTS_LIMIT = 4;
+const SHARE_IMAGE_WIDTH = 1200;
+
+// Link-preview crawlers need an absolute, publicly reachable image. Routing it
+// through the Next image optimizer gives a predictable 1200px-wide (and much
+// lighter) file even when the stored photo is huge — WhatsApp skips big images.
+function absoluteShareImage(src: string): string {
+  return `${SITE_URL}/_next/image?url=${encodeURIComponent(src)}&w=${SHARE_IMAGE_WIDTH}&q=75`;
+}
 
 // `generateMetadata` and the page component both need the same product.
 // Without this, that's two separate Supabase round trips for one page
@@ -40,23 +49,31 @@ export async function generateMetadata({
     };
   }
 
+  const url = `${SITE_URL}/product/${product.slug}`;
+  const priceText = `${product.hasPriceRange ? 'From ' : ''}${formatPrice(product.minPrice)}`;
+  const description = [product.seo.description, `Price: ${priceText}.`].filter(Boolean).join(' ');
+  const image = product.images?.[0] ? absoluteShareImage(product.images[0]) : undefined;
+  const images = image ? [{ url: image, width: SHARE_IMAGE_WIDTH, alt: product.name }] : undefined;
+
   return {
     title: product.seo.title,
     description: product.seo.description,
     keywords: product.seo.keywords,
-    alternates: { canonical: `${SITE_URL}/product/${product.slug}` },
+    alternates: { canonical: url },
     openGraph: {
-      title: product.seo.title,
-      description: product.seo.description,
       type: 'website',
-      images: product.images?.[0]
-        ? [
-            {
-              url: product.images[0],
-              alt: product.name,
-            },
-          ]
-        : undefined,
+      url,
+      siteName: 'Eifa Couture',
+      locale: 'en_IN',
+      title: product.seo.title,
+      description,
+      images,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: product.seo.title,
+      description,
+      images: images?.map((i) => i.url),
     },
   };
 }

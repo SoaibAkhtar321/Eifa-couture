@@ -9,6 +9,7 @@ import '@fontsource-variable/inter/wght.css';
 import './globals.css';
 
 import AuthProvider from '@/providers/AuthProvider';
+import { SITE_URL, SOCIAL_LINKS } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: {
@@ -68,10 +69,31 @@ export const metadata: Metadata = {
       'max-snippet': -1,
     },
   },
-  icons: {
-    icon: '/favicon.ico',
-    apple: '/apple-touch-icon.png',
-  },
+  // Favicon / app icons come from the file conventions in src/app:
+  // favicon.ico, icon.png, apple-icon.png (+ manifest.ts).
+};
+
+// Brand structured data for search results (Organization + WebSite).
+// Social profiles come from SOCIAL_LINKS (WhatsApp is a chat link, not a profile).
+const brandJsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': `${SITE_URL}/#organization`,
+      name: 'Eifa Couture',
+      url: SITE_URL,
+      logo: `${SITE_URL}/images/eifa-logo-header.png`,
+      sameAs: SOCIAL_LINKS.filter((link) => link.icon !== 'whatsapp').map((link) => link.href),
+    },
+    {
+      '@type': 'WebSite',
+      '@id': `${SITE_URL}/#website`,
+      name: 'Eifa Couture',
+      url: SITE_URL,
+      publisher: { '@id': `${SITE_URL}/#organization` },
+    },
+  ],
 };
 
 // Required for `env(safe-area-inset-*)` to resolve to a real value on
@@ -96,6 +118,10 @@ export default function RootLayout({
       className="antialiased"
     >
       <body className="min-h-screen bg-ivory font-body text-charcoal selection:bg-maroon selection:text-white">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(brandJsonLd).replace(/</g, '\\u003c') }}
+        />
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

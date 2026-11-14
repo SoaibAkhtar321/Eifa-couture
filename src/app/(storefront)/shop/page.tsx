@@ -4,14 +4,15 @@ import { Suspense } from 'react';
 import ShopPageClient from '@/components/shop/ShopPageClient';
 import { fetchActiveCategories } from '@/lib/data/categories';
 import { fetchShopFacets, fetchShopProducts } from '@/lib/data/shop';
+import { buildPageMetadata } from '@/lib/seo';
 import { parseShopFilters } from '@/lib/shop-filters';
 import { createClient } from '@/lib/supabase/server';
 
-export const metadata: Metadata = {
-  title: 'Shop Collection | Eifa Couture',
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Shop Collection',
   description: 'Explore Eifa Couture’s premium handcrafted Lucknowi Chikankari collection.',
-  alternates: { canonical: '/shop' },
-};
+  path: '/shop',
+});
 
 type SearchParams = Record<string, string | string[] | undefined>;
 

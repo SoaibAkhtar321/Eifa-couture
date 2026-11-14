@@ -1,12 +1,13 @@
 import type { Metadata } from 'next';
 
+import { buildPageMetadata } from '@/lib/seo';
 import AudiencePage from '@/components/audience/AudiencePage';
 
-export const metadata: Metadata = {
-  title: "Men's Chikankari Collection | Eifa Couture",
+export const metadata: Metadata = buildPageMetadata({
+  title: "Men's Chikankari Collection",
   description: 'Handcrafted Lucknowi Chikankari from Eifa Couture. Browse the full collection.',
-  alternates: { canonical: '/men' },
-};
+  path: '/men',
+});
 
 export default function Page() {
   return <AudiencePage audience="men" />;

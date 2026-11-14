@@ -17,12 +17,34 @@ import {
 } from '@/components/home/HomeSectionSkeletons';
 import { getCachedHeroBanner, getCachedHomepageSectionMap } from '@/lib/data/storefront-cache';
 import { getAudiencePanelImages } from '@/lib/data/audience-panels';
+import { SITE_URL } from '@/lib/constants';
 import type { HomepageSectionKey } from '@/types/database';
 
+const HOME_TITLE = 'Eifa Couture | Premium Lucknowi Chikankari Since 1998';
+const HOME_DESCRIPTION =
+  'Discover premium handcrafted Lucknowi Chikankari fashion at Eifa Couture. Explore luxury kurtas, sarees, dupattas, bridal wear, and menswear rooted in Lucknowi heritage.';
+
 export const metadata: Metadata = {
-  title: 'Eifa Couture | Premium Lucknowi Chikankari Since 1998',
-  description:
-    'Discover premium handcrafted Lucknowi Chikankari fashion at Eifa Couture. Explore luxury kurtas, sarees, dupattas, bridal wear, and menswear rooted in Lucknowi heritage.',
+  title: { absolute: HOME_TITLE },
+  description: HOME_DESCRIPTION,
+  alternates: { canonical: SITE_URL },
+  openGraph: {
+    type: 'website',
+    url: SITE_URL,
+    siteName: 'Eifa Couture',
+    locale: 'en_IN',
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+    images: [
+      { url: '/og-image.jpg', width: 1200, height: 630, alt: 'Eifa Couture — Luxury Lucknowi Chikankari' },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: HOME_TITLE,
+    description: HOME_DESCRIPTION,
+    images: ['/og-image.jpg'],
+  },
 };
 
 // The hero is its own async component so the page shell (and the default
