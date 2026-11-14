@@ -36,7 +36,12 @@ function useHasHydrated() {
   );
 }
 
-export default function Header() {
+interface HeaderProps {
+  /** Admin-created collection pages marked "Show in menu". */
+  extraLinks?: { label: string; href: string }[];
+}
+
+export default function Header({ extraLinks = [] }: HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [logoFailed, setLogoFailed] = useState(false);
   const hasMounted = useHasHydrated();
@@ -150,7 +155,7 @@ export default function Header() {
               className="hidden items-center gap-8 lg:flex pointer-events-auto"
               aria-label="Main navigation"
             >
-              {CORE_LINKS.map((link) => (
+              {[...CORE_LINKS, ...extraLinks.slice(0, 3)].map((link) => (
                 <Link
                   key={link.label}
                   href={link.href}
@@ -314,7 +319,7 @@ export default function Header() {
       </header>
 
       <HeaderSearch />
-      <MobileMenu />
+      <MobileMenu extraLinks={extraLinks} />
     </>
   );
 }

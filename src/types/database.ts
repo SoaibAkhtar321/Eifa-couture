@@ -96,6 +96,7 @@ export interface DbCollection {
   description: string;
   image_url: string | null;
   is_featured: boolean;
+  show_in_menu: boolean;
   sort_order: number;
   is_active: boolean;
   starts_at: string | null;

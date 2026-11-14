@@ -21,7 +21,7 @@ import type { DbCollection } from '@/types/database';
 export async function isCollectionSlugTaken(slug: string, excludeCollectionId?: string): Promise<boolean> {
   const supabase = createBrowserClient();
 
-  let query = supabase.from('collections').select('id').eq('slug', slug).is('deleted_at', null);
+  let query = supabase.from('collections').select('id').eq('slug', slug);  // soft-deleted rows count: slug is UNIQUE
   if (excludeCollectionId) {
     query = query.neq('id', excludeCollectionId);
   }
@@ -48,6 +48,7 @@ export interface CollectionInput {
   slug: string;
   description: string;
   is_featured: boolean;
+  show_in_menu: boolean;
   is_active: boolean;
   sort_order: number;
   starts_at: string | null;

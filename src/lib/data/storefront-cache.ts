@@ -14,6 +14,7 @@ import { unstable_cache } from 'next/cache';
 
 import { createPublicClient } from '@/lib/supabase/public';
 import { fetchActiveCategories } from '@/lib/data/categories';
+import { fetchMenuCollections, type MenuCollection } from '@/lib/data/collections';
 import type { Category } from '@/types';
 import type { DbBanner, DbHomepageSection, DbStoreSettings, HomepageSectionKey } from '@/types/database';
 
@@ -23,6 +24,12 @@ const options = { revalidate: CACHE_SECONDS, tags: ['storefront-content'] };
 export const getCachedCategories = unstable_cache(
   async (): Promise<Category[]> => fetchActiveCategories(createPublicClient()),
   ['storefront-categories'],
+  options
+);
+
+export const getCachedMenuCollections = unstable_cache(
+  async (): Promise<MenuCollection[]> => fetchMenuCollections(createPublicClient()),
+  ['storefront-menu-collections'],
   options
 );
 

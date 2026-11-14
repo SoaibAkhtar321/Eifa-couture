@@ -35,7 +35,7 @@ export default async function EditCollectionPage({ params }: EditCollectionPageP
 
       <CollectionForm collection={collection as DbCollection} />
 
-      <CollectionProductsManager collectionId={id} />
+      <CollectionProductsManager collectionId={id} collectionName={(collection as DbCollection).name} />
     </div>
   );
 }

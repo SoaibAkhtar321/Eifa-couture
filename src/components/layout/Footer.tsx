@@ -33,16 +33,16 @@ function getCategoryHref(slug: string) {
   return `/shop?category=${slug}`;
 }
 
-function getShopLinks(categories: Category[]): FooterLink[] {
+function getShopLinks(categories: Category[], extraLinks: FooterLink[]): FooterLink[] {
   const categoryLinks = categories.map((category) => ({
     label: category.name,
     href: getCategoryHref(category.slug),
   }));
 
-  return [...collectionLinks, ...categoryLinks];
+  return [...collectionLinks, ...extraLinks, ...categoryLinks];
 }
 
-export default async function Footer() {
+export default async function Footer({ extraLinks = [] }: { extraLinks?: FooterLink[] }) {
   const [categories, settings] = await Promise.all([
     getCachedCategories(),
     getCachedStoreSettings(),
@@ -74,7 +74,7 @@ export default async function Footer() {
     { name: 'YouTube', href: settings?.social_youtube_url },
     { name: 'X', href: settings?.social_twitter_url },
   ].filter((link): link is { name: string; href: string } => !!link.href);
-  const shopLinks = getShopLinks(categories);
+  const shopLinks = getShopLinks(categories, extraLinks);
   const currentYear = new Date().getFullYear();
 
   return (

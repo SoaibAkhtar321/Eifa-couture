@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { TextField } from '@/components/admin/FormField';
+import { collectionChangedAction } from '@/lib/admin/collections-actions';
 import {
   getAssignedProducts,
   searchAssignableProducts,
@@ -16,6 +17,7 @@ import {
 
 interface CollectionProductsManagerProps {
   collectionId: string;
+  collectionName?: string;
 }
 
 function useDebouncedValue(value: string, delay: number) {
@@ -49,7 +51,7 @@ function ProductThumbnail({ url, name }: { url: string | null; name: string }) {
   );
 }
 
-export default function CollectionProductsManager({ collectionId }: CollectionProductsManagerProps) {
+export default function CollectionProductsManager({ collectionId, collectionName = 'Collection' }: CollectionProductsManagerProps) {
   const [assigned, setAssigned] = useState<AssignedProduct[]>([]);
   const [isLoadingAssigned, setIsLoadingAssigned] = useState(true);
   const [assignedError, setAssignedError] = useState<string | null>(null);
@@ -117,6 +119,7 @@ export default function CollectionProductsManager({ collectionId }: CollectionPr
       setAddError(error);
       return;
     }
+    await collectionChangedAction({ id: collectionId, name: collectionName, action: 'products' });
     await loadAssigned();
   }
 
@@ -129,6 +132,7 @@ export default function CollectionProductsManager({ collectionId }: CollectionPr
       setAssignedError(error);
       return;
     }
+    await collectionChangedAction({ id: collectionId, name: collectionName, action: 'products' });
     await loadAssigned();
   }
 

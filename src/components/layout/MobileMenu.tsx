@@ -51,7 +51,11 @@ const itemVariants: Variants = {
   visible: { opacity: 1, x: 0, transition: { duration: 0.32, ease: [0.25, 0.46, 0.45, 0.94] } },
 };
 
-export default function MobileMenu() {
+interface MobileMenuProps {
+  extraLinks?: MenuLink[];
+}
+
+export default function MobileMenu({ extraLinks = [] }: MobileMenuProps) {
   const [logoFailed, setLogoFailed] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
   const router = useRouter();
@@ -168,7 +172,7 @@ export default function MobileMenu() {
                   aria-label="Mobile quick navigation"
                   className="border-y border-beige py-3 space-y-1"
                 >
-                  {quickLinks.map((link) => (
+                  {[...quickLinks, ...extraLinks].map((link) => (
                     <Link
                       key={link.href}
                       href={link.href}

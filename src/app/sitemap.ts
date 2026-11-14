@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
+import { fetchActiveCollectionSlugs } from '@/lib/data/collections';
 import { fetchActiveProducts } from '@/lib/data/products';
 
 const SITE_URL = 'https://eifacouture.com';
@@ -27,7 +28,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   try {
     const supabase = await createClient();
-    const products = await fetchActiveProducts(supabase);
+    const [products, collectionSlugs] = await Promise.all([
+      fetchActiveProducts(supabase),
+      fetchActiveCollectionSlugs(supabase),
+    ]);
+    for (const slug of collectionSlugs) {
+      entries.push({ url: `${SITE_URL}/collections/${slug}`, priority: 0.7 });
+    }
     for (const product of products) {
       entries.push({
         url: `${SITE_URL}/product/${product.slug}`,

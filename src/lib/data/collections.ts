@@ -43,6 +43,71 @@ function isWithinCampaignWindow(row: DbCollection, now: Date): boolean {
   return true;
 }
 
+/** A collection's public page: the collection plus its visible products, in the admin's order. */
+export async function fetchCollectionPageBySlug(
+  supabase: SupabaseClient,
+  slug: string,
+  limit = 120
+): Promise<FeaturedCollectionResult | null> {
+  const { data: row, error } = await supabase
+    .from('collections')
+    .select('*')
+    .eq('slug', slug)
+    .eq('is_active', true)
+    .is('deleted_at', null)
+    .maybeSingle();
+
+  if (error || !row) return null;
+  const collection = row as DbCollection;
+  if (!isWithinCampaignWindow(collection, new Date())) return null;
+
+  const { data: memberRows } = await supabase
+    .from('product_collections')
+    .select(`sort_order, products ( ${PRODUCT_SELECT} )`)
+    .eq('collection_id', collection.id)
+    .order('sort_order', { ascending: true })
+    .limit(limit);
+
+  const products = ((memberRows ?? []) as unknown as { products: ProductRow | null }[])
+    .map((member) => member.products)
+    .filter((product): product is ProductRow => !!product && product.is_active && !product.deleted_at)
+    .map(mapProductRow);
+
+  return { collection: mapCollectionRow(collection), products };
+}
+
+export interface MenuCollection {
+  name: string;
+  slug: string;
+}
+
+/** Active collections the admin chose to show in the menu / footer. */
+export async function fetchMenuCollections(supabase: SupabaseClient): Promise<MenuCollection[]> {
+  const { data, error } = await supabase
+    .from('collections')
+    .select('*')
+    .eq('is_active', true)
+    .eq('show_in_menu', true)
+    .is('deleted_at', null)
+    .order('sort_order', { ascending: true });
+
+  if (error || !data) return [];
+  const now = new Date();
+  return (data as DbCollection[])
+    .filter((row) => isWithinCampaignWindow(row, now))
+    .map((row) => ({ name: row.name, slug: row.slug }));
+}
+
+export async function fetchActiveCollectionSlugs(supabase: SupabaseClient): Promise<string[]> {
+  const { data } = await supabase
+    .from('collections')
+    .select('slug, starts_at, ends_at, is_active, deleted_at')
+    .eq('is_active', true)
+    .is('deleted_at', null);
+  const now = new Date();
+  return ((data ?? []) as DbCollection[]).filter((row) => isWithinCampaignWindow(row, now)).map((row) => row.slug);
+}
+
 export type FeaturedCollectionResult = {
   collection: Collection;
   products: Product[];

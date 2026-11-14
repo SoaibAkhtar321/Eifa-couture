@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { TextField, TextareaField, NumberField, ToggleField, DateTimeField } from '@/components/admin/FormField';
+import { useToast } from '@/components/admin/ui/Toaster';
+import { collectionChangedAction } from '@/lib/admin/collections-actions';
 import { collectionFormSchema, type CollectionFormValues } from '@/lib/admin/validation';
 import {
   createCollection,
@@ -23,6 +25,7 @@ const emptyValues: CollectionFormValues = {
   slug: '',
   description: '',
   is_featured: false,
+  show_in_menu: false,
   is_active: true,
   sort_order: 0,
   starts_at: '',
@@ -51,6 +54,7 @@ function datetimeLocalToIso(value: string): string | null {
 export default function CollectionForm({ collection }: CollectionFormProps) {
   const router = useRouter();
   const isEditing = Boolean(collection);
+  const toast = useToast();
 
   const [values, setValues] = useState<CollectionFormValues>(
     collection
@@ -59,6 +63,7 @@ export default function CollectionForm({ collection }: CollectionFormProps) {
           slug: collection.slug,
           description: collection.description,
           is_featured: collection.is_featured,
+          show_in_menu: collection.show_in_menu ?? false,
           is_active: collection.is_active,
           sort_order: collection.sort_order,
           starts_at: isoToDatetimeLocal(collection.starts_at),
@@ -112,6 +117,7 @@ export default function CollectionForm({ collection }: CollectionFormProps) {
       slug: result.data.slug,
       description: result.data.description,
       is_featured: result.data.is_featured,
+      show_in_menu: result.data.show_in_menu,
       is_active: result.data.is_active,
       sort_order: result.data.sort_order,
       starts_at: datetimeLocalToIso(result.data.starts_at),
@@ -125,6 +131,8 @@ export default function CollectionForm({ collection }: CollectionFormProps) {
         setFormError(error ?? 'Failed to save collection.');
         return;
       }
+      await collectionChangedAction({ id: data.id, name: data.name, action: 'update' });
+      toast.success('Collection saved');
       router.push('/admin/collections');
       router.refresh();
     } else {
@@ -134,6 +142,8 @@ export default function CollectionForm({ collection }: CollectionFormProps) {
         setFormError(error ?? 'Failed to create collection.');
         return;
       }
+      await collectionChangedAction({ id: data.id, name: data.name, action: 'create' });
+      toast.success('Collection created — add products to it below by editing it');
       router.push('/admin/collections');
       router.refresh();
     }
@@ -160,7 +170,7 @@ export default function CollectionForm({ collection }: CollectionFormProps) {
               }}
               onBlur={handleSlugBlur}
               error={fieldErrors.slug}
-              hint="Used in the collection URL"
+              hint={`Page address: /collections/${values.slug || 'your-page-name'}`}
               required
             />
             <TextareaField
@@ -210,13 +220,19 @@ export default function CollectionForm({ collection }: CollectionFormProps) {
               label="Active"
               checked={values.is_active}
               onChange={(v) => setField('is_active', v)}
-              hint="Visible on the storefront"
+              hint="Turn off to hide the page from shoppers"
             />
             <ToggleField
               label="Featured"
               checked={values.is_featured}
               onChange={(v) => setField('is_featured', v)}
               hint="Eligible for the homepage featured slot"
+            />
+            <ToggleField
+              label="Show in menu"
+              checked={values.show_in_menu}
+              onChange={(v) => setField('show_in_menu', v)}
+              hint="Adds this page to the website menu and footer. Keep to 2–3 for a tidy header."
             />
           </div>
 

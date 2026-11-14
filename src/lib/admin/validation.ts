@@ -122,6 +122,7 @@ export const collectionFormSchema = z
       .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Slug must be lowercase letters, numbers, and hyphens only'),
     description: z.string().trim().max(500, 'Keep it under 500 characters').default(''),
     is_featured: z.boolean().default(false),
+    show_in_menu: z.boolean().default(false),
     is_active: z.boolean().default(true),
     sort_order: z.coerce.number().int('Must be a whole number').default(0),
     starts_at: z.string().trim().default(''),
