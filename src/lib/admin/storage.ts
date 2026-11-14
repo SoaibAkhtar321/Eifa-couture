@@ -13,6 +13,7 @@
    and to keep them CDN-cacheable/immutable.
    ============================================ */
 
+import { compressImage } from '@/lib/admin/image-compress';
 import { createClient } from '@/lib/supabase/client';
 import type { DbProductImage } from '@/types/database';
 
@@ -25,8 +26,7 @@ export interface ImageUploadError {
   message: string;
 }
 
-function sanitizeFileName(originalName: string): string {
-  const ext = originalName.split('.').pop()?.toLowerCase() ?? 'jpg';
+function sanitizeFileName(ext: string): string {
   const stamp = Date.now().toString(36);
   const random = Math.random().toString(36).slice(2, 8);
   return `${stamp}-${random}.${ext}`;
@@ -60,14 +60,18 @@ export async function uploadProductImage(
     return { data: null, error: validationError };
   }
 
+  // Resize (max 1600px) + WebP in the browser: a ~1 MB photo becomes ~150-300 KB.
+  const image = await compressImage(file, { maxEdge: 1600, targetBytes: 300 * 1024 });
+
   const supabase = createClient();
   // Matches supabase/storage/STORAGE_PLAN.md: product-images/{product_id}/{variant_id?}/{filename}
   const path = variantId
-    ? `${productId}/${variantId}/${sanitizeFileName(file.name)}`
-    : `${productId}/${sanitizeFileName(file.name)}`;
+    ? `${productId}/${variantId}/${sanitizeFileName(image.extension)}`
+    : `${productId}/${sanitizeFileName(image.extension)}`;
 
-  const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file, {
+  const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, image.blob, {
     cacheControl: '31536000', // 1 year — filenames are unique/immutable
+    contentType: image.contentType,
     upsert: false,
   });
 
