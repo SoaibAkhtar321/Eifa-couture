@@ -27,7 +27,7 @@ const TONES: Record<Tone, { section: string; header: 'light' | 'dark' }> = {
   dark: { section: 'bg-espresso', header: 'dark' },
 };
 
-export const RAIL_CARD_WIDTH = 'w-[46vw] shrink-0 snap-start sm:w-[calc((100%-2.5rem)/3)] lg:w-[calc((100%-4.5rem)/4)]';
+export const RAIL_CARD_WIDTH = 'w-[44vw] shrink-0 snap-start sm:w-[calc((100%-2.5rem)/3)] lg:w-[calc((100%-4.5rem)/4)]';
 
 /**
  * Shared homepage product section. Horizontal swipe rail on phones

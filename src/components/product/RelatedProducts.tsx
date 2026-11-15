@@ -27,7 +27,7 @@ export default function RelatedProducts({ products }: RelatedProductsProps) {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-x-4 gap-y-10 sm:gap-x-6 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-x-2 gap-y-3.5 sm:gap-x-6 sm:gap-y-10 md:grid-cols-3 lg:grid-cols-4">
           {products.map((product, index) => (
             <Reveal key={product.id} delay={Math.min(index * 0.06, 0.3)}>
               <ProductCard product={product} />

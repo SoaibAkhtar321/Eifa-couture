@@ -1,7 +1,7 @@
 export function ShopGridSkeleton({ count = 8 }: { count?: number }) {
   return (
     <div
-      className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 xl:grid-cols-4"
+      className="grid grid-cols-2 gap-x-2 gap-y-3.5 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 xl:grid-cols-4"
       role="status"
       aria-label="Loading products"
     >

@@ -256,7 +256,7 @@ export default function ShopPageClient({ categories, products, total, filters, f
                 <ShopGridSkeleton count={Math.min(Math.max(products.length, 4), 8)} />
               ) : products.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 xl:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-x-2 gap-y-3.5 sm:gap-x-5 sm:gap-y-8 md:grid-cols-3 xl:grid-cols-4">
                     {products.map((product, index) => (
                       <ProductCard key={product.id} product={product} priority={index < 2} saveShopScroll />
                     ))}

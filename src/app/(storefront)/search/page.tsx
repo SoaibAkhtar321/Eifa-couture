@@ -398,7 +398,7 @@ export default function SearchPage() {
                 </div>
               </div>
             ) : isLoading ? (
-              <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+              <div className="grid grid-cols-2 gap-2 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
                 {Array.from({ length: 8 }).map((_, index) => (
                   <ProductCardSkeleton key={index} />
                 ))}
@@ -609,7 +609,7 @@ export default function SearchPage() {
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-2 gap-4 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+                  <div className="grid grid-cols-2 gap-2 sm:gap-5 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
                     {filteredProducts.map((product, index) => (
                       <article key={product.id} className="group">
                         <Link

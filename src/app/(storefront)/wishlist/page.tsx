@@ -153,7 +153,7 @@ export default function WishlistPage() {
                   </Link>
                 </div>
 
-                <div className="grid grid-cols-2 gap-x-2.5 gap-y-5 sm:gap-x-5 sm:gap-y-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
+                <div className="grid grid-cols-2 gap-x-2 gap-y-3.5 sm:gap-x-5 sm:gap-y-6 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">
                   {wishlistProducts.map((product, index) => (
                     <Reveal key={product.id} delay={Math.min(index * 0.06, 0.3)}>
                       <ProductCard product={product} priority={index < 2} />
