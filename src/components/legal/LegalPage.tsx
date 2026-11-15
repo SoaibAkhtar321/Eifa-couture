@@ -10,6 +10,7 @@ const RELATED_LINKS = [
   { label: 'Terms of Service', href: '/terms' },
   { label: 'Shipping Policy', href: '/shipping-policy' },
   { label: 'Cancellation, Returns & Refunds', href: '/refund-policy' },
+  { label: 'FAQs', href: '/faq' },
   { label: 'Contact Us', href: '/contact' },
 ];
 

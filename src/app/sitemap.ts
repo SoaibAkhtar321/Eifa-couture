@@ -13,6 +13,7 @@ const STATIC_PATHS: { path: string; priority: number }[] = [
   { path: '/about', priority: 0.5 },
   { path: '/contact', priority: 0.5 },
   { path: '/size-guide', priority: 0.4 },
+  { path: '/faq', priority: 0.5 },
   { path: '/privacy-policy', priority: 0.2 },
   { path: '/shipping-policy', priority: 0.3 },
   { path: '/refund-policy', priority: 0.3 },

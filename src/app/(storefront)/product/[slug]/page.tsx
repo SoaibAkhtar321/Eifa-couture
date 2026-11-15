@@ -87,7 +87,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  const { returnWindowDays } = await getPolicyValues();
+  const { returnWindowDays, deliveryDays } = await getPolicyValues();
   const supabase = await createClient();
   const relatedProducts = await fetchRelatedProducts(
     supabase,
@@ -100,6 +100,17 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const inStock = Object.values(product.stock).some((count) => count > 0);
   const availability = `https://schema.org/${inStock ? 'InStock' : 'OutOfStock'}`;
   const url = `${SITE_URL}/product/${product.slug}`;
+  // Delivery is free on every order, so every offer carries the same
+  // shipping details (rate 0 INR, India only, delivery time from Admin → Settings).
+  const shippingDetails = {
+    '@type': 'OfferShippingDetails',
+    shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'INR' },
+    shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
+    deliveryTime: {
+      '@type': 'ShippingDeliveryTime',
+      transitTime: { '@type': 'QuantitativeValue', minValue: deliveryDays.min, maxValue: deliveryDays.max, unitCode: 'DAY' },
+    },
+  };
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -116,9 +127,19 @@ export default async function ProductPage({ params }: ProductPageProps) {
           highPrice: product.maxPrice,
           offerCount: Math.max(product.variants.length, 1),
           availability,
+          itemCondition: 'https://schema.org/NewCondition',
           url,
+          shippingDetails,
         }
-      : { '@type': 'Offer', priceCurrency: 'INR', price: product.minPrice, availability, url },
+      : {
+          '@type': 'Offer',
+          priceCurrency: 'INR',
+          price: product.minPrice,
+          availability,
+          itemCondition: 'https://schema.org/NewCondition',
+          url,
+          shippingDetails,
+        },
   };
 
   const breadcrumbJsonLd = {

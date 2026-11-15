@@ -9,7 +9,7 @@ import '@fontsource-variable/inter/wght.css';
 import './globals.css';
 
 import AuthProvider from '@/providers/AuthProvider';
-import { CONTACT_INFO, SITE_URL, SOCIAL_LINKS } from '@/lib/constants';
+import { CONTACT_INFO, LEGAL_INFO, SITE_URL, SOCIAL_LINKS } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: {
@@ -82,6 +82,8 @@ const brandJsonLd = {
       '@type': 'Organization',
       '@id': `${SITE_URL}/#organization`,
       name: 'Eifa Couture',
+      ...(LEGAL_INFO.legalName ? { legalName: LEGAL_INFO.legalName } : {}),
+      ...(LEGAL_INFO.gstin ? { taxID: LEGAL_INFO.gstin } : {}),
       url: SITE_URL,
       logo: `${SITE_URL}/images/eifa-logo-header.png`,
       description:

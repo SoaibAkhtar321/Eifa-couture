@@ -105,7 +105,7 @@ export default async function RefundPolicyPage() {
               <li>
                 If approved, we arrange a courier pickup. Once the pickup is booked, the courier name, tracking number
                 and pickup date (where we have them) are shown with your order. Please keep the item packed in its
-                original packaging with the tags until it is collected.
+                original packaging with the tags until it is collected. There is no charge to you for the pickup.
               </li>
               <li>
                 When the item reaches us and our team has received and verified it, we issue your refund or dispatch
