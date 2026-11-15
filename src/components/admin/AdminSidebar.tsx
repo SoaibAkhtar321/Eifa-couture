@@ -17,6 +17,7 @@ interface NavItem {
 const PRIMARY_ITEMS: NavItem[] = [
   { label: 'Products', href: '/admin/products' },
   { label: 'Orders', href: '/admin/orders' },
+  { label: 'Returns', href: '/admin/returns' },
   { label: 'Homepage', href: '/admin/homepage' },
   { label: 'Settings', href: '/admin/settings' },
 ];
@@ -42,7 +43,15 @@ function isItemActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+export default function AdminSidebar({
+  isOpen,
+  onClose,
+  pendingReturns = 0,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  pendingReturns?: number;
+}) {
   const pathname = usePathname();
   const moreHasActive = MORE_ITEMS.some((item) => !item.comingSoon && isItemActive(pathname, item.href));
   const [moreOpen, setMoreOpen] = useState(false);
@@ -75,7 +84,18 @@ export default function AdminSidebar({ isOpen, onClose }: { isOpen: boolean; onC
           isActive ? 'bg-gold text-maroon-dark font-medium' : 'text-cream/90 hover:bg-cream/10 hover:text-cream'
         )}
       >
-        {item.label}
+        <span>{item.label}</span>
+        {item.href === '/admin/returns' && pendingReturns > 0 && (
+          <span
+            className={cn(
+              'ml-auto rounded-full px-2 py-0.5 text-[11px] font-semibold leading-none',
+              isActive ? 'bg-maroon-dark text-gold' : 'bg-gold text-maroon-dark'
+            )}
+            aria-label={`${pendingReturns} return${pendingReturns === 1 ? '' : 's'} awaiting review`}
+          >
+            {pendingReturns > 99 ? '99+' : pendingReturns}
+          </span>
+        )}
       </Link>
     );
   }

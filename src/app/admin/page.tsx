@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
+import Link from 'next/link';
+
 import StatCard from '@/components/admin/StatCard';
 import { formatPrice } from '@/lib/utils';
 
@@ -13,12 +15,14 @@ async function getDashboardStats() {
     { count: customerCount },
     { data: inventoryRows },
     { data: paidOrders },
+    { count: returnsAwaitingReview },
   ] = await Promise.all([
     supabase.from('products').select('id', { count: 'exact', head: true }).eq('is_active', true),
     supabase.from('orders').select('id', { count: 'exact', head: true }),
     supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'customer'),
     supabase.from('inventory').select('id, quantity, low_stock_at'),
     supabase.from('orders').select('total').eq('payment_status', 'paid'),
+    supabase.from('order_returns').select('id', { count: 'exact', head: true }).eq('status', 'requested'),
   ]);
 
   const lowStockCount = (
@@ -36,6 +40,7 @@ async function getDashboardStats() {
     customerCount: customerCount ?? 0,
     lowStockCount,
     revenue,
+    returnsAwaitingReview: returnsAwaitingReview ?? 0,
   };
 }
 
@@ -62,6 +67,13 @@ export default async function AdminDashboardPage() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <StatCard label="Registered customers" value={stats.customerCount.toLocaleString('en-IN')} />
+        <Link href="/admin/returns" className="block rounded-lg transition-shadow hover:shadow-md">
+          <StatCard
+            label="Returns awaiting review"
+            value={stats.returnsAwaitingReview.toLocaleString('en-IN')}
+            tone={stats.returnsAwaitingReview > 0 ? 'warning' : 'default'}
+          />
+        </Link>
       </div>
 
       <div className="rounded-lg border border-charcoal/10 bg-ivory p-6">

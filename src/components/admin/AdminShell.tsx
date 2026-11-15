@@ -9,9 +9,11 @@ import type { AdminSession } from '@/lib/admin/auth';
 
 export default function AdminShell({
   admin,
+  pendingReturns = 0,
   children,
 }: {
   admin: AdminSession;
+  pendingReturns?: number;
   children: React.ReactNode;
 }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -19,7 +21,11 @@ export default function AdminShell({
   return (
     <ToastProvider>
     <div className="min-h-screen bg-beige">
-      <AdminSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      <AdminSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        pendingReturns={pendingReturns}
+      />
 
       <div className="flex-1 flex flex-col min-w-0 lg:pl-64">
         <AdminHeader admin={admin} onMenuClick={() => setIsSidebarOpen(true)} />
