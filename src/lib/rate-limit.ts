@@ -136,6 +136,10 @@ export const RATE_LIMITS = {
   orderCancel: { limit: 5, windowMs: 60_000 },
   /** Customer return/exchange request — keyed by user id. */
   returnRequest: { limit: 5, windowMs: 60_000 },
+  /** Guest order lookup / guest return (order number + email) — keyed by
+   *  IP and again by order number, so one order's email cannot be guessed. */
+  guestLookup: { limit: 10, windowMs: 10 * 60_000 },
+  guestLookupPerOrder: { limit: 8, windowMs: 15 * 60_000 },
 } as const satisfies Record<string, RateLimitConfig>;
 
 export function rateLimitResponseHeaders(retryAfterSeconds: number): HeadersInit {

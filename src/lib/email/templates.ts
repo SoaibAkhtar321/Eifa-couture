@@ -59,6 +59,10 @@ export interface EmailReturn {
   exchangeSize: string | null;
   itemName: string;
   itemSize: string;
+  pickupCourier: string | null;
+  pickupTrackingNumber: string | null;
+  /** YYYY-MM-DD */
+  pickupDate: string | null;
 }
 
 export interface Rendered {
@@ -118,6 +122,7 @@ const trackUrl = (ctx: TemplateContext, order: EmailOrder) =>
   `${ctx.siteUrl}/track-order?order=${encodeURIComponent(order.orderNumber)}`;
 
 const adminOrderUrl = (ctx: TemplateContext, orderId: string) => `${ctx.siteUrl}/admin/orders/${orderId}`;
+const adminReturnsUrl = (ctx: TemplateContext) => `${ctx.siteUrl}/admin/returns`;
 
 const firstName = (name: string) => name.trim().split(/\s+/)[0] || 'there';
 
@@ -352,6 +357,13 @@ export function renderRefundEmail(order: EmailOrder, amount: number | null, ctx:
 
 /* ---------- customer: return / exchange steps ---------- */
 
+function formatPickupDate(date: string): string {
+  const d = new Date(`${date}T00:00:00Z`);
+  return Number.isNaN(d.getTime())
+    ? date
+    : new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(d);
+}
+
 export function renderReturnStepEmail(
   step: string,
   order: EmailOrder,
@@ -363,6 +375,11 @@ export function renderReturnStepEmail(
   const n = order.orderNumber;
   const item = `${ret.itemName} (${ret.itemSize})`;
   const facts: Array<[string, string]> = [['Item', item]];
+  const pickupFacts: Array<[string, string]> = [
+    ...(ret.pickupCourier ? ([['Pickup courier', ret.pickupCourier]] as Array<[string, string]>) : []),
+    ...(ret.pickupTrackingNumber ? ([['Tracking number', ret.pickupTrackingNumber]] as Array<[string, string]>) : []),
+    ...(ret.pickupDate ? ([['Pickup date', formatPickupDate(ret.pickupDate)]] as Array<[string, string]>) : []),
+  ];
   const cta: Cta = { label: `View ${noun} status`, url: trackUrl(ctx, order) };
   const mk = (template: string, subject: string, heading: string, paragraphs: string[], extra: Array<[string, string]> = []) =>
     renderContent({
@@ -377,20 +394,25 @@ export function renderReturnStepEmail(
         [`We have received your ${noun} request and will review it shortly.`], [['Reason', ret.reason]]);
     case 'approved':
       return mk('return_approved', `${Noun} approved for order ${n}`, `Your ${noun} is approved`,
-        [`Your ${noun} request has been approved. We will arrange the pickup and keep you posted.`]);
+        [
+          `Your ${noun} request has been approved. We will arrange the pickup and keep you posted.`,
+          'Please keep the item packed and ready for the courier.',
+        ],
+        pickupFacts);
     case 'rejected':
       return mk('return_rejected', `${Noun} request update for order ${n}`, `We could not approve your ${noun}`,
         [`We are sorry — we were not able to approve this ${noun} request.`],
         ret.adminNotes ? [['Note from our team', ret.adminNotes]] : []);
     case 'picked_up':
       return mk('return_picked_up', `${Noun} picked up for order ${n}`, 'We have picked up your item',
-        ['The courier has picked up your item. We will let you know when it reaches us.']);
+        ['The courier has picked up your item. We will let you know when it reaches us.'],
+        pickupFacts);
     case 'received':
       return mk('return_received', `${Noun} received for order ${n}`, 'We have received your item',
         [ret.isExchange ? 'Your item has reached us. We will ship your replacement shortly.' : 'Your item has reached us. Your refund will be issued shortly.']);
     case 'refunded':
       return mk('return_refunded', `Refund issued for order ${n}`, 'Your refund has been issued',
-        ['Your refund has been issued. It can take 5–7 business days to appear in your account.'],
+        ['Your refund has been issued to your original payment method. It can take 5–7 business days to appear in your account.'],
         ret.refundAmount != null ? [['Refund amount', money(ret.refundAmount)]] : []);
     case 'exchanged':
       return mk('exchange_shipped', `Your replacement for order ${n} has shipped`, 'Your replacement is on its way',
@@ -441,10 +463,11 @@ export function renderAdminNewReturnEmail(order: EmailOrder, ret: EmailReturn, c
     greeting: null,
     paragraphs: [`${order.customerName} requested a ${noun} on order ${order.orderNumber}.`],
     facts: [
+      ['Order', order.orderNumber],
       ['Item', `${ret.itemName} (${ret.itemSize})`],
       ['Reason', ret.reason],
       ...(ret.isExchange && ret.exchangeSize ? ([['Wants size', ret.exchangeSize]] as Array<[string, string]>) : []),
     ],
-    cta: { label: 'Review in admin', url: adminOrderUrl(ctx, order.id) },
+    cta: { label: 'Open returns inbox', url: adminReturnsUrl(ctx) },
   });
 }

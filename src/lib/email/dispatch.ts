@@ -12,6 +12,7 @@
    returned as an outcome instead of thrown.
    ============================================ */
 
+import { CONTACT_INFO } from '@/lib/constants';
 import { createServiceClient } from '@/lib/supabase/service';
 
 import { emailEventKey, parseEmailEvent, type EmailEvent } from './events';
@@ -105,7 +106,9 @@ async function loadReturn(
 ): Promise<{ ret: EmailReturn; orderId: string } | null> {
   const { data: r } = await supabase
     .from('order_returns')
-    .select('id, order_id, order_item_id, is_exchange, reason, admin_notes, refund_amount, exchange_size')
+    .select(
+      'id, order_id, order_item_id, is_exchange, reason, admin_notes, refund_amount, exchange_size, pickup_courier, pickup_tracking_number, pickup_date'
+    )
     .eq('id', returnId)
     .maybeSingle();
   if (!r) return null;
@@ -127,6 +130,9 @@ async function loadReturn(
       exchangeSize: r.exchange_size ?? null,
       itemName: str(item?.name) || 'Item',
       itemSize: str(item?.size),
+      pickupCourier: r.pickup_courier ?? null,
+      pickupTrackingNumber: r.pickup_tracking_number ?? null,
+      pickupDate: r.pickup_date ?? null,
     },
   };
 }
@@ -238,11 +244,13 @@ export async function dispatchNotificationEmail(notificationId: string): Promise
   // Recipient
   let recipients: string[];
   if (event.audience === 'admin') {
+    // ADMIN_ALERT_EMAIL (comma-separated) overrides; otherwise alerts go to the store inbox.
     recipients = (process.env.ADMIN_ALERT_EMAIL ?? '')
       .split(',')
       .map((e) => e.trim())
       .filter(Boolean);
-    if (recipients.length === 0) return { outcome: 'skipped', reason: 'ADMIN_ALERT_EMAIL not set' };
+    if (recipients.length === 0 && CONTACT_INFO.email) recipients = [CONTACT_INFO.email];
+    if (recipients.length === 0) return { outcome: 'skipped', reason: 'no admin alert recipient configured' };
   } else {
     // Defence in depth: the customer notification must belong to the order's owner.
     const { data: owner } = await supabase.from('orders').select('user_id').eq('id', order.id).maybeSingle();

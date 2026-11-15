@@ -19,11 +19,22 @@ interface ReturnRequestButtonProps {
   orderNumber: string;
   item: ReturnableItem;
   onRequested: () => void;
+  /** Guest-on-another-device flow: post here instead of the signed-in route. */
+  endpoint?: string;
+  /** Extra fields sent with the request (the guest's order number + email). */
+  extraBody?: Record<string, string>;
 }
 
 /** "Return / exchange" button + request dialog. The server checks every
  *  rule (window, quantity, stock); this only collects the request. */
-export default function ReturnRequestButton({ orderId, orderNumber, item, onRequested }: ReturnRequestButtonProps) {
+export default function ReturnRequestButton({
+  orderId,
+  orderNumber,
+  item,
+  onRequested,
+  endpoint,
+  extraBody,
+}: ReturnRequestButtonProps) {
   const [open, setOpen] = useState(false);
   const [mode, setMode] = useState<'return' | 'exchange'>('return');
   const [reason, setReason] = useState<string>(RETURN_REASONS[0]);
@@ -63,10 +74,11 @@ export default function ReturnRequestButton({ orderId, orderNumber, item, onRequ
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/orders/${orderId}/return`, {
+      const res = await fetch(endpoint ?? `/api/orders/${orderId}/return`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          ...extraBody,
           orderItemId: item.id,
           quantity,
           reason,

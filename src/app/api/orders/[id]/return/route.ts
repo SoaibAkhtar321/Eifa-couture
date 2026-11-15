@@ -17,6 +17,7 @@ import { z } from 'zod';
 
 import { rateLimit, rateLimitResponseHeaders, RATE_LIMITS } from '@/lib/rate-limit';
 import { createClient } from '@/lib/supabase/server';
+import { mapRequestReturnError as mapRpcError } from '@/lib/returns/request-errors';
 import { createServiceClient } from '@/lib/supabase/service';
 
 const bodySchema = z.object({
@@ -27,28 +28,6 @@ const bodySchema = z.object({
   isExchange: z.boolean().optional(),
   exchangeSize: z.string().trim().max(20).optional(),
 });
-
-const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
-  order_not_found: { status: 404, message: 'Order not found.' },
-  item_not_found: { status: 404, message: 'Item not found on this order.' },
-  order_not_delivered: { status: 409, message: 'Returns can be requested once the order is delivered.' },
-  order_not_paid: { status: 409, message: 'This order is not eligible for a return.' },
-  return_window_closed: { status: 409, message: 'The return window for this order has closed.' },
-  return_already_open: { status: 409, message: 'A return is already in progress for this item.' },
-  quantity_exceeds_purchased: { status: 409, message: 'This item has already been returned or exchanged.' },
-  invalid_quantity: { status: 400, message: 'Choose a valid quantity.' },
-  reason_required: { status: 400, message: 'Please choose a reason.' },
-  exchange_size_required: { status: 400, message: 'Choose the size you want in exchange.' },
-  exchange_variant_unavailable: { status: 409, message: 'That size is not available for exchange.' },
-  exchange_out_of_stock: { status: 409, message: 'That size is out of stock right now.' },
-};
-
-function mapRpcError(message: string): { status: number; message: string } {
-  for (const [code, mapped] of Object.entries(ERROR_RESPONSES)) {
-    if (message.includes(code)) return mapped;
-  }
-  return { status: 500, message: 'Could not submit your request. Please try again.' };
-}
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   const { id: orderId } = await context.params;

@@ -18,6 +18,11 @@
      - refund failed                                  -> a new refund
        may be started
 
+   Pickup details (courier, tracking number, pickup date) are optional
+   and accepted only with 'approve' (from requested) and 'picked_up'
+   (from approved). They are saved BEFORE the status change so the
+   customer email sent for that change already contains them.
+
    The refund is the item's share of what the customer actually paid
    (coupon discount spread across items), never more than the
    remaining refundable balance (initiate_refund enforces that).
@@ -47,6 +52,17 @@ const bodySchema = z.object({
   action: z.enum(['approve', 'reject', 'picked_up', 'received', 'refunded', 'exchanged']),
   notes: z.string().trim().max(500).optional(),
   restock: z.boolean().optional(),
+  pickup: z
+    .object({
+      courier: z.string().trim().max(80).nullish(),
+      trackingNumber: z.string().trim().max(80).nullish(),
+      date: z
+        .string()
+        .regex(/^\d{4}-\d{2}-\d{2}$/)
+        .refine((d) => !Number.isNaN(Date.parse(`${d}T00:00:00Z`)))
+        .nullish(),
+    })
+    .optional(),
 });
 
 const ERROR_RESPONSES: Record<string, { status: number; message: string }> = {
@@ -115,7 +131,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
   const parsed = bodySchema.safeParse(json);
   if (!parsed.success) return fail(400, 'Invalid request body.');
 
-  const { action, notes, restock } = parsed.data;
+  const { action, notes, restock, pickup } = parsed.data;
   const toStatus = ACTION_TO_STATUS[action];
   const service = createServiceClient();
 
@@ -136,6 +152,25 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
   let refundAmount: number | null = null;
   let razorpayRefundId: string | null = null;
+
+  // ---------------- Pickup details (approve / picked_up only) ----------------
+  const savesPickup =
+    pickup !== undefined &&
+    ((action === 'approve' && ret.status === 'requested') ||
+      (action === 'picked_up' && ret.status === 'approved'));
+
+  if (savesPickup && pickup) {
+    const { error: pickupError } = await service
+      .from('order_returns')
+      .update({
+        pickup_courier: pickup.courier?.trim() || null,
+        pickup_tracking_number: pickup.trackingNumber?.trim() || null,
+        pickup_date: pickup.date || null,
+      })
+      .eq('id', returnId);
+
+    if (pickupError) return fail(500, 'Could not save the pickup details. Please try again.');
+  }
 
   // ---------------- Money step (only for 'refunded') ----------------
   if (toStatus === 'refunded') {
@@ -298,6 +333,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       refund_amount: refundAmount,
       razorpay_refund_id: razorpayRefundId,
       restock: restock ?? false,
+      ...(savesPickup && pickup
+        ? {
+            pickup_courier: pickup.courier?.trim() || null,
+            pickup_tracking_number: pickup.trackingNumber?.trim() || null,
+            pickup_date: pickup.date || null,
+          }
+        : {}),
     },
   });
 

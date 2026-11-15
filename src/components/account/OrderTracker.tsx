@@ -6,6 +6,7 @@ import { FormEvent, useEffect, useState } from 'react';
 
 import CancelOrderButton, { type CancelOutcome } from '@/components/account/CancelOrderButton';
 import ReturnRequestButton from '@/components/account/ReturnRequestButton';
+import GuestOrderLookup from '@/components/account/GuestOrderLookup';
 import ReturnTimeline, { type CustomerReturn } from '@/components/account/ReturnTimeline';
 import { useAuth } from '@/hooks/useAuth';
 import {
@@ -136,7 +137,7 @@ export default function OrderTracker() {
     return createClient()
       .from('order_returns')
       .select(
-        'id, order_item_id, status, reason, is_exchange, exchange_size, quantity, admin_notes, refund_amount, requested_at, resolved_at'
+        'id, order_item_id, status, reason, is_exchange, exchange_size, quantity, admin_notes, refund_amount, requested_at, resolved_at, pickup_courier, pickup_tracking_number, pickup_date'
       )
       .eq('order_id', orderId)
       .order('requested_at', { ascending: false })
@@ -192,6 +193,7 @@ export default function OrderTracker() {
         <Link href="/login?next=/track-order" className="btn-luxury btn-luxury-primary mt-6 inline-flex">
           Sign In
         </Link>
+        <GuestOrderLookup />
       </div>
     );
   }

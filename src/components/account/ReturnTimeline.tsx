@@ -14,6 +14,10 @@ export interface CustomerReturn {
   refund_amount: number | null;
   requested_at: string;
   resolved_at: string | null;
+  pickup_courier: string | null;
+  pickup_tracking_number: string | null;
+  /** YYYY-MM-DD */
+  pickup_date: string | null;
 }
 
 const REFUND_FLOW: ReturnStatus[] = ['requested', 'approved', 'picked_up', 'received', 'refunded'];
@@ -22,6 +26,12 @@ const EXCHANGE_FLOW: ReturnStatus[] = ['requested', 'approved', 'picked_up', 're
 function fmt(date: string) {
   return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' }).format(
     new Date(date)
+  );
+}
+
+function fmtDay(date: string) {
+  return new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(
+    new Date(`${date}T00:00:00`)
   );
 }
 
@@ -85,6 +95,26 @@ export default function ReturnTimeline({
                     );
                   })}
                 </ol>
+              )}
+
+              {!rejected && (r.status === 'approved' || r.status === 'picked_up') && (
+                <div className="mt-3 rounded-md border border-beige bg-cream/60 p-3 text-xs text-ink-soft">
+                  {(r.pickup_courier || r.pickup_tracking_number || r.pickup_date) && (
+                    <p className="text-charcoal">
+                      <span className="font-medium">Pickup:</span>{' '}
+                      {[
+                        r.pickup_courier,
+                        r.pickup_tracking_number ? `Tracking ${r.pickup_tracking_number}` : null,
+                        r.pickup_date ? fmtDay(r.pickup_date) : null,
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                  )}
+                  {r.status === 'approved' && (
+                    <p className="mt-1">Please keep the item packed and ready for the courier.</p>
+                  )}
+                </div>
               )}
 
               {!rejected && r.admin_notes && (

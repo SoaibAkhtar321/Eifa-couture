@@ -3,6 +3,30 @@
 
 import type { ReturnStatus } from '@/types/database';
 
+export interface AdminReturnRefund {
+  status: string; // processing | processed | failed
+  amount: number;
+  errorMessage: string | null;
+  processedAt: string | null;
+}
+
+/**
+ * What the admin Refund button will pay for one return: the item's share of
+ * what the customer actually paid (coupon discount spread across items).
+ * MUST stay identical to the amount computed in
+ * src/app/api/admin/returns/[id]/route.ts, which is the amount actually
+ * refunded; this copy is for display only.
+ */
+export function computeReturnRefundPreview(
+  unitPrice: number,
+  quantity: number,
+  orderSubtotal: number,
+  orderDiscount: number
+): number {
+  const paidRatio = orderSubtotal > 0 ? Math.max(0, (orderSubtotal - orderDiscount) / orderSubtotal) : 1;
+  return Math.round(unitPrice * quantity * paidRatio * 100) / 100;
+}
+
 export interface AdminReturnRecord {
   id: string;
   status: ReturnStatus;
@@ -18,6 +42,14 @@ export interface AdminReturnRecord {
   itemName: string;
   itemSize: string;
   itemColor: string;
+  pickupCourier: string | null;
+  pickupTrackingNumber: string | null;
+  /** YYYY-MM-DD */
+  pickupDate: string | null;
+  /** Amount the Refund button will pay; null when it cannot be computed. */
+  refundPreview: number | null;
+  /** The refund linked to this return, if one was ever started. */
+  refund: AdminReturnRefund | null;
 }
 
 /* ---------- Admin returns inbox (/admin/returns) ---------- */
