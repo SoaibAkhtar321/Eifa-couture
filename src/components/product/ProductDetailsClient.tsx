@@ -26,7 +26,41 @@ export default function ProductDetailsClient({
   // Combined with key={slug} on the parent, this now runs on a fresh mount
   // every time, instead of racing a prop update on a reused instance.
   useLayoutEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    const html = document.documentElement;
+    const toTop = () => {
+      // Smooth scrolling (if any) must not turn this into a slow animation.
+      const previous = html.style.scrollBehavior;
+      html.style.scrollBehavior = 'auto';
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      html.style.scrollBehavior = previous;
+    };
+    toTop();
+
+    // The page grows as images and sections load, and the browser can restore
+    // the previous page's scroll offset. Re-apply the reset a moment later,
+    // unless the shopper has already started scrolling themselves.
+    let userMoved = false;
+    const markMoved = () => {
+      userMoved = true;
+    };
+    window.addEventListener('wheel', markMoved, { passive: true, once: true });
+    window.addEventListener('touchstart', markMoved, { passive: true, once: true });
+    window.addEventListener('keydown', markMoved, { once: true });
+
+    const frame = window.requestAnimationFrame(() => {
+      if (!userMoved) toTop();
+    });
+    const timer = window.setTimeout(() => {
+      if (!userMoved) toTop();
+    }, 250);
+
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.clearTimeout(timer);
+      window.removeEventListener('wheel', markMoved);
+      window.removeEventListener('touchstart', markMoved);
+      window.removeEventListener('keydown', markMoved);
+    };
   }, []);
 
   // Owned here (not inside ProductInfo) purely so the gallery — a
