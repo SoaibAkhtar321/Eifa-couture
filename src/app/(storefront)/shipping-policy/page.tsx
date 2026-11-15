@@ -2,7 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import LegalPage from '@/components/legal/LegalPage';
-import { CONTACT_INFO, SHIPPING_INFO } from '@/lib/constants';
+import { CONTACT_INFO, LEGAL_LAST_UPDATED } from '@/lib/constants';
+import { getPolicyValues } from '@/lib/policy';
 import { buildPageMetadata } from '@/lib/seo';
 import { formatPrice } from '@/lib/utils';
 
@@ -13,14 +14,15 @@ export const metadata: Metadata = buildPageMetadata({
   path: '/shipping-policy',
 });
 
-export default function ShippingPolicyPage() {
+export default async function ShippingPolicyPage() {
+  const policy = await getPolicyValues();
   const email = CONTACT_INFO.email;
-  const { min, max } = SHIPPING_INFO.standardDeliveryDays;
+  const { min, max } = policy.deliveryDays;
 
   return (
     <LegalPage
       title="Shipping Policy"
-      updated="15 November 2026"
+      updated={LEGAL_LAST_UPDATED}
       currentPath="/shipping-policy"
       intro="Every Eifa Couture piece is hand-packed in Lucknow and sent with care. This page explains where we deliver, how long it takes, what it costs and how to track your parcel."
       sections={[
@@ -40,13 +42,12 @@ export default function ShippingPolicyPage() {
             <>
               <p>
                 Orders are hand-packed and handed to the courier shortly after they are confirmed. Standard delivery
-                usually takes <strong>{min}–{max} working days</strong> from the date you place the order. Sundays and
-                public holidays are not counted.
+                usually takes <strong>{min}–{max} working days</strong> from the date you place the order.
               </p>
               <p>
                 The estimated delivery date for your order is shown in <strong>My Account → Orders</strong> and in your
                 order emails. It is an estimate, not a guarantee: remote areas, festivals, weather and courier delays can
-                add time. Made-to-order or customised pieces may take longer, and we will tell you before you pay.
+                add time. Made-to-order or customised pieces may take longer.
               </p>
             </>
           ),
@@ -56,9 +57,11 @@ export default function ShippingPolicyPage() {
           body: (
             <>
               <p>
-                Shipping is free on orders above {formatPrice(SHIPPING_INFO.freeShippingThreshold)}. Below that, a flat
-                charge of {formatPrice(SHIPPING_INFO.standardShippingCost)} applies. The exact amount for your order is
-                always shown at checkout before you pay, and there are no hidden fees after that.
+                {policy.freeShippingThreshold === null
+                  ? `A flat shipping charge of ${formatPrice(policy.shippingFlatRate)} applies to every order.`
+                  : `Shipping is free on orders above ${formatPrice(policy.freeShippingThreshold)}. Below that, a flat charge of ${formatPrice(policy.shippingFlatRate)} applies.`}{' '}
+                The exact amount for your order is always shown at checkout before you pay. Payment is taken in
+                advance online; we do not offer cash on delivery.
               </p>
               <p>
                 We may change shipping charges or the free-shipping amount from time to time. The charges shown at
@@ -71,9 +74,10 @@ export default function ShippingPolicyPage() {
           heading: 'Tracking your order',
           body: (
             <p>
-              You get email and in-app updates as your order is confirmed, packed, shipped, out for delivery and
-              delivered. When it ships, we add the courier&rsquo;s tracking number. You can follow your parcel any time
-              from <Link href="/track-order">Track Order</Link> or <strong>My Account → Orders</strong>.
+              You get email updates as your order moves along, and signed-in customers also get in-app updates. When it
+              ships, we add the courier&rsquo;s tracking number where one is available. You can follow your order any
+              time from <Link href="/track-order">Track Order</Link> using your order number and email (this works for
+              guest orders too), or from <strong>My Account → Orders</strong>.
             </p>
           ),
         },
@@ -83,7 +87,7 @@ export default function ShippingPolicyPage() {
             <p>
               Please enter a complete address, pin code and a working phone number, because the courier will call you. We
               cannot change the address once an order has shipped. If you need to correct it before then, cancel the
-              order from My Account (see our <Link href="/refund-policy">Cancellation, Returns &amp; Refunds</Link>{' '}
+              order (see our <Link href="/refund-policy">Cancellation, Returns &amp; Refunds</Link>{' '}
               policy) or write to <a href={`mailto:${email}`}>{email}</a> straight away.
             </p>
           ),
@@ -94,8 +98,8 @@ export default function ShippingPolicyPage() {
             <>
               <p>
                 If the courier cannot reach you, they normally try again. If delivery keeps failing because the address
-                is wrong or incomplete, or the parcel is refused, the parcel comes back to us. We will contact you to
-                re-send it; the shipping cost for re-sending may be charged to you.
+                is wrong or incomplete, or the parcel is refused, the parcel comes back to us. We will contact you
+                about re-sending it.
               </p>
               <p>
                 If your order has not arrived by the estimated date, email <a href={`mailto:${email}`}>{email}</a> with
@@ -109,8 +113,8 @@ export default function ShippingPolicyPage() {
           body: (
             <p>
               Please check the parcel when it arrives. If it is visibly damaged, or the item is wrong or damaged, take
-              photos and request a return from My Account within 7 days of delivery. We will arrange a pickup and a
-              replacement or full refund, as set out in our{' '}
+              photos and request a return from your order within {policy.returnWindowDays} days of delivery. What happens next is set
+              out in our{' '}
               <Link href="/refund-policy">Cancellation, Returns &amp; Refunds policy</Link>.
             </p>
           ),

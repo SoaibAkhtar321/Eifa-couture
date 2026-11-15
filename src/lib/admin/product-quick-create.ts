@@ -20,11 +20,12 @@ import {
   generateUniqueSlug,
   isProductSkuTaken,
   isSkuTaken,
+  setProductActive,
   softDeleteProduct,
   type ProductInput,
 } from '@/lib/admin/products-write';
 import { uploadProductImages } from '@/lib/admin/storage';
-import { productFormSchema } from '@/lib/admin/validation';
+import { activeProductImageCountSchema, MIN_PRODUCT_IMAGES, productFormSchema } from '@/lib/admin/validation';
 import { generateSlug } from '@/lib/utils';
 import type { DbProduct, ProductAudience } from '@/types/database';
 
@@ -116,6 +117,14 @@ export async function quickCreateProduct(input: QuickCreateInput): Promise<Quick
   const hasSizes = input.sizes.length > 0;
   const { price, compare_at_price } = toStoredPrices(input.fullPrice, input.discountedPrice);
 
+  const wantsActive = input.overrides?.is_active ?? true;
+  if (wantsActive) {
+    const check = activeProductImageCountSchema.safeParse(input.photos.length);
+    if (!check.success) {
+      return { product: null, error: check.error.issues[0]?.message ?? 'Add more photos.', photoWarning: null };
+    }
+  }
+
   try {
     const extras = input.overrides ?? {};
     const slug = extras.slug?.trim() || (await generateUniqueSlug(input.name));
@@ -140,7 +149,8 @@ export async function quickCreateProduct(input: QuickCreateInput): Promise<Quick
       is_featured: input.is_featured,
       is_best_seller: extras.is_best_seller ?? false,
       is_new_arrival: input.is_new_arrival,
-      is_active: extras.is_active ?? true,
+      // Saved hidden first; switched on below once enough photos uploaded.
+      is_active: false,
       seo_title: extras.seo_title ?? null,
       seo_description: extras.seo_description ?? null,
       seo_keywords: extras.seo_keywords ?? [],
@@ -191,12 +201,23 @@ export async function quickCreateProduct(input: QuickCreateInput): Promise<Quick
     }
 
     let photoWarning: string | null = null;
+    let uploaded = 0;
     if (input.photos.length > 0) {
       const { data, errors } = await uploadProductImages(product.id, input.photos, 0, false);
+      uploaded = data.length;
       if (errors.length > 0) {
         photoWarning = `Product saved, but ${errors.length} photo${errors.length > 1 ? 's' : ''} could not be uploaded (${errors[0].message}). Add them on this page.`;
       } else if (data.length === 0) {
         photoWarning = 'Product saved, but no photos were uploaded. Add them on this page.';
+      }
+    }
+
+    if (wantsActive) {
+      if (uploaded >= MIN_PRODUCT_IMAGES) {
+        const { error: activeError } = await setProductActive(product.id, true);
+        if (activeError) photoWarning = `Product saved but not live yet: ${activeError}`;
+      } else {
+        photoWarning = `${photoWarning ?? 'Product saved'} It stays hidden from the store until it has ${MIN_PRODUCT_IMAGES} photos.`;
       }
     }
 

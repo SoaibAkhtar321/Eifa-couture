@@ -40,7 +40,13 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
   const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) return { ok: false, error: 'RESEND_API_KEY is not set' };
 
-  const from = process.env.EMAIL_FROM?.trim() || DEFAULT_FROM;
+  const configuredFrom = process.env.EMAIL_FROM?.trim();
+  if (!configuredFrom && process.env.NODE_ENV === 'production') {
+    // The default sender is Resend's test address, which only delivers to the
+    // Resend account owner: customers would silently get nothing.
+    console.warn('[email] EMAIL_FROM is not set; set it to an address on a verified Resend domain.');
+  }
+  const from = configuredFrom || DEFAULT_FROM;
   const replyTo = process.env.EMAIL_REPLY_TO?.trim();
 
   const controller = new AbortController();

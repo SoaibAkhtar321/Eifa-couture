@@ -2,36 +2,40 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import LegalPage from '@/components/legal/LegalPage';
-import { CONTACT_INFO, RETURN_POLICY } from '@/lib/constants';
+import { CONTACT_INFO, LEGAL_LAST_UPDATED, RETURN_POLICY } from '@/lib/constants';
+import { getPolicyValues } from '@/lib/policy';
 import { buildPageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Cancellation, Returns & Refunds',
   description:
-    'How to cancel an Eifa Couture order, return or exchange a piece within 7 days of delivery, and when and how refunds are paid.',
+    'How to cancel an Eifa Couture order, request a return or exchange after delivery, and when and how refunds are paid.',
   path: '/refund-policy',
 });
 
-export default function RefundPolicyPage() {
-  const { min, max } = RETURN_POLICY.refundProcessingDays;
+export default async function RefundPolicyPage() {
+  const policy = await getPolicyValues();
+  const { min, max } = policy.refundDays;
+  const windowDays = policy.returnWindowDays;
   const email = CONTACT_INFO.email;
 
   return (
     <LegalPage
       title="Cancellation, Returns & Refunds"
-      updated="15 November 2026"
+      updated={LEGAL_LAST_UPDATED}
       currentPath="/refund-policy"
-      intro={`${RETURN_POLICY.message} This page explains exactly how cancellations, returns, exchanges and refunds work, step by step.`}
+      intro={`${RETURN_POLICY.message} This page explains how cancellations, returns, exchanges and refunds work, step by step. All orders are paid in advance online; we do not offer cash on delivery.`}
       sections={[
         {
           heading: 'Cancelling an order',
           body: (
             <>
               <p>
-                You can cancel an order yourself from <strong>My Account → Orders</strong> at any time{' '}
-                <strong>before it is shipped</strong> (while it is shown as Order placed, Confirmed or Packing). The
-                cancelled order is refunded in full, including any shipping charge, as described under &ldquo;How
-                refunds are paid&rdquo; below.
+                You can cancel an order yourself <strong>before it is shipped</strong> (while it is shown as Order
+                placed, Confirmed or Packing). Signed-in customers cancel from <strong>My Account → Orders</strong>.
+                If you checked out as a guest, open your order from <Link href="/track-order">Track Order</Link> with
+                your order number and email. A cancelled order is refunded in full, including any shipping charge, as
+                described under &ldquo;How refunds are paid&rdquo; below.
               </p>
               <p>
                 Once an order has been shipped it can no longer be cancelled, but you can request a return after it is
@@ -50,16 +54,16 @@ export default function RefundPolicyPage() {
           body: (
             <>
               <p>
-                You may request a return within <strong>{RETURN_POLICY.returnWindow} days of delivery</strong>. The
-                request must be made from <strong>My Account → Orders</strong> once the order shows as Delivered. A return
-                is accepted when:
+                You may request a return within <strong>{windowDays} days of delivery</strong>, once the order shows as
+                Delivered. Signed-in customers request it from <strong>My Account → Orders</strong>. Guest customers can
+                do it from the same browser they ordered with, or from <Link href="/track-order">Track Order</Link> using
+                the order number and email used at checkout. A return is accepted when:
               </p>
               <ul className="list-disc space-y-2 pl-5">
-                {RETURN_POLICY.conditions
-                  .filter((condition) => !/refund/i.test(condition) && !/exchange/i.test(condition))
-                  .map((condition) => (
-                    <li key={condition}>{condition}</li>
-                  ))}
+                {RETURN_POLICY.conditions.map((condition) => (
+                  <li key={condition}>{condition}</li>
+                ))}
+                <li>The request is made inside the {windowDays}-day window above.</li>
               </ul>
               <p>
                 Handcrafted variations in thread work, shade and finish are part of Chikankari and are not defects. Slight
@@ -74,9 +78,8 @@ export default function RefundPolicyPage() {
           body: (
             <p>
               If your piece arrives damaged, defective or is not the item you ordered, request a return as soon as
-              possible and within the {RETURN_POLICY.returnWindow}-day window, and attach clear photos in the request.
-              These returns are accepted even if the tags have been removed to check the piece, and we cover the return
-              pickup and refund your shipping charge.
+              possible and within the {windowDays}-day window, and attach clear photos in the request. We review these
+              requests with priority.
             </p>
           ),
         },
@@ -85,36 +88,28 @@ export default function RefundPolicyPage() {
           body: (
             <p>
               If a size does not fit, you can request an <strong>exchange for a different size of the same piece and
-              colour</strong> from the same place, within {RETURN_POLICY.exchangeWindow} days of delivery and subject to
-              stock. If your size is not available, we will refund you instead.
+              colour</strong> from the same place as a return, within {windowDays} days of delivery and subject to
+              stock. If the size you want is not available, you can request a return instead.
             </p>
-          ),
-        },
-        {
-          heading: 'What cannot be returned',
-          body: (
-            <ul className="list-disc space-y-2 pl-5">
-              <li>Customised, altered or made-to-measure pieces, and bridal pieces.</li>
-              <li>Sale or clearance items marked as final sale.</li>
-              <li>Items that have been worn, washed, altered, or are missing tags or original packaging.</li>
-              <li>Requests made after the {RETURN_POLICY.returnWindow}-day return window has closed.</li>
-            </ul>
           ),
         },
         {
           heading: 'How a return works',
           body: (
             <ol className="list-decimal space-y-2 pl-5">
-              <li>Open the delivered order in My Account and choose Return / Exchange for the item.</li>
+              <li>Open the delivered order and choose Return / Exchange for the item and quantity.</li>
               <li>Pick the reason (and the new size for an exchange) and add photos if the item is damaged or wrong.</li>
-              <li>We review the request and email you whether it is approved. A rejected request comes with a reason.</li>
               <li>
-                If approved, we arrange a pickup from your delivery address where our courier serves your pincode.
-                Otherwise we will tell you how to send it back. Pack the item in its original packaging with the tags.
+                We review the request and email you whether it is approved. A rejected request comes with a reason.
               </li>
               <li>
-                When the item reaches us and passes inspection, we issue your refund or dispatch your exchange. You can
-                follow each step in My Account.
+                If approved, we arrange a courier pickup. Once the pickup is booked, the courier name, tracking number
+                and pickup date (where we have them) are shown with your order. Please keep the item packed in its
+                original packaging with the tags until it is collected.
+              </li>
+              <li>
+                When the item reaches us and has been checked, we issue your refund or dispatch your exchange. You can
+                follow each step on your order, and we email you when the refund is issued.
               </li>
             </ol>
           ),
@@ -132,23 +127,25 @@ export default function RefundPolicyPage() {
                   <strong>Cancelled before shipping:</strong> the full amount, including shipping, is refunded.
                 </li>
                 <li>
-                  <strong>Returned items:</strong> the price of the returned items is refunded after we receive and
-                  inspect them.
+                  <strong>Returned items:</strong> the refund is issued only after the item has reached us and been
+                  checked. You are refunded what you actually paid for the returned items. If you used a coupon, its
+                  discount is shared across the items in the order, so a returned item is refunded its share of the
+                  amount you paid. Partial returns are refunded for the returned quantity only.
                 </li>
                 <li>
-                  <strong>Shipping charges:</strong> refunded when we cancel the order, or when the return is because of
-                  a damaged, defective or wrong item. For other returns the original shipping charge is not refunded.
+                  <strong>Shipping charge on returns:</strong> whether the original shipping charge is refunded is
+                  stated in your return approval message.
                 </li>
                 <li>
-                  <strong>Timeline:</strong> we start the refund promptly, and it reaches your account within{' '}
-                  {min}–{max} working days after we start it. Some banks and card issuers take a few extra days to show
-                  it on your statement.
+                  <strong>Timeline:</strong> we start the refund after we have received and checked the item, and it
+                  reaches your account within {min}–{max} working days after we start it. Some banks and card issuers
+                  take a few extra days to show it on your statement.
                 </li>
               </ul>
               <p>
-                If an online payment is debited but your order is not confirmed, the amount is reversed automatically,
-                normally within {min}–{max} working days. If it is not, email us your payment reference and we will
-                follow it up with Razorpay.
+                If an online payment is debited but your order is not confirmed, the amount is normally reversed within{' '}
+                {min}–{max} working days. If it is not, email us your payment reference and we will follow it up with
+                Razorpay.
               </p>
             </>
           ),

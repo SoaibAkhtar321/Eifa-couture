@@ -6,7 +6,12 @@ import { useState } from 'react';
 import { TextField, TextareaField, SelectField, NumberField, ToggleField } from '@/components/admin/FormField';
 import ConfirmDialog from '@/components/admin/ui/ConfirmDialog';
 import { useToast } from '@/components/admin/ui/Toaster';
-import { productFormSchema, type ProductFormValues } from '@/lib/admin/validation';
+import {
+  MIN_PRODUCT_IMAGES,
+  PRODUCT_IMAGE_HINT,
+  productFormSchema,
+  type ProductFormValues,
+} from '@/lib/admin/validation';
 import {
   updateProduct,
   generateUniqueSlug,
@@ -171,7 +176,8 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
     }
 
     if (!isEditing) {
-      if (photos.length === 0) errors.photos = 'Add at least one photo so customers can see the product';
+      if (values.is_active && photos.length < MIN_PRODUCT_IMAGES)
+        errors.photos = `Add at least ${MIN_PRODUCT_IMAGES} photos (you have ${photos.length}). ${PRODUCT_IMAGE_HINT}`;
       const sizes = Object.keys(sizeStock);
       for (const s of sizes) {
         const q = Number(sizeStock[s]);
@@ -183,6 +189,12 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
       if (sizes.length === 0 && (!Number.isInteger(values.stock_quantity) || values.stock_quantity < 0)) {
         errors.stock_quantity = 'Enter a whole number, 0 or more';
       }
+    }
+
+    if (isEditing && product && values.is_active && !product.is_active) {
+      const count = images.filter((img) => !img.variant_id).length;
+      if (count < MIN_PRODUCT_IMAGES)
+        errors.photos = `Add at least ${MIN_PRODUCT_IMAGES} photos before turning this product on (you have ${count}). ${PRODUCT_IMAGE_HINT}`;
     }
 
     setFieldErrors(errors);
@@ -256,7 +268,7 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
         router.push(`/admin/products/${result.product.id}/edit`);
         return;
       }
-      toast.success('Product created. It is now live in the store.');
+      toast.success(values.is_active ? 'Product created. It is now live in the store.' : 'Product created (hidden from the store).');
       router.push('/admin/products');
       return;
     }
@@ -353,15 +365,20 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
           Photos
         </h2>
         {isEditing && product ? (
+          <>
           <ImageManager
             productId={product.id}
             images={images.filter((img) => !img.variant_id)}
             onChange={(updated) => setImages([...images.filter((img) => img.variant_id), ...updated])}
             title="Product photos"
             emptyMessage="No photos yet. Drag photos here or choose them to upload."
+            minimum={MIN_PRODUCT_IMAGES}
+            protectMinimum={product.is_active}
           />
+          {fieldErrors.photos && <p className="text-xs text-red-600">{fieldErrors.photos}</p>}
+          </>
         ) : (
-          <ImageDropzone files={photos} onChange={setPhotos} error={fieldErrors.photos} />
+          <ImageDropzone files={photos} minimum={MIN_PRODUCT_IMAGES} onChange={setPhotos} error={fieldErrors.photos} />
         )}
       </section>
 

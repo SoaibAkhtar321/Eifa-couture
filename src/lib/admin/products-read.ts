@@ -43,6 +43,8 @@ export interface ProductListFilters {
 export interface ProductListRow extends DbProduct {
   category_name: string | null;
   primary_image_url: string | null;
+  /** Product-level photos only (colour galleries not counted). */
+  image_count: number;
   total_stock: number;
   variant_count: number;
 }
@@ -139,6 +141,7 @@ export async function listProducts(filters: ProductListFilters = {}): Promise<{
       ...row,
       category_name: row.category?.name ?? null,
       primary_image_url: primaryImage?.url ?? null,
+      image_count: productImages.length,
       total_stock: totalStock,
       variant_count: realVariants.length,
     };
@@ -187,4 +190,32 @@ export async function getProduct(id: string): Promise<{
   }
 
   return { data: data as unknown as ProductWithRelations, error: null };
+}
+/* ---------- Live products with too few photos (Phase 2) ---------- */
+
+export interface ProductNeedingPhotos {
+  id: string;
+  name: string;
+  image_count: number;
+}
+
+/** Live products with fewer than `minimum` product-level photos. Read-only:
+ *  nothing is deactivated automatically. */
+export async function listProductsNeedingPhotos(minimum = 3): Promise<ProductNeedingPhotos[]> {
+  const supabase = await createServerClient();
+  const { data } = await supabase
+    .from('products')
+    .select('id, name, product_images(id, variant_id)')
+    .eq('is_active', true)
+    .is('deleted_at', null)
+    .order('name', { ascending: true });
+
+  type Raw = { id: string; name: string; product_images: { id: string; variant_id: string | null }[] };
+  return ((data ?? []) as unknown as Raw[])
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      image_count: p.product_images.filter((i) => !i.variant_id).length,
+    }))
+    .filter((p) => p.image_count < minimum);
 }

@@ -1,5 +1,6 @@
-import { CONTACT_INFO, RETURN_POLICY, SITE_URL, SOCIAL_LINKS } from '@/lib/constants';
+import { CONTACT_INFO, SITE_URL, SOCIAL_LINKS } from '@/lib/constants';
 import { getCachedCategories } from '@/lib/data/storefront-cache';
+import { getPolicyValues } from '@/lib/policy';
 
 // Re-generated at most once an hour so new categories appear without a deploy.
 export const revalidate = 3600;
@@ -10,6 +11,7 @@ export const revalidate = 3600;
  * they stay in sync with the site.
  */
 export async function GET() {
+  const policy = await getPolicyValues();
   let categoryLines: string[] = [];
   try {
     const categories = await getCachedCategories();
@@ -40,8 +42,8 @@ export async function GET() {
     '',
     ...(categoryLines.length ? ['## Categories', ...categoryLines, ''] : []),
     '## Policies',
-    `- Returns accepted within ${RETURN_POLICY.returnWindow} days of delivery on unused items with tags; size exchanges within ${RETURN_POLICY.exchangeWindow} days. Customised and bridal pieces are not returnable.`,
-    '- Payments are processed securely through Razorpay. Delivery is across India.',
+    `- Returns and size exchanges can be requested within ${policy.returnWindowDays} days of delivery for unused items with tags. Customised and bridal pieces are not returnable.`,
+    '- Payments are prepaid online through Razorpay (no cash on delivery). Guest checkout is available. Delivery is across India.',
     '',
     '## Contact',
     `- Email: ${CONTACT_INFO.email}`,

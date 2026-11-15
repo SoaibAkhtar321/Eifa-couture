@@ -88,7 +88,7 @@ const brandJsonLd = {
         'Premium handcrafted Lucknowi Chikankari fashion — kurtas, anarkalis, sarees and bridal collections.',
       foundingDate: '1998',
       email: CONTACT_INFO.email,
-      telephone: CONTACT_INFO.phone,
+      telephone: CONTACT_INFO.phoneE164,
       address: {
         '@type': 'PostalAddress',
         streetAddress: CONTACT_INFO.address.line1,
@@ -101,7 +101,7 @@ const brandJsonLd = {
         '@type': 'ContactPoint',
         contactType: 'customer support',
         email: CONTACT_INFO.email,
-        telephone: CONTACT_INFO.phone,
+        telephone: CONTACT_INFO.phoneE164,
         areaServed: 'IN',
         availableLanguage: ['en', 'hi'],
       },

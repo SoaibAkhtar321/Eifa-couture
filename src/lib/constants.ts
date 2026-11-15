@@ -32,7 +32,11 @@ export const SOCIAL_LINKS = [
 // ── Contact Info ──
 export const CONTACT_INFO = {
   email: "eifachikankari@gmail.com",
-  phone: "+91 88745 77757",
+  // Single source for the phone number. Display, tel: link and schema.org
+  // all derive from these; never type the number anywhere else.
+  phone: "+91 63923 26923",
+  phoneE164: "+916392326923",
+  phoneHref: "tel:+916392326923",
   address: {
     line1: "F No. 402, Bhukhand No. 466/112 072/3 D",
     line2: "Chowk, Lucknow, Uttar Pradesh 226003",
@@ -74,11 +78,7 @@ export const LEGAL_INFO = {
 export const SHIPPING_INFO = {
   freeShippingThreshold: 2999,
   standardShippingCost: 149,
-  expressShippingCost: 349,
   standardDeliveryDays: { min: 5, max: 7 },
-  expressDeliveryDays: { min: 2, max: 3 },
-  codAvailable: true,
-  codCharge: 49,
   internationalShipping: false,
   message:
     "Free shipping on all orders above ₹2,999. Each piece is carefully hand-packed with love.",
@@ -86,19 +86,25 @@ export const SHIPPING_INFO = {
 
 // ── Return Policy ──
 export const RETURN_POLICY = {
+  // FALLBACK ONLY. The live return window is Admin → Settings
+  // (store_settings.return_window_days), which the database enforces.
+  // Pages read it through getPolicyValues() in lib/policy.ts.
   returnWindow: 7,
-  exchangeWindow: 7,
+  // Working days for the money to reach the customer once a refund is started.
   refundProcessingDays: { min: 5, max: 7 },
+  // Item rules shown on the returns page. Window and refund wording are
+  // written by the page itself so they cannot disagree with the settings.
   conditions: [
     "Item must be unused and in original packaging with all tags intact.",
-    "Returns are accepted within 7 days of delivery.",
-    "Size exchanges are accepted within 7 days of delivery, subject to stock.",
     "Customised, altered, or bridal pieces are not eligible for return.",
     "Sale items are final sale and cannot be returned or exchanged.",
-    "Refunds will be processed to the original payment method.",
   ],
   message: "We want you to love your purchase. If something isn't right, we're here to help.",
 } as const;
+
+// Shown as "Last updated" on every legal page. Change it whenever a policy
+// page's wording changes.
+export const LEGAL_LAST_UPDATED = "15 November 2026";
 // ── Size chart (approximate body measurements, inches) ──
 // Shown in the product page "Size guide" modal. Edit here if the atelier's
 // fit differs; only sizes the product actually offers are displayed.

@@ -25,14 +25,14 @@ const contactCards = [
     title: 'Instagram Enquiry',
     description:
       'Ask about product availability, fabric, size guidance, or custom styling suggestions by message.',
-    detail: '@eifachikankari',
+    detail: instagram ? `@${instagram.href.replace(/\/+$/, '').split('/').pop()}` : 'Instagram',
     href: instagram?.href ?? '/contact',
   },
   {
     title: 'Call or Visit',
     description: `${CONTACT_INFO.address.line1}, ${CONTACT_INFO.address.line2}. Please call before visiting.`,
     detail: CONTACT_INFO.phone,
-    href: `tel:${CONTACT_INFO.phone.replace(/[^+\d]/g, '')}`,
+    href: CONTACT_INFO.phoneHref,
   },
 ];
 
@@ -126,13 +126,13 @@ export default function ContactPage() {
                 </h2>
 
                 <p className="mt-5 max-w-md text-sm leading-7 text-ink-muted sm:text-base sm:leading-8">
-                  This is a demo-ready form. Later, we can connect it with email,
-                  WhatsApp, Firebase, or an admin enquiry dashboard.
+                  Write to us by email, message us on Instagram, or call us. Please mention your order
+                  number if you are asking about an existing order.
                 </p>
 
                 <div className="mt-7 border border-beige bg-white p-5">
                   <p className="font-body text-[10px] uppercase tracking-[0.24em] text-gold">
-                    Common Enquiries
+                    We Can Help With
                   </p>
 
                   <div className="mt-4 flex flex-wrap gap-2">
@@ -148,95 +148,44 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <form className="space-y-5 border border-beige bg-white p-5 sm:p-7 lg:p-8">
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
-                      Full Name
-                    </span>
+              <div className="space-y-5 border border-beige bg-white p-5 sm:p-7 lg:p-8">
+                <p className="font-body text-[10px] uppercase tracking-[0.24em] text-gold">Reach Us Directly</p>
 
-                    <input
-                      type="text"
-                      name="name"
-                      placeholder="Enter your name"
-                      className="w-full border border-beige bg-ivory px-4 py-3 text-sm text-charcoal outline-none transition-colors focus:border-gold"
-                    />
-                  </label>
-
-                  <label className="block">
-                    <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
-                      Phone Number
-                    </span>
-
-                    <input
-                      type="tel"
-                      name="phone"
-                      placeholder="Your mobile number"
-                      className="w-full border border-beige bg-ivory px-4 py-3 text-sm text-charcoal outline-none transition-colors focus:border-gold"
-                    />
-                  </label>
-                </div>
-
-                <label className="block">
-                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
-                    Email Address
-                  </span>
-
-                  <input
-                    type="email"
-                    name="email"
-                    placeholder="you@example.com"
-                    className="w-full border border-beige bg-ivory px-4 py-3 text-sm text-charcoal outline-none transition-colors focus:border-gold"
-                  />
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
-                    Enquiry Type
-                  </span>
-
-                  <select
-                    name="enquiryType"
-                    className="w-full border border-beige bg-ivory px-4 py-3 text-sm text-charcoal outline-none transition-colors focus:border-gold"
-                    defaultValue=""
-                  >
-                    <option value="" disabled>
-                      Select enquiry type
-                    </option>
-
-                    {enquiryTypes.map((type) => (
-                      <option key={type} value={type}>
-                        {type}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="block">
-                  <span className="mb-2 block text-xs uppercase tracking-[0.18em] text-ink-muted">
-                    Message
-                  </span>
-
-                  <textarea
-                    name="message"
-                    rows={5}
-                    placeholder="Tell us about your requirement"
-                    className="w-full resize-none border border-beige bg-ivory px-4 py-3 text-sm text-charcoal outline-none transition-colors focus:border-gold"
-                  />
-                </label>
-
-                <button
-                  type="button"
-                  className="btn-luxury btn-luxury-primary w-full"
-                >
-                  Send Enquiry Soon
-                </button>
-
-                <p className="text-center text-xs leading-6 text-ink-muted">
-                  Form submission is not connected yet. For now, customers can
-                  use email or Instagram enquiry.
-                </p>
-              </form>
+                <dl className="space-y-4 text-sm leading-7 text-charcoal">
+                  <div>
+                    <dt className="text-xs uppercase tracking-[0.18em] text-ink-muted">Email</dt>
+                    <dd>
+                      <a className="text-maroon underline" href={`mailto:${CONTACT_INFO.email}`}>
+                        {CONTACT_INFO.email}
+                      </a>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs uppercase tracking-[0.18em] text-ink-muted">Phone</dt>
+                    <dd>
+                      <a className="text-maroon underline" href={CONTACT_INFO.phoneHref}>
+                        {CONTACT_INFO.phone}
+                      </a>
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs uppercase tracking-[0.18em] text-ink-muted">Visit</dt>
+                    <dd>
+                      {CONTACT_INFO.address.line1}, {CONTACT_INFO.address.line2}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-xs uppercase tracking-[0.18em] text-ink-muted">Hours</dt>
+                    <dd>
+                      Mon–Fri {CONTACT_INFO.workingHours.weekdays}
+                      <br />
+                      Sat–Sun {CONTACT_INFO.workingHours.weekends}
+                      <br />
+                      {CONTACT_INFO.workingHours.note}
+                    </dd>
+                  </div>
+                </dl>
+              </div>
             </div>
           </div>
         </section>

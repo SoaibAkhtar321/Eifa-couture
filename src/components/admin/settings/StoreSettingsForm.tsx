@@ -121,21 +121,13 @@ export default function StoreSettingsForm({ settings }: StoreSettingsFormProps) 
               error={fieldErrors.store_name}
               required
             />
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <TextField
-                label="Store email"
-                type="email"
-                value={values.store_email ?? ''}
-                onChange={(e) => setField('store_email', e.target.value || null)}
-                error={fieldErrors.store_email}
-              />
-              <TextField
-                label="Store phone"
-                value={values.store_phone ?? ''}
-                onChange={(e) => setField('store_phone', e.target.value || null)}
-                error={fieldErrors.store_phone}
-              />
-            </div>
+            <TextField
+              label="Store email"
+              type="email"
+              value={values.store_email ?? ''}
+              onChange={(e) => setField('store_email', e.target.value || null)}
+              error={fieldErrors.store_email}
+            />
             <TextField
               label="Address line 1"
               value={values.address_line1 ?? ''}

@@ -9,6 +9,15 @@
 
 import { z } from 'zod';
 
+/** Minimum number of product-level photos an active product must have. */
+export const MIN_PRODUCT_IMAGES = 3;
+export const PRODUCT_IMAGE_HINT = 'Add front, back and a close-up of the embroidery.';
+
+export const activeProductImageCountSchema = z
+  .number()
+  .int()
+  .min(MIN_PRODUCT_IMAGES, `Add at least ${MIN_PRODUCT_IMAGES} photos (front, back and a close-up) before this product can go live.`);
+
 export const productTypeSchema = z.enum(['simple', 'variant']);
 export const audienceSchema = z.enum(['women', 'men', 'accessories']);
 

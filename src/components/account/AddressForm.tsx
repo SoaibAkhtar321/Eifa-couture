@@ -101,7 +101,7 @@ export default function AddressForm({
           className={`w-full border bg-ivory px-4 py-3 text-sm text-charcoal outline-none transition-colors focus:border-gold ${
             errors.phone ? 'border-red-400' : 'border-beige'
           }`}
-          placeholder="+91 98765 43210"
+          placeholder="10-digit mobile number"
         />
         {errors.phone && (
           <span className="mt-1 block text-xs text-red-600">{errors.phone}</span>

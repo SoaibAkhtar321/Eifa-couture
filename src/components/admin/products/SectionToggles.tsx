@@ -3,6 +3,7 @@
 import { useState } from 'react';
 
 import { createClient } from '@/lib/supabase/client';
+import { setProductActive } from '@/lib/admin/products-write';
 
 type Flag = 'is_featured' | 'is_best_seller' | 'is_new_arrival' | 'is_active';
 
@@ -68,13 +69,19 @@ export function SectionToggles({
 export function ActiveToggle({ productId, initial }: { productId: string; initial: boolean }) {
   const [active, setActive] = useState(initial);
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function toggle() {
     setSaving(true);
     const next = !active;
     setActive(next);
-    const { error } = await createClient().from('products').update({ is_active: next }).eq('id', productId);
-    if (error) setActive(!next);
+    const { error: failure } = await setProductActive(productId, next);
+    if (failure) {
+      setActive(!next);
+      setError(failure);
+    } else {
+      setError(null);
+    }
     setSaving(false);
   }
 
@@ -92,6 +99,7 @@ export function ActiveToggle({ productId, initial }: { productId: string; initia
       }`}
     >
       {active ? 'Live' : 'Hidden'}
+      {error && <span className="mt-1 block max-w-[14rem] whitespace-normal text-[11px] font-normal text-red-600">{error}</span>}
     </button>
   );
 }

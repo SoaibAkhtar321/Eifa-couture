@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { ActiveToggle, SectionToggles } from '@/components/admin/products/SectionToggles';
 import DataTable, { type DataTableColumn } from '@/components/admin/DataTable';
 import { TextField, SelectField } from '@/components/admin/FormField';
+import { MIN_PRODUCT_IMAGES } from '@/lib/admin/validation';
 import { formatPrice } from '@/lib/utils';
 import type { DbCategory } from '@/types/database';
 import type { ProductListRow } from '@/lib/admin/products-read';
@@ -99,6 +100,11 @@ export default function ProductTable({
         <div>
           <p className="font-medium text-charcoal">{row.name}</p>
           <p className="text-xs text-ink-muted">{row.slug}</p>
+          {row.image_count < MIN_PRODUCT_IMAGES && (
+            <p className="mt-1 inline-block rounded bg-amber-100 px-1.5 py-0.5 text-[11px] font-medium text-amber-800">
+              Needs more photos ({row.image_count} of {MIN_PRODUCT_IMAGES})
+            </p>
+          )}
         </div>
       ),
     },

@@ -18,6 +18,7 @@
    ============================================ */
 
 import { createClient as createBrowserClient } from '@/lib/supabase/client';
+import { activeProductImageCountSchema } from '@/lib/admin/validation';
 import { generateSlug } from '@/lib/utils';
 import type { DbProduct, DbProductVariant, ProductAudience } from '@/types/database';
 
@@ -130,11 +131,43 @@ export async function createProduct(input: ProductInput): Promise<{
   return { data: data as DbProduct, error: null };
 }
 
+/** Number of product-level photos (not colour/variant galleries). */
+export async function countProductImages(productId: string): Promise<number> {
+  const supabase = createBrowserClient();
+  const { count } = await supabase
+    .from('product_images')
+    .select('id', { count: 'exact', head: true })
+    .eq('product_id', productId)
+    .is('variant_id', null);
+  return count ?? 0;
+}
+
+/** Turns a product on or off in the store, enforcing the photo minimum. */
+export async function setProductActive(id: string, active: boolean): Promise<{ error: string | null }> {
+  if (active) {
+    const check = activeProductImageCountSchema.safeParse(await countProductImages(id));
+    if (!check.success) return { error: check.error.issues[0]?.message ?? 'Add more photos first.' };
+  }
+  const supabase = createBrowserClient();
+  const { error } = await supabase.from('products').update({ is_active: active }).eq('id', id);
+  return { error: error ? error.message : null };
+}
+
 export async function updateProduct(
   id: string,
   input: ProductInput
 ): Promise<{ data: DbProduct | null; error: string | null }> {
   const supabase = createBrowserClient();
+
+  // An inactive product can only be switched on once it has enough photos.
+  // (Already-live products with fewer photos are not blocked from other edits.)
+  if (input.is_active) {
+    const { data: current } = await supabase.from('products').select('is_active').eq('id', id).single();
+    if (current && !current.is_active) {
+      const check = activeProductImageCountSchema.safeParse(await countProductImages(id));
+      if (!check.success) return { data: null, error: check.error.issues[0]?.message ?? 'Add more photos first.' };
+    }
+  }
 
   if (await isSlugTaken(input.slug, id)) {
     return { data: null, error: 'That slug is already in use by another product.' };

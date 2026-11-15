@@ -2,11 +2,15 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import PhotoCounter from './PhotoCounter';
+
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 interface ImageDropzoneProps {
   files: File[];
+  /** Minimum photos needed; shows a counter and hint when set. */
+  minimum?: number;
   onChange: (files: File[]) => void;
   error?: string;
 }
@@ -14,7 +18,7 @@ interface ImageDropzoneProps {
 /** Drag-and-drop photo picker with previews, used while creating a product
  *  (the product row doesn't exist yet, so photos are staged in the browser
  *  and uploaded right after the product is saved). First photo = main photo. */
-export default function ImageDropzone({ files, onChange, error }: ImageDropzoneProps) {
+export default function ImageDropzone({ files, minimum, onChange, error }: ImageDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [problems, setProblems] = useState<string[]>([]);
@@ -80,6 +84,7 @@ export default function ImageDropzone({ files, onChange, error }: ImageDropzoneP
         />
       </div>
 
+      {minimum !== undefined && <PhotoCounter count={files.length} minimum={minimum} />}
       {error && <p className="text-xs text-red-600">{error}</p>}
       {problems.length > 0 && (
         <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">

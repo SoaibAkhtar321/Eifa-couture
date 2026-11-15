@@ -5,6 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { CONTACT_INFO, LEGAL_INFO } from '@/lib/constants';
+import { getPolicyValues } from '@/lib/policy';
 
 
 export const metadata: Metadata = buildPageMetadata({
@@ -53,7 +54,8 @@ const timeline = [
   },
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const { returnWindowDays } = await getPolicyValues();
   return (
     <>
 
@@ -244,7 +246,7 @@ export default function AboutPage() {
               {LEGAL_INFO.legalName ? ` (${LEGAL_INFO.legalName})` : ''}, {CONTACT_INFO.address.line1},{' '}
               {CONTACT_INFO.address.line2}, India.
               {LEGAL_INFO.gstin ? ` GSTIN ${LEGAL_INFO.gstin}.` : ''} Payments are processed securely by Razorpay, and
-              you can cancel before shipping or return within 7 days of delivery.
+              you can cancel before shipping or return within {returnWindowDays} days of delivery.
             </p>
 
             <p className="mt-4 text-sm text-ink-muted">
@@ -254,7 +256,7 @@ export default function AboutPage() {
               {CONTACT_INFO.phone && (
                 <>
                   {' · '}
-                  <a className="text-maroon underline" href={`tel:${CONTACT_INFO.phone.replace(/[^+\d]/g, '')}`}>
+                  <a className="text-maroon underline" href={CONTACT_INFO.phoneHref}>
                     {CONTACT_INFO.phone}
                   </a>
                 </>

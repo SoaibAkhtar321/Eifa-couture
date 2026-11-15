@@ -104,7 +104,7 @@ export default function LegalPage({
                     <>
                       {' '}
                       ·{' '}
-                      <a className="text-maroon underline" href={`tel:${CONTACT_INFO.phone.replace(/[^+\d]/g, '')}`}>
+                      <a className="text-maroon underline" href={CONTACT_INFO.phoneHref}>
                         {CONTACT_INFO.phone}
                       </a>
                     </>

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
 import { createClient } from '@/lib/supabase/server';
-import { listProducts } from '@/lib/admin/products-read';
+import { listProducts, listProductsNeedingPhotos } from '@/lib/admin/products-read';
 import ProductTable from '@/components/admin/products/ProductTable';
 import type { DbCategory } from '@/types/database';
 
@@ -34,7 +34,7 @@ export default async function AdminProductsPage({ searchParams }: ProductsPagePr
   const params = await searchParams;
   const page = Number(params.page ?? '1') || 1;
 
-  const [{ data: result, error }, categories] = await Promise.all([
+  const [{ data: result, error }, categories, needPhotos] = await Promise.all([
     listProducts({
       search: params.q,
       categoryId: params.category,
@@ -46,6 +46,7 @@ export default async function AdminProductsPage({ searchParams }: ProductsPagePr
       pageSize: 20,
     }),
     getCategories(),
+    listProductsNeedingPhotos(),
   ]);
 
   return (
@@ -64,6 +65,27 @@ export default async function AdminProductsPage({ searchParams }: ProductsPagePr
           Add product
         </Link>
       </div>
+
+      {needPhotos.length > 0 && (
+        <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900" role="status">
+          <p className="font-medium">
+            Needs more photos: {needPhotos.length} live product{needPhotos.length === 1 ? ' has' : 's have'} fewer than 3 photos.
+          </p>
+          <p className="mt-1 text-xs">They stay live. Open each one and add front, back and a close-up of the embroidery.</p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {needPhotos.map((p) => (
+              <li key={p.id}>
+                <Link
+                  href={`/admin/products/${p.id}/edit`}
+                  className="inline-block rounded-full border border-amber-400 bg-white px-3 py-1 text-xs hover:bg-amber-100"
+                >
+                  {p.name} ({p.image_count} of 3)
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <ProductTable
         rows={result?.rows ?? []}

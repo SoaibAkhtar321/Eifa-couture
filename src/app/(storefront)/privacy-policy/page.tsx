@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import LegalPage from '@/components/legal/LegalPage';
-import { CONTACT_INFO, LEGAL_INFO } from '@/lib/constants';
+import { CONTACT_INFO, LEGAL_INFO, LEGAL_LAST_UPDATED } from '@/lib/constants';
 import { buildPageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -17,7 +17,7 @@ export default function PrivacyPolicyPage() {
   return (
     <LegalPage
       title="Privacy Policy"
-      updated="15 November 2026"
+      updated={LEGAL_LAST_UPDATED}
       currentPath="/privacy-policy"
       intro="This policy explains what personal data Eifa Couture collects when you use this website, why we collect it, who we share it with, how long we keep it, and how you can exercise your rights. It is written to meet the Digital Personal Data Protection Act, 2023 (DPDP Act), the Information Technology Act, 2000 and the rules made under them."
       sections={[
@@ -43,8 +43,19 @@ export default function PrivacyPolicyPage() {
                   receive your name and email address from Google.
                 </li>
                 <li>
+                  <strong>Guest orders:</strong> you can check out without creating an account. For a guest order we
+                  collect the name, email address, phone number and delivery address you type at checkout, plus the
+                  order and payment details. We use the email address to send your order updates and to let you find
+                  your order again.
+                </li>
+                <li>
                   <strong>Delivery details:</strong> the names, phone numbers and addresses you save or enter at
                   checkout.
+                </li>
+                <li>
+                  <strong>Anonymous session:</strong> when you start guest checkout, our authentication provider creates
+                  an anonymous session for your browser. It has no name, email or password; it is a random identifier
+                  that lets your guest order stay linked to your browser.
                 </li>
                 <li>
                   <strong>Order information:</strong> items bought, amounts, order and payment status, delivery tracking,
@@ -55,7 +66,7 @@ export default function PrivacyPolicyPage() {
                   <strong>Shopping activity:</strong> your bag and wishlist, and reviews or ratings you choose to post.
                 </li>
                 <li>
-                  <strong>Messages to us:</strong> what you send through the contact form, email or social media.
+                  <strong>Messages to us:</strong> what you send us by email, phone or social media, including your name and contact details.
                 </li>
                 <li>
                   <strong>Technical data:</strong> IP address, browser and device type, and security logs, used to keep
@@ -151,8 +162,8 @@ export default function PrivacyPolicyPage() {
           body: (
             <>
               <p>
-                We use only what is needed for the site to work: a sign-in session cookie so you stay logged in, and
-                your browser&rsquo;s local storage to remember your bag, wishlist and recent searches on your device.
+                We use only what is needed for the site to work: a sign-in session cookie so you stay logged in (for guest
+                checkout this is the anonymous session described above), and your browser&rsquo;s local storage to remember your bag, wishlist and recent searches on your device.
               </p>
               <p>
                 We currently do not use advertising cookies or third-party analytics trackers. If we add any, we will
@@ -172,14 +183,17 @@ export default function PrivacyPolicyPage() {
                   <strong>Account and saved addresses:</strong> until you ask us to delete your account.
                 </li>
                 <li>
-                  <strong>Order, invoice and payment records:</strong> for the period the law requires us to keep
-                  accounting and tax records (generally up to 8 years), even after your account is deleted.
+                  <strong>Order, invoice and payment records</strong> (including guest orders and return and refund
+                  records): for the period the law requires us to keep accounting and tax records, even after your
+                  account is deleted.
                 </li>
                 <li>
-                  <strong>Support messages:</strong> for up to 3 years after the matter is closed.
+                  <strong>Anonymous guest sessions with no order:</strong> these hold no personal data and are removed
+                  from time to time.
                 </li>
                 <li>
-                  <strong>Security logs:</strong> for a short period, normally not more than 12 months.
+                  <strong>Support messages and security logs:</strong> only as long as needed to deal with the matter and
+                  keep the site safe.
                 </li>
               </ul>
               <p>When data is no longer needed, we erase it or remove the details that identify you.</p>

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { CONTACT_INFO, SHIPPING_INFO, SOCIAL_LINKS } from '@/lib/constants';
+import { CONTACT_INFO, RETURN_POLICY, SHIPPING_INFO, SOCIAL_LINKS } from '@/lib/constants';
 import { getCachedCategories, getCachedStoreSettings } from '@/lib/data/storefront-cache';
 import { formatPrice } from '@/lib/utils';
 import type { Category } from '@/types';
@@ -59,13 +59,13 @@ export default async function Footer({ extraLinks = [] }: { extraLinks?: FooterL
       ? { title: 'Pan-India delivery', text: 'Carefully hand-packed' }
       : { title: 'Free shipping', text: `On orders above ${formatPrice(freeThreshold)}` },
     { title: 'Pan-India delivery', text: 'Carefully hand-packed' },
-    { title: 'Easy returns', text: '7 days on unworn pieces' },
+    { title: 'Easy returns', text: `${settings?.return_window_days ?? RETURN_POLICY.returnWindow} days on unworn pieces` },
     { title: 'Secure payment', text: 'Powered by Razorpay' },
   ].filter((item, index, all) => all.findIndex((other) => other.title === item.title) === index);
   // Contact + social details come from Admin → Settings, falling back
   // to defaults only for fields the admin hasn't filled in.
   const email = settings?.store_email || CONTACT_INFO.email;
-  const phone = settings?.store_phone || CONTACT_INFO.phone;
+  const phone = CONTACT_INFO.phone;
   const addressLines = settings?.address_line1
     ? [
         settings.address_line1,
@@ -202,7 +202,7 @@ export default async function Footer({ extraLinks = [] }: { extraLinks?: FooterL
 
               {phone && (
                 <a
-                  href={`tel:${phone.replace(/[^+\d]/g, '')}`}
+                  href={CONTACT_INFO.phoneHref}
                   className="block transition-colors duration-300 hover:text-maroon"
                 >
                   {phone}

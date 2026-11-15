@@ -39,6 +39,12 @@ export default function ProductImageGallery({
   const openZoom = () => setIsZoomOpen(true);
   const closeZoom = () => setIsZoomOpen(false);
 
+  const stepZoom = (delta: number) => {
+    if (images.length < 2) return;
+    const current = Math.max(0, images.indexOf(selectedImage ?? ''));
+    setSelectedImage(images[(current + delta + images.length) % images.length]);
+  };
+
   // Move focus into the dialog on open, and back to the element that
   // opened it on close — standard modal a11y expectation that this
   // full-screen zoom overlay (role="dialog") was missing entirely.
@@ -57,11 +63,14 @@ export default function ProductImageGallery({
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') closeZoom();
+      if (event.key === 'ArrowRight') stepZoom(1);
+      if (event.key === 'ArrowLeft') stepZoom(-1);
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isZoomOpen]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- stepZoom reads the latest selection each render
+  }, [isZoomOpen, selectedImage, images]);
 
   return (
     <div className="w-full">
@@ -123,7 +132,7 @@ export default function ProductImageGallery({
         className="hidden h-full gap-4 lg:grid lg:grid-cols-[96px_1fr]"
       >
         <div
-          className="order-2 flex gap-3 overflow-x-auto pb-4 lg:order-1 lg:flex-col lg:overflow-visible lg:pb-0 touch-pan-x max-w-full"
+          className="order-2 flex gap-3 overflow-x-auto pb-4 lg:order-1 lg:max-h-[80vh] lg:flex-col lg:overflow-y-auto lg:overflow-x-hidden lg:pb-0 touch-pan-x max-w-full"
           style={{ WebkitOverflowScrolling: 'touch' }}
         >
           {images.map((image, index) => (
@@ -189,6 +198,27 @@ export default function ProductImageGallery({
           >
             ×
           </button>
+
+          {images.length > 1 && (
+            <>
+              <button
+                type="button"
+                onClick={() => stepZoom(-1)}
+                aria-label="Previous photo"
+                className="absolute left-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 text-2xl text-white hover:bg-white hover:text-charcoal cursor-pointer"
+              >
+                ‹
+              </button>
+              <button
+                type="button"
+                onClick={() => stepZoom(1)}
+                aria-label="Next photo"
+                className="absolute right-3 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-white/25 text-2xl text-white hover:bg-white hover:text-charcoal cursor-pointer"
+              >
+                ›
+              </button>
+            </>
+          )}
 
           <div className="relative h-[82vh] w-full max-w-4xl flex items-center justify-center">
             <ProductImage

@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import LegalPage from '@/components/legal/LegalPage';
-import { CONTACT_INFO, LEGAL_INFO } from '@/lib/constants';
+import { CONTACT_INFO, LEGAL_INFO, LEGAL_LAST_UPDATED, RETURN_POLICY } from '@/lib/constants';
 import { buildPageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -14,11 +14,12 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default function TermsPage() {
   const email = CONTACT_INFO.email;
+  const { min, max } = RETURN_POLICY.refundProcessingDays;
 
   return (
     <LegalPage
       title="Terms of Service"
-      updated="15 November 2026"
+      updated={LEGAL_LAST_UPDATED}
       currentPath="/terms"
       intro="These terms apply when you visit this website or place an order with Eifa Couture. By using the site or placing an order, you agree to them. Please read them together with our Privacy Policy, Shipping Policy and Cancellation, Returns & Refunds policy."
       sections={[
@@ -42,10 +43,12 @@ export default function TermsPage() {
                 able to enter a legally binding contract under Indian law.
               </p>
               <p>
-                You need an account to place an order. Give accurate information, keep your login details confidential,
-                and tell us at once if you think someone else has used your account. You are responsible for activity on
-                your account. We may suspend or close accounts that are used for fraud, abuse or in breach of these
-                terms.
+                You can place an order as a <strong>guest</strong> without creating an account, or sign in to an
+                account. For a guest order, give a correct email address and phone number: we use them to send order
+                updates and to let you find your order again with your order number. If you create an account, give
+                accurate information, keep your login details confidential, and tell us at once if you think someone
+                else has used your account. You are responsible for activity on your account. We may suspend or close
+                accounts that are used for fraud, abuse or in breach of these terms.
               </p>
             </>
           ),
@@ -84,7 +87,8 @@ export default function TermsPage() {
                 suspect fraud.
               </p>
               <p>
-                You can cancel an order yourself from <strong>My Account</strong> until it is shipped. See{' '}
+                You can cancel an order yourself until it is shipped (from <strong>My Account</strong>, or from Track Order
+                for a guest order). See{' '}
                 <Link href="/refund-policy">Cancellation, Returns &amp; Refunds</Link>.
               </p>
             </>
@@ -96,13 +100,13 @@ export default function TermsPage() {
             <>
               <p>
                 Payments are made online through Razorpay using the methods shown at checkout (such as UPI, cards, net
-                banking and wallets). Payment is taken in advance; we do not currently offer cash on delivery. Your
+                banking and wallets). Payment is taken in advance (prepaid orders only); we do not offer cash on delivery. Your
                 payment details are handled by Razorpay and its banking partners under their own terms, and we do not
                 store them.
               </p>
               <p>
                 If money is debited but the order is not confirmed, the amount is normally reversed to your account by
-                the bank or Razorpay within 5–7 working days. Contact us with your payment reference if it is not.
+                the bank or Razorpay within {min}–{max} working days. Contact us with your payment reference if it is not.
               </p>
             </>
           ),

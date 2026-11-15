@@ -13,11 +13,14 @@ import type { Product } from '@/types';
 interface ProductDetailsClientProps {
   product: Product;
   relatedProducts: Product[];
+  /** Live return window from store settings (same value the database enforces). */
+  returnWindowDays?: number;
 }
 
 export default function ProductDetailsClient({
   product,
   relatedProducts,
+  returnWindowDays,
 }: ProductDetailsClientProps) {
   // Runs before paint, eliminating the visible scroll jump.
   // Combined with key={slug} on the parent, this now runs on a fresh mount
@@ -70,7 +73,7 @@ export default function ProductDetailsClient({
             {product.images?.length > 0 && (
               <ProductImageGallery product={product} images={galleryImages} />
             )}
-            <ProductInfo product={product} onColorChange={setSelectedColor} />
+            <ProductInfo product={product} onColorChange={setSelectedColor} returnWindowDays={returnWindowDays} />
           </div>
         </div>
       </section>

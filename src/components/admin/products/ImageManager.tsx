@@ -12,6 +12,8 @@ import {
 } from '@/lib/admin/storage';
 import type { DbProductImage } from '@/types/database';
 
+import PhotoCounter from './PhotoCounter';
+
 interface ImageManagerProps {
   productId: string;
   images: DbProductImage[];
@@ -24,6 +26,10 @@ interface ImageManagerProps {
   variantId?: string | null;
   title?: string;
   emptyMessage?: string;
+  /** Product-level gallery only: minimum photos, shown as a counter. */
+  minimum?: number;
+  /** When true (product is live), deleting below `minimum` is blocked. */
+  protectMinimum?: boolean;
 }
 
 export default function ImageManager({
@@ -33,6 +39,8 @@ export default function ImageManager({
   variantId = null,
   title = 'Images',
   emptyMessage = 'No images yet. Upload at least one to publish this product.',
+  minimum,
+  protectMinimum = false,
 }: ImageManagerProps) {
   const [isUploading, setIsUploading] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
@@ -68,6 +76,14 @@ export default function ImageManager({
 
     setIsUploading(false);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  }
+
+  function requestDelete(image: DbProductImage) {
+    if (minimum !== undefined && protectMinimum && images.length <= minimum) {
+      setErrors([`This product is live and needs at least ${minimum} photos. Add another photo first, then delete this one.`]);
+      return;
+    }
+    setPendingDelete(image);
   }
 
   async function handleDeleteConfirmed() {
@@ -163,6 +179,8 @@ export default function ImageManager({
         </label>
       </div>
 
+      {minimum !== undefined && <PhotoCounter count={sortedImages.length} minimum={minimum} />}
+
       {errors.length > 0 && (
         <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
           {errors.map((err, i) => (
@@ -216,7 +234,7 @@ export default function ImageManager({
                 )}
                 <button
                   type="button"
-                  onClick={() => setPendingDelete(image)}
+                  onClick={() => requestDelete(image)}
                   className="ml-auto min-h-[44px] rounded px-2 text-xs font-medium text-red-200 hover:bg-ivory/20"
                 >
                   Delete

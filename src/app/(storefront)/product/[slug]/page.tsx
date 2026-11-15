@@ -8,6 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import { SITE_URL } from '@/lib/constants';
 import { formatPrice } from '@/lib/utils';
 import { fetchProductBySlug, fetchRelatedProducts } from '@/lib/data/products';
+import { getPolicyValues } from '@/lib/policy';
 
 type ProductPageProps = {
   params: Promise<{
@@ -86,6 +87,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
+  const { returnWindowDays } = await getPolicyValues();
   const supabase = await createClient();
   const relatedProducts = await fetchRelatedProducts(
     supabase,
@@ -150,6 +152,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           key={slug}
           product={product}
           relatedProducts={relatedProducts}
+          returnWindowDays={returnWindowDays}
         />
       </main>
     </>

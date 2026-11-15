@@ -7,7 +7,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import MobileStickyActionBar from '@/components/product/MobileStickyActionBar';
 import SizeChartModal from '@/components/product/SizeChartModal';
 import { useShippingConfig } from '@/hooks/useShippingConfig';
-import { SHIPPING_INFO } from '@/lib/constants';
+import { RETURN_POLICY, SHIPPING_INFO } from '@/lib/constants';
 import { useAuth } from '@/hooks/useAuth';
 import { useMediaQuery, usePrefersReducedMotion } from '@/hooks/useMediaQuery';
 import {
@@ -24,6 +24,8 @@ import type { Product } from '@/types';
 
 interface ProductInfoProps {
   product: Product;
+  /** Live return window from store settings; falls back to the built-in default. */
+  returnWindowDays?: number;
   /** Called with the selected color whenever it changes, including
    *  once on mount with the default selection — lets a sibling (the
    *  image gallery) switch to that color's photos without lifting all
@@ -81,7 +83,7 @@ type AccordionSection = {
   content: string[];
 };
 
-function ProductAccordion({ product }: { product: Product }) {
+function ProductAccordion({ product, returnDays }: { product: Product; returnDays: number }) {
   const [openId, setOpenId] = useState<string | null>('description');
   const { freeThreshold } = useShippingConfig();
 
@@ -98,9 +100,9 @@ function ProductAccordion({ product }: { product: Product }) {
       id: 'shipping',
       title: 'Delivery & Returns',
       content: [
-        `Delivered across India in about ${days.min}–${days.max} business days, with express delivery available at checkout.`,
+        `Delivered across India in about ${days.min}–${days.max} business days.`,
         ...(freeThreshold === null ? [] : [`Free shipping on orders above ${formatPrice(freeThreshold)}.`]),
-        'Returns are accepted within 7 days of delivery for unworn, unwashed pieces with tags intact.',
+        `Returns are accepted within ${returnDays} days of delivery for unworn, unwashed pieces with tags intact.`,
       ],
     },
   ].filter((section) => section.content.some((line) => line.trim().length > 0));
@@ -152,7 +154,8 @@ function ProductAccordion({ product }: { product: Product }) {
   );
 }
 
-export default function ProductInfo({ product, onColorChange }: ProductInfoProps) {
+export default function ProductInfo({ product, onColorChange, returnWindowDays }: ProductInfoProps) {
+  const returnDays = returnWindowDays ?? RETURN_POLICY.returnWindow;
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated } = useAuth();
@@ -543,7 +546,7 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
         {[
           { title: 'Handcrafted', text: 'In Lucknow' },
           { title: 'Secure payment', text: 'Razorpay' },
-          { title: 'Easy returns', text: 'Within 7 days' },
+          { title: 'Easy returns', text: `Within ${returnDays} days` },
         ].map((badge) => (
           <li key={badge.title} className="rounded-lg border border-gold-deep/25 bg-white px-2 py-3">
             <span className="block text-[10px] font-semibold uppercase tracking-[0.14em] text-ink">{badge.title}</span>
@@ -552,7 +555,7 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
         ))}
       </ul>
 
-      <ProductAccordion product={product} />
+      <ProductAccordion product={product} returnDays={returnDays} />
 
       {product.audience !== 'accessories' && (
         <SizeChartModal

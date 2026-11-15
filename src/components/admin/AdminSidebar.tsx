@@ -10,7 +10,6 @@ import { Z_INDEX } from '@/lib/z-index';
 interface NavItem {
   label: string;
   href: string;
-  comingSoon?: boolean;
 }
 
 // The four things the shop owner uses every day.
@@ -35,7 +34,6 @@ const MORE_ITEMS: NavItem[] = [
   { label: 'Finance', href: '/admin/finance' },
   { label: 'Audit Log', href: '/admin/audit-log' },
   { label: 'Notifications', href: '/admin/notifications' },
-  { label: 'Media Library', href: '/admin/media', comingSoon: true },
 ];
 
 function isItemActive(pathname: string, href: string): boolean {
@@ -53,25 +51,12 @@ export default function AdminSidebar({
   pendingReturns?: number;
 }) {
   const pathname = usePathname();
-  const moreHasActive = MORE_ITEMS.some((item) => !item.comingSoon && isItemActive(pathname, item.href));
+  const moreHasActive = MORE_ITEMS.some((item) => isItemActive(pathname, item.href));
   const [moreOpen, setMoreOpen] = useState(false);
   // Stay open on any page that lives under "More" so the current page is visible.
   const showMore = moreOpen || moreHasActive;
 
   function renderItem(item: NavItem) {
-    if (item.comingSoon) {
-      return (
-        <div
-          key={item.href}
-          className="flex min-h-[44px] cursor-not-allowed items-center justify-between rounded-md px-3 text-sm text-cream/70"
-          title="Coming soon"
-        >
-          <span>{item.label}</span>
-          <span className="rounded border border-cream/30 px-1.5 py-0.5 text-[10px] uppercase tracking-wide">Soon</span>
-        </div>
-      );
-    }
-
     const isActive = isItemActive(pathname, item.href);
     return (
       <Link
