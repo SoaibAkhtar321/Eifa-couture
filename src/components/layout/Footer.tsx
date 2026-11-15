@@ -26,7 +26,8 @@ const helpLinks: FooterLink[] = [
 const legalLinks: FooterLink[] = [
   { label: 'Privacy Policy', href: '/privacy-policy' },
   { label: 'Terms of Service', href: '/terms' },
-  { label: 'Refund Policy', href: '/refund-policy' },
+  { label: 'Shipping Policy', href: '/shipping-policy' },
+  { label: 'Returns & Refunds', href: '/refund-policy' },
 ];
 
 function getCategoryHref(slug: string) {

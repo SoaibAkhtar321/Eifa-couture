@@ -50,6 +50,26 @@ export const CONTACT_INFO = {
   },
 } as const;
 
+// ── Legal / Compliance Info ──
+// Shown on the legal pages. Fields left blank are simply not displayed, so the
+// site never shows a placeholder. Fill them in before launch:
+//  - legalName:  registered business name (as on GST / Razorpay KYC)
+//  - gstin:      GST number, if registered
+//  - grievanceOfficer.name: a named person is required by the Consumer
+//    Protection (E-Commerce) Rules 2020 and the DPDP Act 2023.
+export const LEGAL_INFO = {
+  tradeName: "Eifa Couture",
+  legalName: "",
+  gstin: "",
+  grievanceOfficer: {
+    name: "",
+    designation: "Grievance Officer",
+  },
+  // Time limits we commit to for customer complaints and privacy requests.
+  acknowledgeWithinHours: 48,
+  resolveWithinDays: 30,
+} as const;
+
 // ── Shipping Info ──
 export const SHIPPING_INFO = {
   freeShippingThreshold: 2999,
@@ -67,12 +87,12 @@ export const SHIPPING_INFO = {
 // ── Return Policy ──
 export const RETURN_POLICY = {
   returnWindow: 7,
-  exchangeWindow: 15,
+  exchangeWindow: 7,
   refundProcessingDays: { min: 5, max: 7 },
   conditions: [
     "Item must be unused and in original packaging with all tags intact.",
     "Returns are accepted within 7 days of delivery.",
-    "Exchanges are accepted within 15 days of delivery.",
+    "Size exchanges are accepted within 7 days of delivery, subject to stock.",
     "Customised, altered, or bridal pieces are not eligible for return.",
     "Sale items are final sale and cannot be returned or exchanged.",
     "Refunds will be processed to the original payment method.",

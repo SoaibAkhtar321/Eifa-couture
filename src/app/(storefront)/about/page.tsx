@@ -4,6 +4,8 @@ import { buildPageMetadata } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { CONTACT_INFO, LEGAL_INFO } from '@/lib/constants';
+
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Our Story',
@@ -227,6 +229,52 @@ export default function AboutPage() {
             >
               Shop Collection
             </Link>
+          </div>
+        </section>
+        <section className="border-t border-beige bg-ivory py-12 sm:py-16">
+          <div className="luxury-container max-w-3xl text-center">
+            <span className="mb-3 block font-body text-[10px] uppercase tracking-[0.3em] text-gold sm:text-xs">
+              Buy With Confidence
+            </span>
+
+            <h2 className="font-heading text-3xl text-charcoal sm:text-4xl">Who You Are Buying From</h2>
+
+            <p className="mt-5 text-sm leading-7 text-ink-muted sm:text-base sm:leading-8">
+              {LEGAL_INFO.tradeName}
+              {LEGAL_INFO.legalName ? ` (${LEGAL_INFO.legalName})` : ''}, {CONTACT_INFO.address.line1},{' '}
+              {CONTACT_INFO.address.line2}, India.
+              {LEGAL_INFO.gstin ? ` GSTIN ${LEGAL_INFO.gstin}.` : ''} Payments are processed securely by Razorpay, and
+              you can cancel before shipping or return within 7 days of delivery.
+            </p>
+
+            <p className="mt-4 text-sm text-ink-muted">
+              <a className="text-maroon underline" href={`mailto:${CONTACT_INFO.email}`}>
+                {CONTACT_INFO.email}
+              </a>
+              {CONTACT_INFO.phone && (
+                <>
+                  {' · '}
+                  <a className="text-maroon underline" href={`tel:${CONTACT_INFO.phone.replace(/[^+\d]/g, '')}`}>
+                    {CONTACT_INFO.phone}
+                  </a>
+                </>
+              )}
+            </p>
+
+            <p className="mt-6 flex flex-wrap justify-center gap-x-5 gap-y-2 text-xs uppercase tracking-[0.18em]">
+              <Link className="text-ink-soft hover:text-maroon" href="/shipping-policy">
+                Shipping
+              </Link>
+              <Link className="text-ink-soft hover:text-maroon" href="/refund-policy">
+                Returns &amp; Refunds
+              </Link>
+              <Link className="text-ink-soft hover:text-maroon" href="/privacy-policy">
+                Privacy
+              </Link>
+              <Link className="text-ink-soft hover:text-maroon" href="/terms">
+                Terms
+              </Link>
+            </p>
           </div>
         </section>
       </main>
