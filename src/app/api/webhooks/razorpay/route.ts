@@ -44,6 +44,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 
+import { refundPaymentOnCancelledOrder } from '@/lib/refund-cancelled-payment';
 import { verifyWebhookSignature } from '@/lib/razorpay';
 import { createServiceClient } from '@/lib/supabase/service';
 
@@ -160,7 +161,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (event.event === 'payment.captured') {
-    const { error: rpcError } = await serviceClient.rpc('mark_order_paid', {
+    const { data: settled, error: rpcError } = await serviceClient.rpc('mark_order_paid', {
       p_order_id: order.id,
       p_razorpay_payment_id: razorpayPaymentId,
       p_razorpay_signature: signatureHeader,
@@ -172,6 +173,15 @@ export async function POST(request: NextRequest) {
       // Real failure (e.g. DB hiccup) — return 500 so Razorpay
       // retries this delivery later rather than silently losing it.
       return NextResponse.json({ error: { message: 'Failed to settle order.' } }, { status: 500 });
+    }
+
+    if (settled?.cancelled_order_paid) {
+      // Paid after cancellation: refund automatically. Still 200 -
+      // a retry would not re-trigger the refund (already processed).
+      await refundPaymentOnCancelledOrder({
+        orderId: order.id,
+        orderNumber: settled.order_number,
+      });
     }
 
     return NextResponse.json({ received: true });

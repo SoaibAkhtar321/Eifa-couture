@@ -20,6 +20,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { z } from 'zod';
 
 import { getClientIp, rateLimit, rateLimitResponseHeaders, RATE_LIMITS } from '@/lib/rate-limit';
+import { refundPaymentOnCancelledOrder } from '@/lib/refund-cancelled-payment';
 import { verifyCheckoutSignature } from '@/lib/razorpay';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
@@ -132,6 +133,12 @@ export async function POST(request: NextRequest) {
       { error: { message: 'Could not confirm payment. Please contact support.' } },
       { status: 500 }
     );
+  }
+
+  if (result?.cancelled_order_paid) {
+    // Paid after the order was cancelled: order stays cancelled and
+    // the money goes straight back (never throws).
+    await refundPaymentOnCancelledOrder({ orderId, orderNumber: result.order_number });
   }
 
   if (result?.needs_stock_review) {

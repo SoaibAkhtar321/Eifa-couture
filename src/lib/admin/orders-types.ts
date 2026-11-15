@@ -141,6 +141,7 @@ const EVENT_TYPE_LABELS: Record<string, string> = {
   payment_failed: 'Payment failed',
   payment_retried: 'Payment retried',
   payment_refunded: 'Payment refunded',
+  payment_after_cancel: 'Payment received after cancellation',
 };
 
 const ACTOR_TYPE_FALLBACK_LABEL: Record<OrderHistoryActorType, string> = {
