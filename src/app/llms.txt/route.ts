@@ -42,7 +42,8 @@ export async function GET() {
     '',
     '## Contact',
     `- Email: ${CONTACT_INFO.email}`,
-    `- Location: ${CONTACT_INFO.address.city}, ${CONTACT_INFO.address.state}, India`,
+    `- Phone: ${CONTACT_INFO.phone}`,
+    `- Address: ${CONTACT_INFO.address.line1}, ${CONTACT_INFO.address.line2}, India`,
     ...SOCIAL_LINKS.map((link) => `- ${link.name}: ${link.href}`),
     '',
   ];

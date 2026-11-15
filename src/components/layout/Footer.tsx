@@ -65,8 +65,15 @@ export default async function Footer({ extraLinks = [] }: { extraLinks?: FooterL
   // to defaults only for fields the admin hasn't filled in.
   const email = settings?.store_email || CONTACT_INFO.email;
   const phone = settings?.store_phone || CONTACT_INFO.phone;
-  const location =
-    [settings?.address_city, settings?.address_state].filter(Boolean).join(', ') || 'Lucknow, Uttar Pradesh';
+  const addressLines = settings?.address_line1
+    ? [
+        settings.address_line1,
+        settings.address_line2,
+        [settings.address_city, settings.address_state, settings.address_pincode]
+          .filter(Boolean)
+          .join(', '),
+      ].filter(Boolean)
+    : [CONTACT_INFO.address.line1, CONTACT_INFO.address.line2];
   // Instagram + Facebook fall back to the site-wide defaults; the other
   // platforms only appear if the admin has filled them in.
   const defaultHref = (name: string) =>
@@ -177,7 +184,13 @@ export default async function Footer({ extraLinks = [] }: { extraLinks?: FooterL
             </h3>
 
             <div className="mt-5 space-y-3 font-subheading text-[17px] text-ink-soft">
-              <p>{location}</p>
+              <address className="not-italic">
+                {addressLines.map((line) => (
+                  <span key={line} className="block">
+                    {line}
+                  </span>
+                ))}
+              </address>
 
               <a
                 href={`mailto:${email}`}

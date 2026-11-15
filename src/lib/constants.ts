@@ -30,17 +30,17 @@ export const SOCIAL_LINKS = [
 ] as const;
 
 // ── Contact Info ──
-// `phone` is intentionally empty until a real business number is confirmed;
-// the footer hides the phone line when it is blank.
 export const CONTACT_INFO = {
   email: "eifachikankari@gmail.com",
-  phone: "",
+  phone: "+91 88745 77757",
   address: {
-    line1: "Aminabad Market, Near Gol Darwaza",
-    line2: "Lucknow, Uttar Pradesh 226018",
+    line1: "F No. 402, Bhukhand No. 466/112 072/3 D",
+    line2: "Chowk, Lucknow, Uttar Pradesh 226003",
+    locality: "Chowk",
     city: "Lucknow",
+    district: "Lucknow",
     state: "Uttar Pradesh",
-    pincode: "226018",
+    pincode: "226003",
     country: "India",
   },
   workingHours: {

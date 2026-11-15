@@ -29,11 +29,10 @@ const contactCards = [
     href: instagram?.href ?? '/contact',
   },
   {
-    title: 'Boutique Hours',
-    description:
-      'Our team usually responds during business hours. Custom and bulk enquiries may take longer.',
-    detail: 'Mon - Sat, 11 AM - 7 PM',
-    href: '/contact',
+    title: 'Call or Visit',
+    description: `${CONTACT_INFO.address.line1}, ${CONTACT_INFO.address.line2}. Please call before visiting.`,
+    detail: CONTACT_INFO.phone,
+    href: `tel:${CONTACT_INFO.phone.replace(/[^+\d]/g, '')}`,
   },
 ];
 
