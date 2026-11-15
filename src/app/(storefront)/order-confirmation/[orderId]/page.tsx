@@ -591,9 +591,9 @@ export default function OrderConfirmationPage() {
                       </div>
 
                       <div className="flex items-center justify-between text-sm text-ink-muted">
-                        <span>Shipping</span>
+                        <span>Delivery</span>
                         <span>
-                          {order.shippingFee === 0 ? 'Complimentary' : formatPrice(order.shippingFee)}
+                          {order.shippingFee === 0 ? 'Free' : formatPrice(order.shippingFee)}
                         </span>
                       </div>
 

@@ -34,7 +34,7 @@ export default async function RefundPolicyPage() {
                 You can cancel an order yourself <strong>before it is shipped</strong> (while it is shown as Order
                 placed, Confirmed or Packing). Signed-in customers cancel from <strong>My Account → Orders</strong>.
                 If you checked out as a guest, open your order from <Link href="/track-order">Track Order</Link> with
-                your order number and email. A cancelled order is refunded in full, including any shipping charge, as
+                your order number and email. A cancelled order is refunded in full, as
                 described under &ldquo;How refunds are paid&rdquo; below.
               </p>
               <p>
@@ -131,10 +131,6 @@ export default async function RefundPolicyPage() {
                   checked. You are refunded what you actually paid for the returned items. If you used a coupon, its
                   discount is shared across the items in the order, so a returned item is refunded its share of the
                   amount you paid. Partial returns are refunded for the returned quantity only.
-                </li>
-                <li>
-                  <strong>Shipping charge on returns:</strong> whether the original shipping charge is refunded is
-                  stated in your return approval message.
                 </li>
                 <li>
                   <strong>Timeline:</strong> we start the refund after we have received and checked the item, and it

@@ -6,7 +6,6 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 import MobileStickyActionBar from '@/components/product/MobileStickyActionBar';
 import SizeChartModal from '@/components/product/SizeChartModal';
-import { useShippingConfig } from '@/hooks/useShippingConfig';
 import { RETURN_POLICY, SHIPPING_INFO } from '@/lib/constants';
 import { useAuth } from '@/hooks/useAuth';
 import { useMediaQuery, usePrefersReducedMotion } from '@/hooks/useMediaQuery';
@@ -85,7 +84,6 @@ type AccordionSection = {
 
 function ProductAccordion({ product, returnDays }: { product: Product; returnDays: number }) {
   const [openId, setOpenId] = useState<string | null>('description');
-  const { freeThreshold } = useShippingConfig();
 
   const days = SHIPPING_INFO.standardDeliveryDays;
   const fabricAndCare = [
@@ -101,7 +99,7 @@ function ProductAccordion({ product, returnDays }: { product: Product; returnDay
       title: 'Delivery & Returns',
       content: [
         `Delivered across India in about ${days.min}–${days.max} business days.`,
-        ...(freeThreshold === null ? [] : [`Free shipping on orders above ${formatPrice(freeThreshold)}.`]),
+        'Delivery is free on every order.',
         `Returns are accepted within ${returnDays} days of delivery for unworn, unwashed pieces with tags intact.`,
       ],
     },

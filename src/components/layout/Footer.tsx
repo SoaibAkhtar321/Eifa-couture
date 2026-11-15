@@ -1,8 +1,7 @@
 import Link from 'next/link';
 
-import { CONTACT_INFO, DEVELOPER_CREDIT, RETURN_POLICY, SHIPPING_INFO, SOCIAL_LINKS } from '@/lib/constants';
+import { CONTACT_INFO, DEVELOPER_CREDIT, RETURN_POLICY, SOCIAL_LINKS } from '@/lib/constants';
 import { getCachedCategories, getCachedStoreSettings } from '@/lib/data/storefront-cache';
-import { formatPrice } from '@/lib/utils';
 import type { Category } from '@/types';
 
 type FooterLink = {
@@ -49,15 +48,8 @@ export default async function Footer({ extraLinks = [] }: { extraLinks?: FooterL
     getCachedStoreSettings(),
   ]);
 
-  // Same rule checkout charges against (Admin → Settings), with the
-  // built-in default when settings can't be read.
-  const freeThreshold = settings
-    ? settings.shipping_free_threshold
-    : SHIPPING_INFO.freeShippingThreshold;
   const trustItems = [
-    freeThreshold === null || freeThreshold === undefined
-      ? { title: 'Pan-India delivery', text: 'Carefully hand-packed' }
-      : { title: 'Free shipping', text: `On orders above ${formatPrice(freeThreshold)}` },
+    { title: 'Free delivery', text: 'On every order' },
     { title: 'Pan-India delivery', text: 'Carefully hand-packed' },
     { title: 'Easy returns', text: `${settings?.return_window_days ?? RETURN_POLICY.returnWindow} days on unworn pieces` },
     { title: 'Secure payment', text: 'Powered by Razorpay' },

@@ -10,7 +10,6 @@ import { useRouter } from 'next/navigation';
 import AddressForm from '@/components/account/AddressForm';
 import { useAuth } from '@/hooks/useAuth';
 import { createAddress, fetchAddresses, type AddressInput } from '@/lib/addresses';
-import { getShippingCharge, useShippingConfig } from '@/hooks/useShippingConfig';
 import {
   addressToShippingSnapshot,
   createOrder,
@@ -168,9 +167,8 @@ export default function CheckoutPage() {
 
   const itemCount = displayItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const shippingConfig = useShippingConfig();
-  const shippingCharge =
-    displayItems.length === 0 ? 0 : getShippingCharge(shippingConfig, displaySubtotal);
+  // There is no delivery or shipping charge on any order.
+  const shippingCharge = 0;
 
   const total = displaySubtotal + shippingCharge;
 
@@ -780,12 +778,8 @@ export default function CheckoutPage() {
                     </div>
 
                     <div className="flex items-center justify-between text-sm text-ink-muted">
-                      <span>Shipping</span>
-                      <span>
-                        {shippingCharge === 0
-                          ? 'Complimentary'
-                          : formatPrice(shippingCharge)}
-                      </span>
+                      <span>Delivery</span>
+                      <span>Free</span>
                     </div>
 
                     <div className="flex items-center justify-between border-t border-beige pt-4">

@@ -25,9 +25,9 @@ export default function AnnouncementBar() {
         >
           <div className="luxury-container flex items-center justify-center py-2.5 relative">
             <p className="font-subheading text-[13px] sm:text-sm tracking-wide text-center text-white/90">
-              <span>Complimentary Shipping on Orders Above ₹2,999</span>
+              <span>Free Delivery on Every Order</span>
               <span className="mx-3 text-gold/60">|</span>
-              <span>Handcrafted with Love in Lucknow</span>
+              <span>Handcrafted Chikankari from Lucknow, Since 1998</span>
             </p>
 
             {/* Close button */}

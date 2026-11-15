@@ -69,9 +69,8 @@ export default function TermsPage() {
           heading: 'Prices and taxes',
           body: (
             <p>
-              All prices are in Indian Rupees (INR) and are inclusive of applicable taxes unless stated otherwise. Any
-              shipping charge is shown separately at checkout before you pay, and the total you pay is shown before you
-              confirm the order. We may change prices at any time, but the price shown when you place the order is the
+              All prices are in Indian Rupees (INR) and are inclusive of applicable taxes unless stated otherwise. There
+              is no delivery or shipping charge, and the total you pay is shown before you confirm the order. We may change prices at any time, but the price shown when you place the order is the
               price you pay.
             </p>
           ),

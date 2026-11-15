@@ -5,12 +5,11 @@ import LegalPage from '@/components/legal/LegalPage';
 import { CONTACT_INFO, LEGAL_LAST_UPDATED } from '@/lib/constants';
 import { getPolicyValues } from '@/lib/policy';
 import { buildPageMetadata } from '@/lib/seo';
-import { formatPrice } from '@/lib/utils';
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Shipping Policy',
   description:
-    'Eifa Couture shipping and delivery policy: where we deliver, delivery times, shipping charges, order tracking and what to do if a parcel is delayed or damaged.',
+    'Eifa Couture shipping and delivery policy: where we deliver, delivery times, free delivery, order tracking and what to do if a parcel is delayed or damaged.',
   path: '/shipping-policy',
 });
 
@@ -53,21 +52,13 @@ export default async function ShippingPolicyPage() {
           ),
         },
         {
-          heading: 'Shipping charges',
+          heading: 'Delivery charges',
           body: (
-            <>
-              <p>
-                {policy.freeShippingThreshold === null
-                  ? `A flat shipping charge of ${formatPrice(policy.shippingFlatRate)} applies to every order.`
-                  : `Shipping is free on orders above ${formatPrice(policy.freeShippingThreshold)}. Below that, a flat charge of ${formatPrice(policy.shippingFlatRate)} applies.`}{' '}
-                The exact amount for your order is always shown at checkout before you pay. Payment is taken in
-                advance online; we do not offer cash on delivery.
-              </p>
-              <p>
-                We may change shipping charges or the free-shipping amount from time to time. The charges shown at
-                checkout when you place your order apply to that order.
-              </p>
-            </>
+            <p>
+              There is no delivery or shipping charge. Delivery is free on every order, whatever the order value, and
+              the total shown at checkout is the total you pay. Payment is taken in advance online; we do not offer
+              cash on delivery.
+            </p>
           ),
         },
         {

@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { AnimatePresence, motion, type Variants } from 'framer-motion';
 
 import { useBodyScrollLock } from '@/hooks/useBodyScrollLock';
-import { useShippingConfig } from '@/hooks/useShippingConfig';
 import { formatPrice, isSupabaseImageUrl } from '@/lib/utils';
 import { useCartStore } from '@/store/cart-store';
 import { useUIStore } from '@/store/ui-store';
@@ -74,8 +73,6 @@ export default function CartDrawer() {
   const total = useCartStore((state) => state.getTotal());
 
   const itemCount = items.reduce((sum, item) => sum + item.quantity, 0);
-  const { freeThreshold } = useShippingConfig();
-  const freeShippingDelta = freeThreshold === null ? 0 : freeThreshold - total;
 
   useBodyScrollLock(isCartOpen);
 
@@ -157,38 +154,6 @@ export default function CartDrawer() {
                 </svg>
               </button>
             </div>
-
-            {items.length > 0 && (
-              <div className="border-b border-beige/50 bg-cream/50 px-5 py-3 sm:px-6">
-                {freeShippingDelta > 0 ? (
-                  <p className="text-center font-subheading text-[13px] tracking-wide text-ink-soft">
-                    Add{' '}
-                    <span className="font-medium text-maroon">
-                      {formatPrice(freeShippingDelta)}
-                    </span>{' '}
-                    more for complimentary shipping
-                  </p>
-                ) : (
-                  <p className="text-center font-subheading text-[13px] tracking-wide text-gold">
-                    ✦ You&apos;ve unlocked complimentary shipping ✦
-                  </p>
-                )}
-
-                <div className="mt-2 h-[2px] overflow-hidden rounded-full bg-beige">
-                  <motion.div
-                    className="h-full bg-gradient-to-r from-gold to-maroon"
-                    initial={{ width: 0 }}
-                    animate={{
-                      width: `${Math.min(
-                        freeThreshold ? (total / freeThreshold) * 100 : 100,
-                        100
-                      )}%`,
-                    }}
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
-                  />
-                </div>
-              </div>
-            )}
 
             <div className="flex-1 overflow-y-auto overscroll-y-contain">
               {items.length === 0 ? (

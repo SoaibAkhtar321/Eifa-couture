@@ -85,12 +85,10 @@ export const LEGAL_INFO = {
 
 // ── Shipping Info ──
 export const SHIPPING_INFO = {
-  freeShippingThreshold: 2999,
-  standardShippingCost: 149,
   standardDeliveryDays: { min: 5, max: 7 },
   internationalShipping: false,
   message:
-    "Free shipping on all orders above ₹2,999. Each piece is carefully hand-packed with love.",
+    "Free delivery on every order. Each piece is carefully hand-packed with love.",
 } as const;
 
 // ── Return Policy ──

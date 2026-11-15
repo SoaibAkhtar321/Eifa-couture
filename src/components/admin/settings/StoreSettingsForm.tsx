@@ -41,8 +41,9 @@ export default function StoreSettingsForm({ settings }: StoreSettingsFormProps) 
     seo_default_description: settings.seo_default_description,
     currency_code: settings.currency_code,
     currency_symbol: settings.currency_symbol,
-    shipping_flat_rate: settings.shipping_flat_rate,
-    shipping_free_threshold: settings.shipping_free_threshold,
+    // No shipping charge exists: always saved as 0 / none.
+    shipping_flat_rate: 0,
+    shipping_free_threshold: null,
     shipping_processing_days: settings.shipping_processing_days,
     tax_gst_percent: settings.tax_gst_percent,
     tax_prices_inclusive: settings.tax_prices_inclusive,
@@ -333,24 +334,8 @@ export default function StoreSettingsForm({ settings }: StoreSettingsFormProps) 
 
           {/* Shipping */}
           <div className="rounded-lg border border-charcoal/10 bg-ivory p-6 space-y-4">
-            <h2 className="text-sm font-medium text-charcoal">Shipping</h2>
-            <NumberField
-              label="Flat shipping rate"
-              value={values.shipping_flat_rate}
-              onChange={(e) => setField('shipping_flat_rate', Number(e.target.value))}
-              error={fieldErrors.shipping_flat_rate}
-              min={0}
-              step="0.01"
-            />
-            <NumberField
-              label="Free shipping threshold"
-              value={values.shipping_free_threshold ?? ''}
-              onChange={(e) => setField('shipping_free_threshold', e.target.value === '' ? null : Number(e.target.value))}
-              error={fieldErrors.shipping_free_threshold}
-              min={0}
-              step="0.01"
-              hint="Leave blank to disable free shipping"
-            />
+            <h2 className="text-sm font-medium text-charcoal">Delivery</h2>
+            <p className="text-xs text-ink-muted">Delivery is free on every order. There is no shipping charge to set.</p>
             <NumberField
               label="Processing time (days)"
               value={values.shipping_processing_days}
