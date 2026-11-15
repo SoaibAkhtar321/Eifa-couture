@@ -17,12 +17,12 @@ const contentSecurityPolicy = [
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'self'",
-  `img-src 'self' data: blob: https://picsum.photos https://images.unsplash.com https://images.pexels.com https://cdn.shopify.com https://cdn.razorpay.com https://${supabaseHostname}`,
+  `img-src 'self' data: blob: https://images.unsplash.com https://images.pexels.com https://cdn.shopify.com https://cdn.razorpay.com https://${supabaseHostname}`,
   `media-src 'self' https://${supabaseHostname}`,
-  `connect-src 'self' https://${supabaseHostname} wss://${supabaseHostname} https://api.razorpay.com https://lumberjack.razorpay.com`,
-  `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com${isDev ? " 'unsafe-eval'" : ''}`,
+  `connect-src 'self' https://${supabaseHostname} wss://${supabaseHostname} https://api.razorpay.com https://lumberjack.razorpay.com https://challenges.cloudflare.com`,
+  `script-src 'self' 'unsafe-inline' https://checkout.razorpay.com https://challenges.cloudflare.com${isDev ? " 'unsafe-eval'" : ''}`,
   // Razorpay Checkout renders inside an iframe served from api.razorpay.com.
-  'frame-src https://api.razorpay.com https://checkout.razorpay.com',
+  'frame-src https://api.razorpay.com https://checkout.razorpay.com https://challenges.cloudflare.com',
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
   "form-action 'self' https://api.razorpay.com",
@@ -61,10 +61,6 @@ const nextConfig: NextConfig = {
     // (Vercel) is unaffected and keeps the protection on.
     dangerouslyAllowLocalIP: isDev,
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'picsum.photos',
-      },
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
