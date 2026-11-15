@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { notFound } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
@@ -26,6 +27,7 @@ async function getFormOptions(): Promise<{ categories: DbCategory[]; fabrics: Db
 }
 
 export default async function EditProductPage({ params }: EditProductPageProps) {
+  await requireAdmin();
   const { id } = await params;
 
   const [{ data: product, error }, { categories, fabrics }] = await Promise.all([

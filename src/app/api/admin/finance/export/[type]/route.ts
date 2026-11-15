@@ -46,8 +46,14 @@ const PAGE_SIZE = 1000;
 const MAX_PAGES = 20; // hard ceiling: 20,000 rows per export
 
 function csvEscape(value: string | number | null | undefined): string {
-  const str = value === null || value === undefined ? '' : String(value);
-  if (/[",\n]/.test(str)) {
+  let str = value === null || value === undefined ? '' : String(value);
+  // CSV/formula injection: a text cell starting with = + - @ (or tab/CR) is run
+  // as a formula by Excel/Sheets. Prefix an apostrophe so it stays plain text.
+  // Real numbers (including negatives) are left untouched.
+  if (typeof value === 'string' && /^[=+\-@\t\r]/.test(str)) {
+    str = `'${str}`;
+  }
+  if (/[",\r\n]/.test(str)) {
     return `"${str.replace(/"/g, '""')}"`;
   }
   return str;

@@ -29,8 +29,14 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const supabase = await createClient();
+  // Optional Cloudflare Turnstile token. When CAPTCHA protection is switched on in
+  // Supabase (Authentication -> Attack Protection), Supabase itself verifies it
+  // and rejects anonymous sign-ins without a valid one. We only forward it.
+  const body = (await request.json().catch(() => null)) as { captchaToken?: unknown } | null;
+  const captchaToken =
+    typeof body?.captchaToken === 'string' && body.captchaToken.length <= 2048 ? body.captchaToken : undefined;
 
+  const supabase = await createClient();
   // Never replace a session that already exists (signed-in or guest).
   const {
     data: { user: existing },
@@ -39,7 +45,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ session: null, existing: true });
   }
 
-  const { data, error } = await supabase.auth.signInAnonymously();
+  const { data, error } = await supabase.auth.signInAnonymously(captchaToken ? { options: { captchaToken } } : undefined);
 
   if (error || !data.session) {
     return NextResponse.json(

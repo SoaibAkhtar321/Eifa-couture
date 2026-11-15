@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { listCustomers } from '@/lib/admin/customers-read';
 import CustomerTable from '@/components/admin/customers/CustomerTable';
 
@@ -13,6 +14,7 @@ interface CustomersPageProps {
 }
 
 export default async function AdminCustomersPage({ searchParams }: CustomersPageProps) {
+  await requireAdmin();
   const params = await searchParams;
   const page = Number(params.page ?? '1') || 1;
 

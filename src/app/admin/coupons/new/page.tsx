@@ -1,8 +1,10 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import CouponForm from '@/components/admin/coupons/CouponForm';
 
 export const metadata = { title: 'New Coupon' };
 
-export default function NewCouponPage() {
+export default async function NewCouponPage() {
+  await requireAdmin();
   return (
     <div className="space-y-8">
       <div>

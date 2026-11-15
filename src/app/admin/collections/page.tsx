@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import Link from 'next/link';
 
 import { listCollections } from '@/lib/admin/collections-read';
@@ -14,6 +15,7 @@ interface CollectionsPageProps {
 }
 
 export default async function AdminCollectionsPage({ searchParams }: CollectionsPageProps) {
+  await requireAdmin();
   const params = await searchParams;
   const page = Number(params.page ?? '1') || 1;
 

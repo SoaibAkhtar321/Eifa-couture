@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { notFound } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
@@ -11,6 +12,7 @@ interface EditCouponPageProps {
 }
 
 export default async function EditCouponPage({ params }: EditCouponPageProps) {
+  await requireAdmin();
   const { id } = await params;
   const supabase = await createClient();
 

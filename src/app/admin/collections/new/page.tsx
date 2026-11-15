@@ -1,8 +1,10 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import CollectionForm from '@/components/admin/collections/CollectionForm';
 
 export const metadata = { title: 'New Collection' };
 
-export default function NewCollectionPage() {
+export default async function NewCollectionPage() {
+  await requireAdmin();
   return (
     <div className="space-y-8">
       <div>

@@ -1,9 +1,11 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { getAuditLogs } from '@/lib/admin/audit-log';
 import AuditLogTable from '@/components/admin/audit-log/AuditLogTable';
 
 export const metadata = { title: 'Audit Log' };
 
 export default async function AdminAuditLogPage() {
+  await requireAdmin();
   const { data: entries, error } = await getAuditLogs({ limit: 100 });
 
   return (

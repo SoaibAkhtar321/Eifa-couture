@@ -26,6 +26,8 @@ export interface SendEmailInput {
   text: string;
   /** Stable key so Resend itself also de-duplicates a retried send. */
   idempotencyKey?: string;
+  /** Per-message reply-to (e.g. the customer on a contact-form email). Overrides EMAIL_REPLY_TO. */
+  replyTo?: string;
 }
 
 export type SendEmailResult =
@@ -47,7 +49,7 @@ export async function sendEmail(input: SendEmailInput): Promise<SendEmailResult>
     console.warn('[email] EMAIL_FROM is not set; set it to an address on a verified Resend domain.');
   }
   const from = configuredFrom || DEFAULT_FROM;
-  const replyTo = process.env.EMAIL_REPLY_TO?.trim();
+  const replyTo = input.replyTo?.trim() || process.env.EMAIL_REPLY_TO?.trim();
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);

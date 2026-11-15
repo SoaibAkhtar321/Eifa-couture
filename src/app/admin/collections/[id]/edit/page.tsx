@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { notFound } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
@@ -12,6 +13,7 @@ interface EditCollectionPageProps {
 }
 
 export default async function EditCollectionPage({ params }: EditCollectionPageProps) {
+  await requireAdmin();
   const { id } = await params;
   const supabase = await createClient();
 

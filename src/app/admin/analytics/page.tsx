@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import StatCard from '@/components/admin/StatCard';
 import RevenueChart from '@/components/admin/analytics/RevenueChart';
 import OrderStatusBreakdown from '@/components/admin/analytics/OrderStatusBreakdown';
@@ -21,6 +22,7 @@ function parseRange(value: string | undefined): AnalyticsRange {
 }
 
 export default async function AdminAnalyticsPage({ searchParams }: AnalyticsPageProps) {
+  await requireAdmin();
   const params = await searchParams;
   const rangeDays = parseRange(params.range);
 

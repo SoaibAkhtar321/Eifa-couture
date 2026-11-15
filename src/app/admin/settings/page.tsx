@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { getStoreSettings } from '@/lib/data/store-settings';
 import StoreSettingsForm from '@/components/admin/settings/StoreSettingsForm';
 import ErrorState from '@/components/admin/ErrorState';
@@ -5,6 +6,7 @@ import ErrorState from '@/components/admin/ErrorState';
 export const metadata = { title: 'Settings' };
 
 export default async function AdminSettingsPage() {
+  await requireAdmin();
   const { data: settings, error } = await getStoreSettings();
 
   return (

@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { createClient } from '@/lib/supabase/server';
 import ProductForm from '@/components/admin/products/ProductForm';
 import type { DbCategory, DbFabric } from '@/types/database';
@@ -19,6 +20,7 @@ async function getFormOptions(): Promise<{ categories: DbCategory[]; fabrics: Db
 }
 
 export default async function NewProductPage() {
+  await requireAdmin();
   const { categories, fabrics } = await getFormOptions();
 
   return (

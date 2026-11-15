@@ -6,6 +6,7 @@
  
    ============================================ */
 
+import { getTurnstileToken } from '@/lib/auth/turnstile-client';
 import { useMemo } from 'react';
 
 import { createClient } from '@/lib/supabase/client';
@@ -108,7 +109,18 @@ export function useAuth() {
     const { data } = await supabase.auth.getSession();
     if (data.session) return { error: null };
 
-    const res = await fetch('/api/auth/guest', { method: 'POST' });
+    let captchaToken: string | null = null;
+    try {
+      captchaToken = await getTurnstileToken();
+    } catch {
+      return { error: { message: 'We could not complete the security check. Please refresh and try again.' } };
+    }
+
+    const res = await fetch('/api/auth/guest', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ captchaToken }),
+    });
     const json = await res
       .json()
       .catch(() => ({ error: { message: 'Something went wrong. Please try again.' } }));

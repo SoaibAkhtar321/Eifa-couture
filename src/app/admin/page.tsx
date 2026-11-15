@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 
@@ -45,6 +46,7 @@ async function getDashboardStats() {
 }
 
 export default async function AdminDashboardPage() {
+  await requireAdmin();
   const stats = await getDashboardStats();
 
   return (

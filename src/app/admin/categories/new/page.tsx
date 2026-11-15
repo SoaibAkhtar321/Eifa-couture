@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { createClient } from '@/lib/supabase/server';
 import CategoryForm from '@/components/admin/categories/CategoryForm';
 import type { DbCategory } from '@/types/database';
@@ -16,6 +17,7 @@ async function getCategories(): Promise<DbCategory[]> {
 }
 
 export default async function NewCategoryPage() {
+  await requireAdmin();
   const categories = await getCategories();
 
   return (

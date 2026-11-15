@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { notFound } from 'next/navigation';
 
 import { getBanner } from '@/lib/data/banners';
@@ -10,6 +11,7 @@ interface EditBannerPageProps {
 }
 
 export default async function EditBannerPage({ params }: EditBannerPageProps) {
+  await requireAdmin();
   const { id } = await params;
 
   const { data: banner, error } = await getBanner(id);

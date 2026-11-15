@@ -1,8 +1,10 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import NotificationsView from '@/components/notifications/NotificationsView';
 
 export const metadata = { title: 'Notifications' };
 
-export default function AdminNotificationsPage() {
+export default async function AdminNotificationsPage() {
+  await requireAdmin();
   return (
     <div className="space-y-8">
       <div>

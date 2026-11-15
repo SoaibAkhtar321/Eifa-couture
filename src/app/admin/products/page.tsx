@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import Link from 'next/link';
 
 import { createClient } from '@/lib/supabase/server';
@@ -31,6 +32,7 @@ async function getCategories(): Promise<DbCategory[]> {
 }
 
 export default async function AdminProductsPage({ searchParams }: ProductsPageProps) {
+  await requireAdmin();
   const params = await searchParams;
   const page = Number(params.page ?? '1') || 1;
 

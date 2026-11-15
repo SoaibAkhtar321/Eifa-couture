@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { notFound } from 'next/navigation';
 
 import { createClient } from '@/lib/supabase/server';
@@ -22,6 +23,7 @@ async function getCategories(): Promise<DbCategory[]> {
 }
 
 export default async function EditCategoryPage({ params }: EditCategoryPageProps) {
+  await requireAdmin();
   const { id } = await params;
   const supabase = await createClient();
 

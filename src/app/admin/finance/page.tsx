@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import StatCard from '@/components/admin/StatCard';
 import FinanceRangeSwitch from '@/components/admin/finance/FinanceRangeSwitch';
 import FinanceExportButtons from '@/components/admin/finance/FinanceExportButtons';
@@ -29,6 +30,7 @@ function parsePreset(value: string | undefined): FinancePreset {
 }
 
 export default async function AdminFinancePage({ searchParams }: FinancePageProps) {
+  await requireAdmin();
   const params = await searchParams;
   const preset = parsePreset(params.range);
 

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { CONTACT_INFO, RETURN_POLICY, SHIPPING_INFO, SOCIAL_LINKS } from '@/lib/constants';
+import { CONTACT_INFO, DEVELOPER_CREDIT, RETURN_POLICY, SHIPPING_INFO, SOCIAL_LINKS } from '@/lib/constants';
 import { getCachedCategories, getCachedStoreSettings } from '@/lib/data/storefront-cache';
 import { formatPrice } from '@/lib/utils';
 import type { Category } from '@/types';
@@ -228,6 +228,23 @@ export default async function Footer({ extraLinks = [] }: { extraLinks?: FooterL
         <div className="flex flex-col gap-3 border-t border-beige py-5 text-xs uppercase tracking-[0.22em] text-ink-muted sm:flex-row sm:items-center sm:justify-between">
           <p>© {currentYear} Eifa Couture. All rights reserved.</p>
           <p>Handcrafted in Lucknow</p>
+        </div>
+        <div className="border-t border-beige py-4 text-center text-[11px] uppercase tracking-[0.18em] text-ink-muted">
+          <p>
+            Powered by{' '}
+            <a
+              href={DEVELOPER_CREDIT.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-maroon underline-offset-4 transition-colors hover:text-gold hover:underline"
+            >
+              {DEVELOPER_CREDIT.name}
+            </a>
+            <span aria-hidden="true"> · </span>
+            <a href={DEVELOPER_CREDIT.phoneHref} className="transition-colors hover:text-gold">
+              {DEVELOPER_CREDIT.phone}
+            </a>
+          </p>
         </div>
       </div>
     </footer>

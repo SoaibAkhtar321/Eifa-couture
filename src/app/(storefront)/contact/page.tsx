@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 import { CONTACT_INFO, SOCIAL_LINKS } from '@/lib/constants';
+import ContactForm from '@/components/contact/ContactForm';
+import { CONTACT_ENQUIRY_TYPES } from '@/lib/contact/schema';
 import { buildPageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = buildPageMetadata({
@@ -34,14 +36,6 @@ const contactCards = [
     detail: CONTACT_INFO.phone,
     href: CONTACT_INFO.phoneHref,
   },
-];
-
-const enquiryTypes = [
-  'Product enquiry',
-  'Size guidance',
-  'Custom order',
-  'Bulk / wholesale enquiry',
-  'Order support',
 ];
 
 export default function ContactPage() {
@@ -126,8 +120,8 @@ export default function ContactPage() {
                 </h2>
 
                 <p className="mt-5 max-w-md text-sm leading-7 text-ink-muted sm:text-base sm:leading-8">
-                  Write to us by email, message us on Instagram, or call us. Please mention your order
-                  number if you are asking about an existing order.
+                  Send us a message and we will reply by email. Please add your order number if you are
+                  asking about an existing order.
                 </p>
 
                 <div className="mt-7 border border-beige bg-white p-5">
@@ -136,7 +130,7 @@ export default function ContactPage() {
                   </p>
 
                   <div className="mt-4 flex flex-wrap gap-2">
-                    {enquiryTypes.map((type) => (
+                    {CONTACT_ENQUIRY_TYPES.map((type) => (
                       <span
                         key={type}
                         className="border border-beige bg-ivory px-3 py-2 text-[11px] uppercase tracking-[0.14em] text-ink-muted"
@@ -146,46 +140,48 @@ export default function ContactPage() {
                     ))}
                   </div>
                 </div>
+
+                <div className="mt-5 space-y-5 border border-beige bg-white p-5 sm:p-7 lg:p-8">
+                  <p className="font-body text-[10px] uppercase tracking-[0.24em] text-gold">Reach Us Directly</p>
+
+                  <dl className="space-y-4 text-sm leading-7 text-charcoal">
+                    <div>
+                      <dt className="text-xs uppercase tracking-[0.18em] text-ink-muted">Email</dt>
+                      <dd>
+                        <a className="text-maroon underline" href={`mailto:${CONTACT_INFO.email}`}>
+                          {CONTACT_INFO.email}
+                        </a>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs uppercase tracking-[0.18em] text-ink-muted">Phone</dt>
+                      <dd>
+                        <a className="text-maroon underline" href={CONTACT_INFO.phoneHref}>
+                          {CONTACT_INFO.phone}
+                        </a>
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs uppercase tracking-[0.18em] text-ink-muted">Visit</dt>
+                      <dd>
+                        {CONTACT_INFO.address.line1}, {CONTACT_INFO.address.line2}
+                      </dd>
+                    </div>
+                    <div>
+                      <dt className="text-xs uppercase tracking-[0.18em] text-ink-muted">Hours</dt>
+                      <dd>
+                        Mon–Fri {CONTACT_INFO.workingHours.weekdays}
+                        <br />
+                        Sat–Sun {CONTACT_INFO.workingHours.weekends}
+                        <br />
+                        {CONTACT_INFO.workingHours.note}
+                      </dd>
+                    </div>
+                  </dl>
+                </div>
               </div>
 
-              <div className="space-y-5 border border-beige bg-white p-5 sm:p-7 lg:p-8">
-                <p className="font-body text-[10px] uppercase tracking-[0.24em] text-gold">Reach Us Directly</p>
-
-                <dl className="space-y-4 text-sm leading-7 text-charcoal">
-                  <div>
-                    <dt className="text-xs uppercase tracking-[0.18em] text-ink-muted">Email</dt>
-                    <dd>
-                      <a className="text-maroon underline" href={`mailto:${CONTACT_INFO.email}`}>
-                        {CONTACT_INFO.email}
-                      </a>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs uppercase tracking-[0.18em] text-ink-muted">Phone</dt>
-                    <dd>
-                      <a className="text-maroon underline" href={CONTACT_INFO.phoneHref}>
-                        {CONTACT_INFO.phone}
-                      </a>
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs uppercase tracking-[0.18em] text-ink-muted">Visit</dt>
-                    <dd>
-                      {CONTACT_INFO.address.line1}, {CONTACT_INFO.address.line2}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-xs uppercase tracking-[0.18em] text-ink-muted">Hours</dt>
-                    <dd>
-                      Mon–Fri {CONTACT_INFO.workingHours.weekdays}
-                      <br />
-                      Sat–Sun {CONTACT_INFO.workingHours.weekends}
-                      <br />
-                      {CONTACT_INFO.workingHours.note}
-                    </dd>
-                  </div>
-                </dl>
-              </div>
+              <ContactForm />
             </div>
           </div>
         </section>

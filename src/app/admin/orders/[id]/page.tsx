@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
@@ -17,6 +18,7 @@ interface OrderDetailPageProps {
 }
 
 export default async function AdminOrderDetailPage({ params }: OrderDetailPageProps) {
+  await requireAdmin();
   const { id } = await params;
   // Run in parallel — the order and its history are independent
   // queries, so no reason to wait on one before starting the other.

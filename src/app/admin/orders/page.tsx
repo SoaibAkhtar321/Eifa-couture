@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { listOrders } from '@/lib/admin/orders';
 import OrderTable from '@/components/admin/orders/OrderTable';
 import type { OrderStatus, PaymentStatus } from '@/types/database';
@@ -17,6 +18,7 @@ interface OrdersPageProps {
 }
 
 export default async function AdminOrdersPage({ searchParams }: OrdersPageProps) {
+  await requireAdmin();
   const params = await searchParams;
   const page = Number(params.page ?? '1') || 1;
 

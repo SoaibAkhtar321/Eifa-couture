@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import Link from 'next/link';
 
 import { createClient } from '@/lib/supabase/server';
@@ -31,6 +32,7 @@ async function getProductCounts(): Promise<Record<string, number> | null> {
 }
 
 export default async function AdminCategoriesPage() {
+  await requireAdmin();
   const [{ data: categories, error }, productCounts] = await Promise.all([getCategories(), getProductCounts()]);
 
   return (

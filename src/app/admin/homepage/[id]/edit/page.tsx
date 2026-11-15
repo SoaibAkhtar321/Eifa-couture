@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { notFound } from 'next/navigation';
 
 import { getHomepageSection } from '@/lib/data/homepage-sections';
@@ -23,6 +24,7 @@ const SECTION_LABELS: Record<HomepageSectionKey, string> = {
 };
 
 export default async function EditHomepageSectionPage({ params }: EditHomepageSectionPageProps) {
+  await requireAdmin();
   const { id } = await params;
 
   const { data: section, error } = await getHomepageSection(id);

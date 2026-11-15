@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import Link from 'next/link';
 
 import { listBanners } from '@/lib/data/banners';
@@ -6,6 +7,7 @@ import BannerTable from '@/components/admin/banners/BannerTable';
 export const metadata = { title: 'Banners' };
 
 export default async function AdminBannersPage() {
+  await requireAdmin();
   const { data: banners, error } = await listBanners();
 
   return (

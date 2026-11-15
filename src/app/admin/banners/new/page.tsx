@@ -1,8 +1,10 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import BannerForm from '@/components/admin/banners/BannerForm';
 
 export const metadata = { title: 'New Banner' };
 
-export default function NewBannerPage() {
+export default async function NewBannerPage() {
+  await requireAdmin();
   return (
     <div className="space-y-8">
       <div>

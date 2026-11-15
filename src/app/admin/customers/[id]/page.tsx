@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
@@ -25,6 +26,7 @@ const STATUS_BADGE: Record<string, string> = {
 };
 
 export default async function AdminCustomerDetailPage({ params }: CustomerDetailPageProps) {
+  await requireAdmin();
   const { id } = await params;
   const { data: customer, error } = await getCustomerDetail(id);
 

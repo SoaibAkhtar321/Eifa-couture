@@ -10,6 +10,15 @@ export const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
 
 export type Size = (typeof SIZES)[number];
 
+// ── Site credit (footer) ──
+// Single source for the "Powered by" line at the bottom of the footer.
+export const DEVELOPER_CREDIT = {
+  name: "Spesio Technologies",
+  url: "https://spesio-technologies.vercel.app",
+  phone: "+91 89578 33269",
+  phoneHref: "tel:+918957833269",
+} as const;
+
 // ── Social Links ──
 // Single source of truth for the storefront (footer, mobile menu, schema.org
 // `sameAs`). Admin → Settings can still override a platform per-field in the

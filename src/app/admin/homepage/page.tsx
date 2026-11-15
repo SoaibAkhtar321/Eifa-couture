@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import AudiencePanelsForm, { type AudiencePanelState } from '@/components/admin/homepage/AudiencePanelsForm';
 import HomepageSectionsTable from '@/components/admin/homepage/HomepageSectionsTable';
 import { getAudienceContent } from '@/lib/audience-content';
@@ -13,6 +14,7 @@ const PANELS: { audience: AudiencePanelState['audience']; label: string }[] = [
 ];
 
 export default async function AdminHomepagePage() {
+  await requireAdmin();
   const [{ data: sections, error }, panelImages] = await Promise.all([
     listHomepageSections(),
     getAudiencePanelImages(),

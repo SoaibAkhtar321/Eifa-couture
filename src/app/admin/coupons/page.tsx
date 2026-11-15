@@ -1,3 +1,4 @@
+import { requireAdmin } from '@/lib/admin/auth';
 import Link from 'next/link';
 
 import { createClient } from '@/lib/supabase/server';
@@ -17,6 +18,7 @@ async function getCoupons(): Promise<{ data: DbCoupon[]; error: string | null }>
 }
 
 export default async function AdminCouponsPage() {
+  await requireAdmin();
   const { data: coupons, error } = await getCoupons();
 
   return (
