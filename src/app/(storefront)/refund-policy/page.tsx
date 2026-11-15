@@ -1,9 +1,16 @@
 import type { Metadata } from 'next';
 
+import { buildPageMetadata } from '@/lib/seo';
+
 import LegalPage from '@/components/legal/LegalPage';
 import { RETURN_POLICY } from '@/lib/constants';
 
-export const metadata: Metadata = { title: 'Shipping, Returns & Refunds | Eifa Couture' };
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Shipping, Returns & Refunds',
+  description:
+    'Eifa Couture shipping, delivery, return, exchange and refund policy for handcrafted Chikankari orders.',
+  path: '/refund-policy',
+});
 
 export default function RefundPolicyPage() {
   return (

@@ -9,7 +9,7 @@ import '@fontsource-variable/inter/wght.css';
 import './globals.css';
 
 import AuthProvider from '@/providers/AuthProvider';
-import { SITE_URL, SOCIAL_LINKS } from '@/lib/constants';
+import { CONTACT_INFO, SITE_URL, SOCIAL_LINKS } from '@/lib/constants';
 
 export const metadata: Metadata = {
   title: {
@@ -33,11 +33,11 @@ export const metadata: Metadata = {
   authors: [{ name: 'Eifa Couture' }],
   creator: 'Eifa Couture',
   publisher: 'Eifa Couture',
-  metadataBase: new URL('https://eifacouture.com'),
+  metadataBase: new URL(SITE_URL),
   openGraph: {
     type: 'website',
     locale: 'en_IN',
-    url: 'https://eifacouture.com',
+    url: SITE_URL,
     siteName: 'Eifa Couture',
     title: 'Eifa Couture | Luxury Lucknowi Chikankari',
     description:
@@ -74,7 +74,7 @@ export const metadata: Metadata = {
 };
 
 // Brand structured data for search results (Organization + WebSite).
-// Social profiles come from SOCIAL_LINKS (WhatsApp is a chat link, not a profile).
+// Social profiles (`sameAs`) and the contact email come from src/lib/constants.ts.
 const brandJsonLd = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -84,7 +84,24 @@ const brandJsonLd = {
       name: 'Eifa Couture',
       url: SITE_URL,
       logo: `${SITE_URL}/images/eifa-logo-header.png`,
-      sameAs: SOCIAL_LINKS.filter((link) => link.icon !== 'whatsapp').map((link) => link.href),
+      description:
+        'Premium handcrafted Lucknowi Chikankari fashion — kurtas, anarkalis, sarees and bridal collections.',
+      foundingDate: '1998',
+      email: CONTACT_INFO.email,
+      address: {
+        '@type': 'PostalAddress',
+        addressLocality: CONTACT_INFO.address.city,
+        addressRegion: CONTACT_INFO.address.state,
+        addressCountry: 'IN',
+      },
+      contactPoint: {
+        '@type': 'ContactPoint',
+        contactType: 'customer support',
+        email: CONTACT_INFO.email,
+        areaServed: 'IN',
+        availableLanguage: ['en', 'hi'],
+      },
+      sameAs: SOCIAL_LINKS.map((link) => link.href),
     },
     {
       '@type': 'WebSite',

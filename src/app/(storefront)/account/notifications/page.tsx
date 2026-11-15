@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import NotificationsView from '@/components/notifications/NotificationsView';
 
-export const metadata = { title: 'Notifications | Eifa Couture' };
+export const metadata = { title: 'Notifications' };
 
 export default function NotificationsPage() {
   return (

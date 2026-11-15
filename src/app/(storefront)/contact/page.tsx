@@ -1,27 +1,32 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
+import { CONTACT_INFO, SOCIAL_LINKS } from '@/lib/constants';
+import { buildPageMetadata } from '@/lib/seo';
 
-export const metadata: Metadata = {
-  title: 'Contact Us | Eifa Couture',
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Contact Us',
   description:
     'Contact Eifa Couture for product enquiries, order support, custom requests, and handcrafted Lucknowi Chikankari assistance.',
-};
+  path: '/contact',
+});
+
+const instagram = SOCIAL_LINKS.find((link) => link.name === 'Instagram');
 
 const contactCards = [
   {
     title: 'Order Support',
     description:
       'Need help with sizing, product details, delivery, or an existing order? Reach out to our support team.',
-    detail: 'support@eifacouture.com',
-    href: 'mailto:support@eifacouture.com',
+    detail: CONTACT_INFO.email,
+    href: `mailto:${CONTACT_INFO.email}`,
   },
   {
-    title: 'WhatsApp Enquiry',
+    title: 'Instagram Enquiry',
     description:
-      'Ask about product availability, fabric, size guidance, or custom styling suggestions.',
-    detail: '+91 00000 00000',
-    href: 'https://wa.me/910000000000',
+      'Ask about product availability, fabric, size guidance, or custom styling suggestions by message.',
+    detail: '@eifachikankari',
+    href: instagram?.href ?? '/contact',
   },
   {
     title: 'Boutique Hours',
@@ -98,7 +103,7 @@ export default function ContactPage() {
                     className="mt-5 inline-flex font-body text-xs uppercase tracking-[0.2em] text-maroon transition-colors hover:text-gold"
                     target={card.href.startsWith('http') ? '_blank' : undefined}
                     rel={
-                      card.href.startsWith('http') ? 'noreferrer' : undefined
+                      card.href.startsWith('http') ? 'noopener noreferrer' : undefined
                     }
                   >
                     {card.detail}
@@ -230,7 +235,7 @@ export default function ContactPage() {
 
                 <p className="text-center text-xs leading-6 text-ink-muted">
                   Form submission is not connected yet. For now, customers can
-                  use email or WhatsApp enquiry.
+                  use email or Instagram enquiry.
                 </p>
               </form>
             </div>

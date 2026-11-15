@@ -4,7 +4,7 @@ import { Suspense } from 'react';
 import OrderTracker from '@/components/account/OrderTracker';
 
 export const metadata: Metadata = {
-  title: 'Track Order | Eifa Couture',
+  title: 'Track Order',
   description: 'Follow your Eifa Couture order from our Lucknow atelier to your door.',
 };
 

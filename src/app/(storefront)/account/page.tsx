@@ -5,7 +5,7 @@ import AccountGateway from '@/components/account/AccountGateway';
 import GuestPromoBand from '@/components/account/GuestPromoBand';
 
 export const metadata: Metadata = {
-  title: 'My Account | Eifa Couture',
+  title: 'My Account',
   description:
     'Access your Eifa Couture account for orders, wishlist, saved details, and handcrafted Chikankari shopping support.',
 };

@@ -1,13 +1,16 @@
 import type { Metadata } from 'next';
+
+import { buildPageMetadata } from '@/lib/seo';
 import Image from 'next/image';
 import Link from 'next/link';
 
 
-export const metadata: Metadata = {
-  title: 'Our Story | Eifa Couture',
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Our Story',
   description:
     'Discover the story of Eifa Couture, a premium Lucknowi Chikankari fashion house preserving handcrafted elegance since 1998.',
-};
+  path: '/about',
+});
 
 const values = [
   {

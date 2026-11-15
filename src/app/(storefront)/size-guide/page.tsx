@@ -1,12 +1,15 @@
 import type { Metadata } from 'next';
+
+import { buildPageMetadata } from '@/lib/seo';
 import Link from 'next/link';
 
 
-export const metadata: Metadata = {
-  title: 'Size Guide | Eifa Couture',
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Size Guide',
   description:
     'Find the right size for Eifa Couture handcrafted Chikankari kurtas, sets, sarees, dupattas, and accessories.',
-};
+  path: '/size-guide',
+});
 
 const womenSizeGuide = [
   { size: 'XS', bust: '32', waist: '26', hip: '36' },

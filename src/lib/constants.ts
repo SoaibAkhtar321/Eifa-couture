@@ -11,39 +11,30 @@ export const SIZES = ["XS", "S", "M", "L", "XL", "XXL", "3XL"] as const;
 export type Size = (typeof SIZES)[number];
 
 // ── Social Links ──
+// Single source of truth for the storefront (footer, mobile menu, schema.org
+// `sameAs`). Admin → Settings can still override a platform per-field in the
+// footer. Add Pinterest / YouTube / WhatsApp here only once real, working
+// profiles exist — placeholder links hurt trust and SEO.
 export const SOCIAL_LINKS = [
   {
     name: "Instagram",
-    href: "https://instagram.com/eifacouture",
+    href: "https://www.instagram.com/eifachikankari/",
     icon: "instagram",
   },
   {
     name: "Facebook",
-    href: "https://facebook.com/eifacouture",
+    // Page name: "Eifa chikankari". Confirm the exact page URL/handle.
+    href: "https://www.facebook.com/eifachikankari",
     icon: "facebook",
-  },
-  {
-    name: "Pinterest",
-    href: "https://pinterest.com/eifacouture",
-    icon: "pinterest",
-  },
-  {
-    name: "YouTube",
-    href: "https://youtube.com/@eifacouture",
-    icon: "youtube",
-  },
-  {
-    name: "WhatsApp",
-    href: "https://wa.me/919876543210",
-    icon: "whatsapp",
   },
 ] as const;
 
 // ── Contact Info ──
+// `phone` is intentionally empty until a real business number is confirmed;
+// the footer hides the phone line when it is blank.
 export const CONTACT_INFO = {
-  email: "hello@eifacouture.com",
-  phone: "+91 98765 43210",
-  whatsapp: "+91 98765 43210",
+  email: "eifachikankari@gmail.com",
+  phone: "",
   address: {
     line1: "Aminabad Market, Near Gol Darwaza",
     line2: "Lucknow, Uttar Pradesh 226018",

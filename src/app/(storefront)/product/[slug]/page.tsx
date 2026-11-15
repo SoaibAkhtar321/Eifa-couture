@@ -119,8 +119,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
       : { '@type': 'Offer', priceCurrency: 'INR', price: product.minPrice, availability, url },
   };
 
+  const breadcrumbJsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: SITE_URL },
+      { '@type': 'ListItem', position: 2, name: 'Shop', item: `${SITE_URL}/shop` },
+      { '@type': 'ListItem', position: 3, name: product.name, item: url },
+    ],
+  };
+
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, '\\u003c') }}
+      />
       {/* Product structured data for search engines. `<` is escaped so the JSON can never close the tag. */}
       <script
         type="application/ld+json"

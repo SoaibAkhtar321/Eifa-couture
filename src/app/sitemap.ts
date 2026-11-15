@@ -2,8 +2,7 @@ import type { MetadataRoute } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { fetchActiveCollectionSlugs } from '@/lib/data/collections';
 import { fetchActiveProducts } from '@/lib/data/products';
-
-const SITE_URL = 'https://eifacouture.com';
+import { SITE_URL } from '@/lib/constants';
 
 const STATIC_PATHS: { path: string; priority: number }[] = [
   { path: '', priority: 1 },
@@ -14,7 +13,6 @@ const STATIC_PATHS: { path: string; priority: number }[] = [
   { path: '/about', priority: 0.5 },
   { path: '/contact', priority: 0.5 },
   { path: '/size-guide', priority: 0.4 },
-  { path: '/track-order', priority: 0.3 },
   { path: '/privacy-policy', priority: 0.2 },
   { path: '/refund-policy', priority: 0.2 },
   { path: '/terms', priority: 0.2 },
@@ -38,6 +36,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     for (const product of products) {
       entries.push({
         url: `${SITE_URL}/product/${product.slug}`,
+        lastModified: product.updatedAt ? new Date(product.updatedAt) : undefined,
+        changeFrequency: 'weekly',
         priority: 0.8,
       });
     }

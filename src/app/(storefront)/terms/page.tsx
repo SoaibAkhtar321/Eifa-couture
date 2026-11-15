@@ -1,8 +1,15 @@
 import type { Metadata } from 'next';
 
+import { buildPageMetadata } from '@/lib/seo';
+
 import LegalPage from '@/components/legal/LegalPage';
 
-export const metadata: Metadata = { title: 'Terms of Service | Eifa Couture' };
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Terms of Service',
+  description:
+    'The terms that apply when you browse and place orders on the Eifa Couture website.',
+  path: '/terms',
+});
 
 export default function TermsPage() {
   return (

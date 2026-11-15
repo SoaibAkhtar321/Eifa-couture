@@ -1,8 +1,15 @@
 import type { Metadata } from 'next';
 
+import { buildPageMetadata } from '@/lib/seo';
+
 import LegalPage from '@/components/legal/LegalPage';
 
-export const metadata: Metadata = { title: 'Privacy Policy | Eifa Couture' };
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Privacy Policy',
+  description:
+    'How Eifa Couture collects, uses and protects your personal information when you shop on our website.',
+  path: '/privacy-policy',
+});
 
 export default function PrivacyPolicyPage() {
   return (

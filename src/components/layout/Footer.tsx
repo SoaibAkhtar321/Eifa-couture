@@ -1,6 +1,6 @@
 import Link from 'next/link';
 
-import { CONTACT_INFO, SHIPPING_INFO } from '@/lib/constants';
+import { CONTACT_INFO, SHIPPING_INFO, SOCIAL_LINKS } from '@/lib/constants';
 import { getCachedCategories, getCachedStoreSettings } from '@/lib/data/storefront-cache';
 import { formatPrice } from '@/lib/utils';
 import type { Category } from '@/types';
@@ -67,9 +67,13 @@ export default async function Footer({ extraLinks = [] }: { extraLinks?: FooterL
   const phone = settings?.store_phone || CONTACT_INFO.phone;
   const location =
     [settings?.address_city, settings?.address_state].filter(Boolean).join(', ') || 'Lucknow, Uttar Pradesh';
+  // Instagram + Facebook fall back to the site-wide defaults; the other
+  // platforms only appear if the admin has filled them in.
+  const defaultHref = (name: string) =>
+    SOCIAL_LINKS.find((link) => link.name === name)?.href;
   const socialLinks = [
-    { name: 'Instagram', href: settings?.social_instagram_url },
-    { name: 'Facebook', href: settings?.social_facebook_url },
+    { name: 'Instagram', href: settings?.social_instagram_url || defaultHref('Instagram') },
+    { name: 'Facebook', href: settings?.social_facebook_url || defaultHref('Facebook') },
     { name: 'Pinterest', href: settings?.social_pinterest_url },
     { name: 'YouTube', href: settings?.social_youtube_url },
     { name: 'X', href: settings?.social_twitter_url },
@@ -182,12 +186,14 @@ export default async function Footer({ extraLinks = [] }: { extraLinks?: FooterL
                 {email}
               </a>
 
-              <a
-                href={`tel:${phone.replace(/[^+\d]/g, '')}`}
-                className="block transition-colors duration-300 hover:text-maroon"
-              >
-                {phone}
-              </a>
+              {phone && (
+                <a
+                  href={`tel:${phone.replace(/[^+\d]/g, '')}`}
+                  className="block transition-colors duration-300 hover:text-maroon"
+                >
+                  {phone}
+                </a>
+              )}
             </div>
 
             <ul className="mt-6 space-y-3">

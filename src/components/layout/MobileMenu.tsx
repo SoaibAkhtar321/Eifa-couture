@@ -237,13 +237,13 @@ export default function MobileMenu({ extraLinks = [] }: MobileMenuProps) {
             </div>
 
             <div className="border-t border-beige bg-ivory px-5 py-4 shrink-0">
-              <div className="grid grid-cols-3 gap-3">
-                {SOCIAL_LINKS.slice(0, 3).map((social) => (
+              <div className="grid grid-cols-2 gap-3">
+                {SOCIAL_LINKS.map((social) => (
                   <a
                     key={social.href}
                     href={social.href}
                     target="_blank"
-                    rel="noreferrer"
+                    rel="noopener noreferrer"
                     className="min-h-[44px] flex items-center justify-center border border-beige bg-white px-3 py-3 text-center text-[10px] font-medium uppercase tracking-[0.18em] text-ink-soft transition-all duration-300 hover:border-maroon hover:bg-maroon hover:text-white"
                   >
                     {social.name}

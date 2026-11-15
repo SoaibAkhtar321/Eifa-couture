@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import EditProfileForm from '@/components/account/EditProfileForm';
 
-export const metadata = { title: 'Account Settings | Eifa Couture' };
+export const metadata = { title: 'Account Settings' };
 
 const settingsSections = [
   { title: 'Change Password', desc: 'Update your account password' },
