@@ -7,6 +7,8 @@
    Brand colours mirror globals.css (maroon / gold / ivory / beige).
    ============================================ */
 
+import { LEGAL_INFO } from '@/lib/constants';
+
 const C = {
   maroon: '#5A0B22',
   gold: '#C8A548',
@@ -155,6 +157,7 @@ function renderContent(content: Content): Rendered {
   }
   if (content.cta) text.push(`${content.cta.label}: ${content.cta.url}`, '');
   text.push('— Eifa Couture · Lucknowi Chikankari');
+  if (LEGAL_INFO.gstin) text.push(`GSTIN ${LEGAL_INFO.gstin}`);
 
   /* html */
   const paragraphs = content.paragraphs
@@ -210,7 +213,7 @@ function renderContent(content: Content): Rendered {
       ${paragraphs}${facts}${orderBlock}${cta}
     </td></tr>
     <tr><td style="padding:18px 28px;text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:${C.muted};">
-      Eifa Couture · Handcrafted Lucknowi Chikankari<br>You are receiving this because of activity on your order.
+      Eifa Couture · Handcrafted Lucknowi Chikankari${LEGAL_INFO.gstin ? `<br>GSTIN ${esc(LEGAL_INFO.gstin)}` : ''}<br>You are receiving this because of activity on your order.
     </td></tr>
   </table>
 </td></tr></table></body></html>`;

@@ -72,10 +72,10 @@ export const CONTACT_INFO = {
 //    Protection (E-Commerce) Rules 2020 and the DPDP Act 2023.
 export const LEGAL_INFO = {
   tradeName: "Eifa Couture",
-  legalName: "",
-  gstin: "",
+  legalName: "Anamta Quraishi",
+  gstin: "09ABWPQ1382Q1ZH",
   grievanceOfficer: {
-    name: "",
+    name: "Anamta Quraishi",
     designation: "Grievance Officer",
   },
   // Time limits we commit to for customer complaints and privacy requests.
