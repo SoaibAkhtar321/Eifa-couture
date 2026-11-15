@@ -119,6 +119,9 @@ export const RATE_LIMITS = {
   register: { limit: 3, windowMs: 60_000 },
   forgotPassword: { limit: 3, windowMs: 15 * 60_000 },
   contact: { limit: 5, windowMs: 10 * 60_000 },
+  /** Guest checkout session creation — keyed by IP. Shared mobile
+   *  carrier IPs are common, so this is generous but still bounded. */
+  guestSession: { limit: 10, windowMs: 10 * 60_000 },
   coupon: { limit: 10, windowMs: 60_000 },
   razorpayCreateOrder: { limit: 20, windowMs: 60_000 },
   razorpayVerify: { limit: 20, windowMs: 60_000 },

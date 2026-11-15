@@ -12,7 +12,13 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/store/auth-store';
 
 export function useAuth() {
-  const user = useAuthStore((state) => state.user);
+  const sessionUser = useAuthStore((state) => state.user);
+  // A guest-checkout (anonymous) session is a real Supabase session, but
+  // the rest of the app must treat the shopper as signed out. `user` is
+  // therefore null for guests; `sessionUser` is the raw session user and
+  // is only used by checkout / order confirmation / order tracking.
+  const isGuest = !!sessionUser?.is_anonymous;
+  const user = isGuest ? null : sessionUser;
   const session = useAuthStore((state) => state.session);
   const role = useAuthStore((state) => state.role);
   const isLoading = useAuthStore((state) => state.isLoading);
@@ -96,6 +102,30 @@ export function useAuth() {
     return { error };
   };
 
+  /** Makes sure a Supabase session exists (creating an anonymous guest
+   *  session if needed) so a not-signed-in shopper can place an order. */
+  const ensureGuestSession = async () => {
+    const { data } = await supabase.auth.getSession();
+    if (data.session) return { error: null };
+
+    const res = await fetch('/api/auth/guest', { method: 'POST' });
+    const json = await res
+      .json()
+      .catch(() => ({ error: { message: 'Something went wrong. Please try again.' } }));
+
+    if (json.error) return { error: json.error as { message: string } };
+
+    if (json.session) {
+      const { error } = await supabase.auth.setSession({
+        access_token: json.session.access_token,
+        refresh_token: json.session.refresh_token,
+      });
+      if (error) return { error: { message: error.message } };
+    }
+
+    return { error: null };
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -117,6 +147,9 @@ export function useAuth() {
 
   return {
     user,
+    sessionUser,
+    isGuest,
+    ensureGuestSession,
     session,
     role,
     isLoading,

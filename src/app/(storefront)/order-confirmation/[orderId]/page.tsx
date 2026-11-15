@@ -66,6 +66,7 @@ type RetryPhase = 'idle' | 'launching' | 'awaiting_payment' | 'verifying';
 // it loosely as Record<string, unknown>. This narrows it for display.
 interface ShippingAddressSnapshot {
   full_name?: string;
+  email?: string;
   phone?: string;
   address_line1?: string;
   address_line2?: string | null;
@@ -137,7 +138,8 @@ export default function OrderConfirmationPage() {
   const params = useParams<{ orderId: string }>();
   const orderId = params.orderId;
 
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { sessionUser: user, isGuest, isLoading: isAuthLoading } = useAuth();
+  const ordersHref = isGuest ? '/track-order' : '/account/orders';
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -238,7 +240,7 @@ export default function OrderConfirmationPage() {
       currency: razorpayOrder.currency,
       orderNumber: razorpayOrder.orderNumber,
       customerName: shippingAddress.full_name ?? user.email ?? '',
-      customerEmail: user.email ?? '',
+      customerEmail: user.email ?? shippingAddress.email ?? '',
       customerPhone: shippingAddress.phone,
       onSuccess: async (response) => {
         setRetryPhase('verifying');
@@ -305,7 +307,7 @@ export default function OrderConfirmationPage() {
 
             <span>/</span>
 
-            <Link href="/account/orders" className="hover:text-maroon">
+            <Link href={ordersHref} className="hover:text-maroon">
               Orders
             </Link>
 
@@ -339,7 +341,7 @@ export default function OrderConfirmationPage() {
           ) : notFound || !order || !paymentState ? (
             <div className="mx-auto max-w-2xl border border-beige bg-white p-8 text-center">
               <p className="text-sm text-ink-muted">We couldn&apos;t find this order.</p>
-              <Link href="/account/orders" className="btn-luxury btn-luxury-primary mt-6 inline-flex">
+              <Link href={ordersHref} className="btn-luxury btn-luxury-primary mt-6 inline-flex">
                 View My Orders
               </Link>
             </div>
@@ -463,7 +465,7 @@ export default function OrderConfirmationPage() {
                         Continue Shopping
                       </Link>
 
-                      <Link href="/account/orders" className="btn-luxury btn-luxury-secondary text-center">
+                      <Link href={ordersHref} className="btn-luxury btn-luxury-secondary text-center">
                         View My Orders
                       </Link>
                     </div>
@@ -513,7 +515,7 @@ export default function OrderConfirmationPage() {
                         order.cancelledBy !== 'admin' &&
                         retryButton}
 
-                      <Link href="/account/orders" className="btn-luxury btn-luxury-secondary text-center">
+                      <Link href={ordersHref} className="btn-luxury btn-luxury-secondary text-center">
                         View My Orders
                       </Link>
                     </div>

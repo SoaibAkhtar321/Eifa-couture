@@ -289,16 +289,7 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
   const handleAddToCart = () => {
     if (!hasStock) return;
 
-    if (!isAuthenticated) {
-      savePendingActionAndRedirect({
-        type: 'addToBag',
-        productId: product.id,
-        size: selectedSize,
-        color: selectedColor,
-        quantity,
-      });
-      return;
-    }
+    // No sign-in needed to buy — guests can add to bag and check out.
 
     const unitPrice = resolveVariantPrice(product, selectedSize, selectedColor);
     addItem(product, selectedSize, selectedColor, quantity, selectedStock, unitPrice);
@@ -308,16 +299,7 @@ export default function ProductInfo({ product, onColorChange }: ProductInfoProps
   const handleBuyNow = () => {
     if (!hasStock) return;
 
-    if (!isAuthenticated) {
-      savePendingActionAndRedirect({
-        type: 'buyNow',
-        productId: product.id,
-        size: selectedSize,
-        color: selectedColor,
-        quantity,
-      });
-      return;
-    }
+    // No sign-in needed to buy — guests go straight to guest checkout.
 
     const unitPrice = resolveVariantPrice(product, selectedSize, selectedColor);
     const buyNowItem = { product, size: selectedSize, color: selectedColor, quantity, unitPrice };

@@ -87,7 +87,7 @@ async function loadOrder(supabase: Supabase, orderId: string): Promise<EmailOrde
     trackingUrl: order.tracking_url ?? null,
     cancelledBy: order.cancelled_by ?? null,
     customerName: str(profile?.display_name) || address?.fullName || 'Customer',
-    customerEmail: authUser?.user?.email ?? null,
+    customerEmail: authUser?.user?.email ?? (a.email ? str(a.email) : null),
     address,
     items: (items ?? []).map((i: Record<string, unknown>) => ({
       name: str(i.name),

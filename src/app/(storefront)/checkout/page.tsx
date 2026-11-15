@@ -11,7 +11,12 @@ import AddressForm from '@/components/account/AddressForm';
 import { useAuth } from '@/hooks/useAuth';
 import { createAddress, fetchAddresses, type AddressInput } from '@/lib/addresses';
 import { getShippingCharge, useShippingConfig } from '@/hooks/useShippingConfig';
-import { addressToShippingSnapshot, createOrder, type CreateOrderResult } from '@/lib/orders';
+import {
+  addressToShippingSnapshot,
+  createOrder,
+  type CreateOrderResult,
+  type CreateOrderShippingAddress,
+} from '@/lib/orders';
 import {
   createRazorpayOrderForInternalOrder,
   loadRazorpayScript,
@@ -109,7 +114,7 @@ function getProductImage(product: Product) {
 export default function CheckoutPage() {
   const router = useRouter();
   const hasHydrated = useHasHydrated();
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, sessionUser, ensureGuestSession, isLoading: isAuthLoading } = useAuth();
 
   // ── Contact ──
   const [email, setEmail] = useState('');
@@ -122,6 +127,9 @@ export default function CheckoutPage() {
   const [addressesError, setAddressesError] = useState<string | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [isAddingAddress, setIsAddingAddress] = useState(false);
+  // Guest checkout: the address lives only in this page's state and in
+  // the order's shipping snapshot — nothing is saved to an account.
+  const [guestAddress, setGuestAddress] = useState<AddressInput | null>(null);
   const [isSavingAddress, setIsSavingAddress] = useState(false);
   const [addressFormError, setAddressFormError] = useState<string | null>(null);
 
@@ -215,7 +223,11 @@ export default function CheckoutPage() {
   }, [user, isAuthLoading]);
 
   const handleSaveAddress = async (input: AddressInput) => {
-    if (!user) return;
+    if (!user) {
+      setGuestAddress(input);
+      setIsAddingAddress(false);
+      return;
+    }
 
     setIsSavingAddress(true);
     setAddressFormError(null);
@@ -238,6 +250,27 @@ export default function CheckoutPage() {
   };
 
   const selectedAddress = addresses.find((a) => a.id === selectedAddressId) ?? null;
+
+  // The address actually used for the order: a saved one for signed-in
+  // customers, the typed one for guests.
+  const shippingSnapshot: CreateOrderShippingAddress | null = user
+    ? selectedAddress
+      ? addressToShippingSnapshot(selectedAddress)
+      : null
+    : guestAddress
+      ? {
+          full_name: guestAddress.full_name.trim(),
+          phone: guestAddress.phone,
+          address_line1: guestAddress.address_line1.trim(),
+          address_line2: guestAddress.address_line2?.trim() || null,
+          city: guestAddress.city.trim(),
+          state: guestAddress.state.trim(),
+          pincode: guestAddress.pincode.trim(),
+        }
+      : null;
+  // Guests have no saved addresses: show the form until they've entered one.
+  const showAddressForm = isAddingAddress || (!user && !guestAddress);
+  const shippingAddressId = user ? (selectedAddress?.id ?? null) : null;
 
   /**
    * Creates (or, on retry, re-fetches) the Razorpay order for an
@@ -336,25 +369,22 @@ export default function CheckoutPage() {
     // Retry path: order already exists, just re-open payment for it.
     if (placedOrder) {
       submissionInFlight.current = true;
-      await startPayment(placedOrder, email.trim(), selectedAddress?.phone ?? '', selectedAddress?.full_name ?? '');
+      await startPayment(placedOrder, email.trim(), shippingSnapshot?.phone ?? '', shippingSnapshot?.full_name ?? '');
       submissionInFlight.current = false;
       return;
     }
 
     setEmailError(null);
 
-    if (!user) {
-      setOrderError('Please sign in to complete your order.');
-      return;
-    }
-
     if (!EMAIL_PATTERN.test(email.trim())) {
       setEmailError('Enter a valid email address.');
       return;
     }
 
-    if (!selectedAddress) {
-      setOrderError('Please select or add a delivery address.');
+    if (!shippingSnapshot) {
+      setOrderError(
+        user ? 'Please select or add a delivery address.' : 'Please enter your delivery address.'
+      );
       return;
     }
 
@@ -366,15 +396,26 @@ export default function CheckoutPage() {
     submissionInFlight.current = true;
     setPaymentPhase('creating_order');
 
+    // Guest checkout: make sure a session exists so the order has an owner.
+    if (!sessionUser) {
+      const { error: guestError } = await ensureGuestSession();
+      if (guestError) {
+        submissionInFlight.current = false;
+        setPaymentPhase('form');
+        setOrderError(guestError.message);
+        return;
+      }
+    }
+
     const shippingAddress = {
-      ...addressToShippingSnapshot(selectedAddress),
+      ...shippingSnapshot,
       email: email.trim(),
     };
 
     const { data, error } = await createOrder(
       displayItems,
       shippingAddress,
-      selectedAddress.id,
+      shippingAddressId,
       shippingCharge
     );
 
@@ -383,7 +424,7 @@ export default function CheckoutPage() {
       setPaymentPhase('form');
 
       if (error?.type === 'not_authenticated') {
-        setOrderError('Your session has expired. Please sign in again to place your order.');
+        setOrderError('We could not start your order session. Please refresh the page and try again.');
       } else if (error?.type === 'insufficient_stock') {
         setOrderError(`Sorry, "${error.productName}" no longer has enough stock for this quantity.`);
       } else if (error?.type === 'variant_not_found') {
@@ -400,7 +441,7 @@ export default function CheckoutPage() {
     // second one on subsequent retries within this session.
     setPlacedOrder(data);
 
-    await startPayment(data, email.trim(), selectedAddress.phone, selectedAddress.full_name);
+    await startPayment(data, email.trim(), shippingSnapshot.phone, shippingSnapshot.full_name);
     submissionInFlight.current = false;
   };
 
@@ -484,23 +525,6 @@ export default function CheckoutPage() {
                   Continue Shopping
                 </Link>
               </div>
-            ) : !isAuthLoading && !user ? (
-              <div className="mx-auto max-w-xl border border-beige bg-white px-6 py-12 text-center">
-                <h2 className="font-heading text-3xl text-charcoal">
-                  Sign In To Continue
-                </h2>
-
-                <p className="mx-auto mt-4 max-w-sm text-sm leading-7 text-ink-muted">
-                  Please sign in to your account so we can confirm and save your order.
-                </p>
-
-                <Link
-                  href={`/login?next=${encodeURIComponent('/checkout' + (isBuyNowMode ? '?mode=buy-now' : ''))}`}
-                  className="btn-luxury btn-luxury-primary mt-8 inline-flex"
-                >
-                  Sign In
-                </Link>
-              </div>
             ) : (
               <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:gap-12">
                 <form
@@ -508,6 +532,19 @@ export default function CheckoutPage() {
                   noValidate
                   className="space-y-6 border border-beige bg-white p-5 sm:p-7 lg:p-8"
                 >
+                  {!isAuthLoading && !user && (
+                    <p className="border border-beige bg-cream/55 px-4 py-3 text-sm leading-6 text-ink-muted">
+                      You&apos;re checking out as a guest — no account needed.{' '}
+                      <Link
+                        href={`/login?next=${encodeURIComponent('/checkout' + (isBuyNowMode ? '?mode=buy-now' : ''))}`}
+                        className="text-maroon underline underline-offset-2 hover:text-gold"
+                      >
+                        Sign in
+                      </Link>{' '}
+                      to use saved addresses.
+                    </p>
+                  )}
+
                   <div>
                     <span className="mb-2 block font-body text-[10px] uppercase tracking-[0.26em] text-gold">
                       Contact Details
@@ -552,7 +589,7 @@ export default function CheckoutPage() {
                     <p className="text-sm text-ink-muted">Loading your saved addresses…</p>
                   ) : addressesError ? (
                     <p className="text-sm text-red-600">{addressesError}</p>
-                  ) : isAddingAddress ? (
+                  ) : showAddressForm ? (
                     <div className="space-y-4">
                       {addressFormError && (
                         <p className="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -561,14 +598,17 @@ export default function CheckoutPage() {
                       )}
 
                       <AddressForm
-                        forceDefault={addresses.length === 0}
+                        initialData={user ? undefined : (guestAddress ?? undefined)}
+                        forceDefault={!!user && addresses.length === 0}
                         isSubmitting={isSavingAddress}
-                        submitLabel="Save & Use This Address"
+                        submitLabel={user ? 'Save & Use This Address' : 'Use This Address'}
                         onSubmit={handleSaveAddress}
-                        onCancel={() => setIsAddingAddress(false)}
+                        onCancel={
+                          user ? () => setIsAddingAddress(false) : guestAddress ? () => setIsAddingAddress(false) : undefined
+                        }
                       />
 
-                      {addresses.length === 0 && (
+                      {!!user && addresses.length === 0 && (
                         <p className="text-xs text-ink-muted">
                           This will be saved to your account so future checkouts are faster.
                         </p>
@@ -622,7 +662,32 @@ export default function CheckoutPage() {
                         );
                       })}
 
-                      {!isFormLocked && (
+                      {!user && guestAddress && (
+                        <div className="flex items-start justify-between gap-3 border border-gold bg-gold/5 p-4">
+                          <div className="min-w-0 flex-1">
+                            <span className="font-subheading text-sm text-charcoal">{guestAddress.full_name}</span>
+                            <p className="mt-1 text-sm leading-6 text-ink-muted">
+                              {guestAddress.address_line1}
+                              {guestAddress.address_line2 ? `, ${guestAddress.address_line2}` : ''}
+                              <br />
+                              {guestAddress.city}, {guestAddress.state} — {guestAddress.pincode}
+                              <br />
+                              Phone: {guestAddress.phone}
+                            </p>
+                          </div>
+                          {!isFormLocked && (
+                            <button
+                              type="button"
+                              onClick={() => setIsAddingAddress(true)}
+                              className="text-sm text-maroon transition-colors hover:text-gold"
+                            >
+                              Edit
+                            </button>
+                          )}
+                        </div>
+                      )}
+
+                      {!!user && !isFormLocked && (
                         <button
                           type="button"
                           onClick={() => setIsAddingAddress(true)}

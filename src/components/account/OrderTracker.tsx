@@ -77,7 +77,8 @@ function fmt(date: string) {
 }
 
 export default function OrderTracker() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { sessionUser: user, isLoading } = useAuth();
+  const isAuthenticated = !!user;
   const router = useRouter();
   const params = useSearchParams();
   const requested = params.get('order')?.trim().toUpperCase() ?? '';

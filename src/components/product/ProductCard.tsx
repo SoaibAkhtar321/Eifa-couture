@@ -13,7 +13,6 @@ import { useSyncExternalStore } from 'react';
 
 import { HOVER_LIFT } from '@/components/motion/presets';
 import ProductImage from '@/components/ui/ProductImage';
-import { useAuth } from '@/hooks/useAuth';
 import {
   formatPrice,
   getCategoryPlaceholder,
@@ -51,7 +50,6 @@ function resolveImage(src: string | undefined, category: string) {
 
 export default function ProductCard({ product, priority = false, saveShopScroll = false }: ProductCardProps) {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
   const hasHydrated = useHasHydrated();
 
   const addItem = useCartStore((state) => state.addItem);
@@ -92,10 +90,6 @@ export default function ProductCard({ product, priority = false, saveShopScroll 
 
   const handleBuyNow = () => {
     if (!canAct) return;
-    if (!isAuthenticated) {
-      router.push(`/login?redirect=${encodeURIComponent(href)}`);
-      return;
-    }
     const item = { product, size, color, quantity: 1, unitPrice: resolveVariantPrice(product, size, color) };
     sessionStorage.setItem('eifa-buy-now', JSON.stringify(item));
     router.push('/checkout?mode=buy-now');

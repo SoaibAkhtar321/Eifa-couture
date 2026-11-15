@@ -168,6 +168,10 @@ export default function HeroSection({
               className="pointer-events-none absolute inset-0 bg-linear-to-t from-maroon-dark/95 via-maroon-dark/35 via-45% to-transparent sm:from-maroon-dark/50 sm:via-transparent sm:via-100%"
             />
 
+            <span className="absolute left-3 top-3 rounded-full bg-espresso/70 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-gold-light backdrop-blur sm:hidden">
+              ✦ Since 1998 · Lucknow
+            </span>
+
             <div className="absolute right-3 top-3 flex gap-1.5 rounded-full bg-espresso/70 px-2.5 py-1.5 backdrop-blur">
               {LOOKS.map((item, i) => (
                 <button
@@ -230,7 +234,15 @@ export default function HeroSection({
             )}
           </motion.h1>
 
-          {/* Long story copy is for tablet/desktop; phones get headline + button */}
+          {/* Phones: one short, readable line of the story (tablet/desktop get the full paragraph below) */}
+          <motion.p
+            {...fade(0.3)}
+            className="mt-2 line-clamp-2 max-w-[22rem] text-[13px] leading-5 text-ivory/85 sm:hidden"
+          >
+            {banner?.subtitle || 'Hand-embroidered Chikankari on pure silk and fine cotton, made by Lucknow’s master karigars.'}
+          </motion.p>
+
+          {/* Long story copy is for tablet/desktop */}
           <motion.p
             {...fade(0.3)}
             className="mt-5 hidden max-w-xl text-base leading-8 text-ivory/85 sm:block"
@@ -322,6 +334,17 @@ export default function HeroSection({
           ))}
         </ul>
       </nav>
+
+      {/* Phones: the heritage numbers from the desktop hero, as one compact strip */}
+      <dl className="mx-3 mb-4 grid grid-cols-4 gap-1 border-y border-gold/30 py-3 text-center sm:hidden">
+        {STATS.map((stat) => (
+          <div key={stat.label}>
+            <dt className="sr-only">{stat.label}</dt>
+            <dd className="whitespace-nowrap font-heading text-[15px] leading-none text-gold-light">{stat.value}</dd>
+            <dd className="mt-1 text-[9px] uppercase leading-tight tracking-[0.08em] text-ivory/80">{stat.label}</dd>
+          </div>
+        ))}
+      </dl>
 
       {/* Scroll cue */}
       <motion.div

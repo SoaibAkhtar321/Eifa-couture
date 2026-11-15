@@ -474,6 +474,34 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
         )}
       </section>
 
+      {/* ---------- Description (visible, not hidden under Advanced) ---------- */}
+      <section className={cardClass} aria-labelledby="description-heading">
+        <h2 id="description-heading" className="font-heading text-lg text-maroon">
+          Product description
+        </h2>
+        <p className="text-sm text-ink-muted">
+          Tell customers about this piece — the fabric, the Chikankari work, fit and how to care for it.
+        </p>
+        <TextareaField
+          label="Short description"
+          value={values.short_description}
+          onChange={(e) => setField('short_description', e.target.value)}
+          error={fieldErrors.short_description}
+          hint="One or two lines shown on product cards. Left blank, the product name is used."
+          placeholder="e.g. Hand-embroidered white Chikankari kurta on soft cotton"
+          rows={2}
+        />
+        <TextareaField
+          label="Full description"
+          value={values.description}
+          onChange={(e) => setField('description', e.target.value)}
+          error={fieldErrors.description}
+          hint="Shown on the product page under “Description”. Left blank, the product name is used."
+          placeholder="Describe the fabric, embroidery work, fit, colours and care instructions."
+          rows={6}
+        />
+      </section>
+
       {/* ---------- 4. Where it shows ---------- */}
       <section className={cardClass} aria-labelledby="show-heading">
         <h2 id="show-heading" className="font-heading text-lg text-maroon">
@@ -499,7 +527,7 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
           <span>
             <span className="block font-heading text-lg text-maroon">Advanced options</span>
             <span className="block text-xs text-ink-muted">
-              Description, SEO, SKU, sizes and colours. You can leave all of this alone.
+              SEO, SKU, sizes and colours. You can leave all of this alone.
             </span>
           </span>
           <span aria-hidden="true" className="text-xl text-maroon transition-transform group-open:rotate-180">
@@ -509,22 +537,6 @@ export default function ProductForm({ product, categories, fabrics }: ProductFor
 
         <div className="space-y-6 border-t border-charcoal/10 p-5 sm:p-6">
           <div className="space-y-4">
-            <TextareaField
-              label="Short description"
-              value={values.short_description}
-              onChange={(e) => setField('short_description', e.target.value)}
-              error={fieldErrors.short_description}
-              hint={isEditing ? 'Shown on product cards' : 'Shown on product cards. Left blank, the product name is used.'}
-              rows={2}
-            />
-            <TextareaField
-              label="Full description"
-              value={values.description}
-              onChange={(e) => setField('description', e.target.value)}
-              error={fieldErrors.description}
-              hint={isEditing ? undefined : 'Left blank, the product name is used. You can write it later.'}
-              rows={6}
-            />
             <TextField
               label="Web address (slug)"
               value={values.slug}
