@@ -15,8 +15,8 @@ import type { OrderStatus, PaymentStatus, ReturnStatus } from '@/types/database'
 
 /* ── Tunable defaults (overridden by store_settings when present) ── */
 
-export const DEFAULT_DELIVERY_DAYS_MIN = 4;
-export const DEFAULT_DELIVERY_DAYS_MAX = 7;
+export const DEFAULT_DELIVERY_DAYS_MIN = 7;
+export const DEFAULT_DELIVERY_DAYS_MAX = 12;
 export const DEFAULT_RETURN_WINDOW_DAYS = 7;
 
 /* ── Labels ── */
@@ -134,13 +134,6 @@ export const RETURN_REASONS = [
   'Changed my mind',
   'Other',
 ] as const;
-
-/** Reasons that need no photo; the rest should attach one. */
-export const RETURN_REASONS_PHOTO_RECOMMENDED: readonly string[] = [
-  'Damaged or defective',
-  'Wrong item received',
-  'Quality not as expected',
-];
 
 /** Statuses where a return is still in progress for an item. */
 export const OPEN_RETURN_STATUSES: ReturnStatus[] = ['requested', 'approved', 'picked_up', 'received'];

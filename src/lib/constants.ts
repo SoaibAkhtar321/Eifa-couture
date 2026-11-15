@@ -85,7 +85,7 @@ export const LEGAL_INFO = {
 
 // ── Shipping Info ──
 export const SHIPPING_INFO = {
-  standardDeliveryDays: { min: 5, max: 7 },
+  standardDeliveryDays: { min: 7, max: 12 },
   internationalShipping: false,
   message:
     "Free delivery on every order. Each piece is carefully hand-packed with love.",
@@ -111,7 +111,7 @@ export const RETURN_POLICY = {
 
 // Shown as "Last updated" on every legal page. Change it whenever a policy
 // page's wording changes.
-export const LEGAL_LAST_UPDATED = "15 November 2026";
+export const LEGAL_LAST_UPDATED = "16 November 2026";
 // ── Size chart (approximate body measurements, inches) ──
 // Shown in the product page "Size guide" modal. Edit here if the atelier's
 // fit differs; only sizes the product actually offers are displayed.

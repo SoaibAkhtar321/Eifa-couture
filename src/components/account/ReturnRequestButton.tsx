@@ -137,6 +137,13 @@ export default function ReturnRequestButton({
               </label>
             </fieldset>
 
+            {mode === 'return' && (
+              <p className="mt-3 rounded-md border border-beige bg-cream/60 p-3 text-xs text-ink-soft">
+                Your refund will be issued to your original payment method once we have received the item and
+                verified it.
+              </p>
+            )}
+
             {mode === 'exchange' && (
               <label className="mt-4 block text-sm text-charcoal">
                 <span className="text-xs uppercase tracking-[0.18em] text-ink-muted">New size</span>

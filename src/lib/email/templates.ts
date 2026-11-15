@@ -391,7 +391,10 @@ export function renderReturnStepEmail(
   switch (step) {
     case 'requested':
       return mk(`return_requested`, `${Noun} request received for order ${n}`, `We received your ${noun} request`,
-        [`We have received your ${noun} request and will review it shortly.`], [['Reason', ret.reason]]);
+        [
+          `We have received your ${noun} request and will review it shortly.`,
+          ...(ret.isExchange ? [] : ['Your refund will be issued to your original payment method once we have received the item and verified it.']),
+        ], [['Reason', ret.reason]]);
     case 'approved':
       return mk('return_approved', `${Noun} approved for order ${n}`, `Your ${noun} is approved`,
         [
@@ -409,7 +412,7 @@ export function renderReturnStepEmail(
         pickupFacts);
     case 'received':
       return mk('return_received', `${Noun} received for order ${n}`, 'We have received your item',
-        [ret.isExchange ? 'Your item has reached us. We will ship your replacement shortly.' : 'Your item has reached us. Your refund will be issued shortly.']);
+        [ret.isExchange ? 'Your item has reached us. We will ship your replacement shortly.' : 'Your item has reached us. Once our team has verified it, your refund will be issued to your original payment method.']);
     case 'refunded':
       return mk('return_refunded', `Refund issued for order ${n}`, 'Your refund has been issued',
         ['Your refund has been issued to your original payment method. It can take 5–7 business days to appear in your account.'],

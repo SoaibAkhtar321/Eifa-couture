@@ -78,8 +78,8 @@ export default async function RefundPolicyPage() {
           body: (
             <p>
               If your piece arrives damaged, defective or is not the item you ordered, request a return as soon as
-              possible and within the {windowDays}-day window, and attach clear photos in the request. We review these
-              requests with priority.
+              possible and within the {windowDays}-day window, and describe the problem clearly in the details box. We
+              review these requests with priority and may contact you if we need more information.
             </p>
           ),
         },
@@ -98,7 +98,7 @@ export default async function RefundPolicyPage() {
           body: (
             <ol className="list-decimal space-y-2 pl-5">
               <li>Open the delivered order and choose Return / Exchange for the item and quantity.</li>
-              <li>Pick the reason (and the new size for an exchange) and add photos if the item is damaged or wrong.</li>
+              <li>Pick the reason (and the new size for an exchange) and describe the problem in the details box.</li>
               <li>
                 We review the request and email you whether it is approved. A rejected request comes with a reason.
               </li>
@@ -108,8 +108,8 @@ export default async function RefundPolicyPage() {
                 original packaging with the tags until it is collected.
               </li>
               <li>
-                When the item reaches us and has been checked, we issue your refund or dispatch your exchange. You can
-                follow each step on your order, and we email you when the refund is issued.
+                When the item reaches us and our team has received and verified it, we issue your refund or dispatch
+                your exchange. You can follow each step on your order, and we email you when the refund is issued.
               </li>
             </ol>
           ),
@@ -124,16 +124,17 @@ export default async function RefundPolicyPage() {
               </p>
               <ul className="list-disc space-y-2 pl-5">
                 <li>
-                  <strong>Cancelled before shipping:</strong> the full amount, including shipping, is refunded.
+                  <strong>Cancelled before shipping:</strong> the full amount you paid is refunded.
                 </li>
                 <li>
-                  <strong>Returned items:</strong> the refund is issued only after the item has reached us and been
-                  checked. You are refunded what you actually paid for the returned items. If you used a coupon, its
+                  <strong>Returned items:</strong> your money is refunded only after we have received the returned
+                  item and verified it (checked that it is unused, with tags and in its original packaging). We do
+                  not refund before then. You are refunded what you actually paid for the returned items. If you used a coupon, its
                   discount is shared across the items in the order, so a returned item is refunded its share of the
                   amount you paid. Partial returns are refunded for the returned quantity only.
                 </li>
                 <li>
-                  <strong>Timeline:</strong> we start the refund after we have received and checked the item, and it
+                  <strong>Timeline:</strong> we start the refund after we have received and verified the item, and it
                   reaches your account within {min}–{max} working days after we start it. Some banks and card issuers
                   take a few extra days to show it on your statement.
                 </li>

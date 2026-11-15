@@ -103,8 +103,8 @@ export default async function ShippingPolicyPage() {
           heading: 'Damaged or wrong parcel',
           body: (
             <p>
-              Please check the parcel when it arrives. If it is visibly damaged, or the item is wrong or damaged, take
-              photos and request a return from your order within {policy.returnWindowDays} days of delivery. What happens next is set
+              Please check the parcel when it arrives. If it is visibly damaged, or the item is wrong or damaged, request
+              a return from your order and describe the problem within {policy.returnWindowDays} days of delivery. What happens next is set
               out in our{' '}
               <Link href="/refund-policy">Cancellation, Returns &amp; Refunds policy</Link>.
             </p>

@@ -59,8 +59,7 @@ export default function PrivacyPolicyPage() {
                 </li>
                 <li>
                   <strong>Order information:</strong> items bought, amounts, order and payment status, delivery tracking,
-                  and any cancellation, return, exchange or refund requests, including photos you upload to support a
-                  return.
+                  and any cancellation, return, exchange or refund requests, including the reason and details you give.
                 </li>
                 <li>
                   <strong>Shopping activity:</strong> your bag and wishlist, and reviews or ratings you choose to post.

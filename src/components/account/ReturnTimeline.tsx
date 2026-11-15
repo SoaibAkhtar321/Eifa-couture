@@ -117,6 +117,13 @@ export default function ReturnTimeline({
                 </div>
               )}
 
+              {!rejected && !r.is_exchange && ['requested', 'approved', 'picked_up', 'received'].includes(r.status) && (
+                <p className="mt-2 text-xs text-ink-soft">
+                  Your refund will be issued to your original payment method once we have received the item and
+                  verified it.
+                </p>
+              )}
+
               {!rejected && r.admin_notes && (
                 <p className="mt-2 text-xs italic text-ink-soft">“{r.admin_notes}”</p>
               )}
