@@ -51,9 +51,15 @@ export const guestNotFound = () =>
   NextResponse.json({ error: { message: GUEST_NOT_FOUND_MESSAGE } }, { status: 404 });
 
 /** Applies the IP and per-order limits. Returns a 429 response when blocked. */
-export function guestRateLimited(request: NextRequest, orderNumber: string, scope: string): NextResponse | null {
-  const ip = rateLimit(`${scope}:ip:${getClientIp(request)}`, RATE_LIMITS.guestLookup);
-  const perOrder = rateLimit(`${scope}:order:${orderNumber}`, RATE_LIMITS.guestLookupPerOrder);
+export async function guestRateLimited(
+  request: NextRequest,
+  orderNumber: string,
+  scope: string
+): Promise<NextResponse | null> {
+  const [ip, perOrder] = await Promise.all([
+    rateLimit(`${scope}:ip:${getClientIp(request)}`, RATE_LIMITS.guestLookup),
+    rateLimit(`${scope}:order:${orderNumber}`, RATE_LIMITS.guestLookupPerOrder),
+  ]);
   if (ip.success && perOrder.success) return null;
 
   const retry = Math.max(ip.retryAfterSeconds ?? 0, perOrder.retryAfterSeconds ?? 0, 1);

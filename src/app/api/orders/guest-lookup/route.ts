@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
   const parsed = guestCredentialsSchema.safeParse(json);
   if (!parsed.success) return guestNotFound();
 
-  const blocked = guestRateLimited(request, parsed.data.orderNumber, 'guest-lookup');
+  const blocked = await guestRateLimited(request, parsed.data.orderNumber, 'guest-lookup');
   if (blocked) return blocked;
 
   const order = await findGuestOrder(parsed.data);

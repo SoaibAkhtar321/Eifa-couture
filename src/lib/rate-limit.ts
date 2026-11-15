@@ -1,19 +1,18 @@
 /* ============================================
    EIFA COUTURE — Rate Limiter
    ============================================
-   Simple in-memory fixed-window rate limiter for public write
-   endpoints (auth, contact, coupon validation). No Redis/Upstash is
-   in the current stack, so this is the simplest production-ready
-   option: it runs inside the same Node.js process as the Next.js
-   server and needs no extra infrastructure.
+   Fixed-window rate limiter for public write endpoints.
 
-   Tradeoff: on a multi-instance deployment each instance keeps its
-   own counters, so the effective limit is `limit * instanceCount`
-   rather than a single global limit. That's an acceptable tradeoff
-   for brute-force/abuse mitigation on this project's deployment
-   target (single Node server), and can be swapped for a shared store
-   (e.g. Upstash Redis) later without changing any call sites — only
-   this file would need to change.
+   Two backends, same call sites:
+   - Upstash Redis (shared across all serverless instances) when
+     UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN are set.
+     This is the real protection on Vercel.
+   - In-memory per instance otherwise (local dev, or if Upstash is
+     not configured / temporarily unreachable). On Vercel each
+     instance has its own counters, so this fallback is weak.
+
+   If Upstash errors or times out we fall back to memory instead of
+   blocking customers: a Redis outage must never take checkout down.
    ============================================ */
 
 import type { NextRequest } from 'next/server';
@@ -53,12 +52,7 @@ const cleanupTimer = setInterval(() => {
 // Don't keep the Node process alive just for cleanup.
 cleanupTimer.unref?.();
 
-/**
- * Checks and increments the request count for `key` within the
- * current fixed window. Call once per incoming request, before doing
- * any real work.
- */
-export function rateLimit(key: string, config: RateLimitConfig): RateLimitResult {
+function memoryRateLimit(key: string, config: RateLimitConfig): RateLimitResult {
   const now = Date.now();
   const existing = buckets.get(key);
 
@@ -77,6 +71,59 @@ export function rateLimit(key: string, config: RateLimitConfig): RateLimitResult
 
   existing.count += 1;
   return { success: true, remaining: config.limit - existing.count };
+}
+
+interface UpstashReply {
+  result?: unknown;
+  error?: string;
+}
+
+/** Shared fixed-window counter in Upstash Redis (REST). Returns null on any failure. */
+async function upstashRateLimit(key: string, config: RateLimitConfig): Promise<RateLimitResult | null> {
+  const url = process.env.UPSTASH_REDIS_REST_URL?.trim();
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN?.trim();
+  if (!url || !token) return null;
+
+  const redisKey = `rl:${key}`;
+  try {
+    const res = await fetch(`${url.replace(/\/+$/, '')}/pipeline`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify([
+        ['INCR', redisKey],
+        // Start the window on the first hit only (NX): later hits keep the same expiry.
+        ['PEXPIRE', redisKey, config.windowMs, 'NX'],
+        ['PTTL', redisKey],
+      ]),
+      cache: 'no-store',
+      signal: AbortSignal.timeout(1500),
+    });
+    if (!res.ok) return null;
+
+    const replies = (await res.json()) as UpstashReply[];
+    const count = Number(replies[0]?.result);
+    const ttlMs = Number(replies[2]?.result);
+    if (!Number.isFinite(count) || replies.some((r) => r.error)) return null;
+
+    if (count > config.limit) {
+      const waitMs = Number.isFinite(ttlMs) && ttlMs > 0 ? ttlMs : config.windowMs;
+      return { success: false, remaining: 0, retryAfterSeconds: Math.max(1, Math.ceil(waitMs / 1000)) };
+    }
+    return { success: true, remaining: Math.max(0, config.limit - count) };
+  } catch {
+    // Never log the key: it can contain an IP address or an order number.
+    console.error('[rate-limit] Upstash unavailable, using in-memory fallback');
+    return null;
+  }
+}
+
+/**
+ * Checks and increments the request count for `key` within the current fixed
+ * window. Call (and await) once per incoming request, before doing real work.
+ */
+export async function rateLimit(key: string, config: RateLimitConfig): Promise<RateLimitResult> {
+  const shared = await upstashRateLimit(key, config);
+  return shared ?? memoryRateLimit(key, config);
 }
 
 /**

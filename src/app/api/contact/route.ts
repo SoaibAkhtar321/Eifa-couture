@@ -26,7 +26,7 @@ const fail = (message: string, status: number, headers?: HeadersInit) =>
 const FALLBACK = `Please email ${CONTACT_INFO.email} or call ${CONTACT_INFO.phone} instead.`;
 
 export async function POST(request: NextRequest) {
-  const limit = rateLimit(`contact:${getClientIp(request)}`, RATE_LIMITS.contact);
+  const limit = await rateLimit(`contact:${getClientIp(request)}`, RATE_LIMITS.contact);
   if (!limit.success) {
     return fail(
       'Too many messages from this connection. Please wait a few minutes and try again.',

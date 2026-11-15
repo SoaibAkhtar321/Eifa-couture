@@ -63,7 +63,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return NextResponse.json({ error: { message: 'Please sign in to cancel an order.' } }, { status: 401 });
   }
 
-  const limit = rateLimit(`order-cancel:${user.id}`, RATE_LIMITS.orderCancel);
+  const limit = await rateLimit(`order-cancel:${user.id}`, RATE_LIMITS.orderCancel);
   if (!limit.success) {
     return NextResponse.json(
       { error: { message: 'Too many attempts. Please wait a moment and try again.' } },

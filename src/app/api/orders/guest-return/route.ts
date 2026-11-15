@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   const credentials = guestCredentialsSchema.safeParse(json);
   if (!credentials.success) return guestNotFound();
 
-  const blocked = guestRateLimited(request, credentials.data.orderNumber, 'guest-return');
+  const blocked = await guestRateLimited(request, credentials.data.orderNumber, 'guest-return');
   if (blocked) return blocked;
 
   const body = bodySchema.safeParse(json);

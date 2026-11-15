@@ -20,7 +20,7 @@ import { getClientIp, rateLimit, rateLimitResponseHeaders, RATE_LIMITS } from '@
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
-  const limit = rateLimit(`guest:${ip}`, RATE_LIMITS.guestSession);
+  const limit = await rateLimit(`guest:${ip}`, RATE_LIMITS.guestSession);
 
   if (!limit.success) {
     return NextResponse.json(

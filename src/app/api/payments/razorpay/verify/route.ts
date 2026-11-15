@@ -35,7 +35,7 @@ const bodySchema = z.object({
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
-  const limit = rateLimit(`razorpay-verify:${ip}`, RATE_LIMITS.razorpayVerify);
+  const limit = await rateLimit(`razorpay-verify:${ip}`, RATE_LIMITS.razorpayVerify);
 
   if (!limit.success) {
     return NextResponse.json(

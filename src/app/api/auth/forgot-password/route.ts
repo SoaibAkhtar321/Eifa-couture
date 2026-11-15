@@ -23,7 +23,7 @@ const forgotPasswordSchema = z.object({
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
-  const limit = rateLimit(`forgot-password:${ip}`, RATE_LIMITS.forgotPassword);
+  const limit = await rateLimit(`forgot-password:${ip}`, RATE_LIMITS.forgotPassword);
 
   if (!limit.success) {
     return NextResponse.json(

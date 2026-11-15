@@ -45,7 +45,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return NextResponse.json({ error: { message: 'Please sign in to request a return.' } }, { status: 401 });
   }
 
-  const limit = rateLimit(`order-return:${user.id}`, RATE_LIMITS.returnRequest);
+  const limit = await rateLimit(`order-return:${user.id}`, RATE_LIMITS.returnRequest);
   if (!limit.success) {
     return NextResponse.json(
       { error: { message: 'Too many attempts. Please wait a moment and try again.' } },

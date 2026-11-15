@@ -22,7 +22,7 @@ const loginSchema = z.object({
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
-  const limit = rateLimit(`login:${ip}`, RATE_LIMITS.login);
+  const limit = await rateLimit(`login:${ip}`, RATE_LIMITS.login);
 
   if (!limit.success) {
     return NextResponse.json(

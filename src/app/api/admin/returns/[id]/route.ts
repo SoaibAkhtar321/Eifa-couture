@@ -119,7 +119,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     return fail(403, 'Admin access required.');
   }
 
-  const limit = rateLimit(`admin-refund:${user.id}`, RATE_LIMITS.adminRefund);
+  const limit = await rateLimit(`admin-refund:${user.id}`, RATE_LIMITS.adminRefund);
   if (!limit.success) {
     return NextResponse.json(
       { error: { message: 'Too many requests. Please slow down.' } },
